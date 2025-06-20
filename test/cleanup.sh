@@ -4,7 +4,7 @@
 # PROMETHEUS STACK ADD-ON - CLEANUP SCRIPT
 # =============================================================================
 # PURPOSE: Clean up test containers, images, and data after testing
-# USAGE:   ./cleanup.sh [--all] [--force]
+# USAGE:   ./test/cleanup.sh [--all] [--force] (from project root) OR ./cleanup.sh [--all] [--force] (from test folder)
 # 
 # This script provides:
 # 1. Safe cleanup of test containers
@@ -34,6 +34,18 @@
 # =============================================================================
 
 set -e  # Exit on any error
+
+# Determine script location and project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ "$SCRIPT_DIR" == */test ]]; then
+    # Running from test folder
+    PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+    TEST_DIR="$SCRIPT_DIR"
+else
+    # Running from project root
+    PROJECT_ROOT="$SCRIPT_DIR"
+    TEST_DIR="$SCRIPT_DIR/test"
+fi
 
 # Colors for output
 RED='\033[0;31m'
@@ -188,17 +200,17 @@ cleanup_test_data() {
     echo "📁 Test Data Cleanup"
     echo "===================="
     
-    if [ -d "../test-data" ]; then
+    if [ -d "$PROJECT_ROOT/test-data" ]; then
         print_status "INFO" "Found test-data directory"
         
         # Show what will be deleted
         echo "📋 Contents to be removed:"
-        find ../test-data -type f -exec echo "   {}" \;
+        find "$PROJECT_ROOT/test-data" -type f -exec echo "   {}" \;
         
         # Confirm deletion
         if [ "$FORCE" != "true" ]; then
             echo ""
-            read -p "🗑️  Delete test-data directory? (y/N): " -n 1 -r
+            read -p "🗑️  Delete test data? (y/N): " -n 1 -r
             echo
             if [[ ! $REPLY =~ ^[Yy]$ ]]; then
                 print_status "INFO" "Test data cleanup skipped"
@@ -207,7 +219,7 @@ cleanup_test_data() {
         fi
         
         # Remove test data
-        rm -rf ../test-data
+        rm -rf "$PROJECT_ROOT/test-data"
         print_status "OK" "Test data directory removed"
     else
         print_status "INFO" "No test-data directory found"
@@ -237,7 +249,7 @@ show_summary() {
     
     echo ""
     echo "💡 Next Steps:"
-    echo "   - Run ./build-test.sh to start fresh testing"
+    echo "   - Run $TEST_DIR/build-test.sh to start fresh testing"
     echo "   - Or deploy to Home Assistant for production use"
 }
 
@@ -276,6 +288,8 @@ done
 main() {
     echo "🧹 Cleanup for Prometheus Stack Add-on"
     echo "======================================"
+    echo "📁 Project root: $PROJECT_ROOT"
+    echo "📁 Test directory: $TEST_DIR"
     
     # Check Docker availability
     check_docker

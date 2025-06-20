@@ -1,12 +1,12 @@
 ARG BUILD_FROM
-FROM ${BUILD_FROM}
+FROM ${BUILD_FROM:-alpine:3.19}
 
 ENV PROM_VERSION=2.52.0
 ENV ALERTMANAGER_VERSION=0.27.0
 ENV KARMA_VERSION=v0.116
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+RUN apk add --no-cache \
+        bash \
         curl \
         tar \
         wget \
@@ -28,8 +28,8 @@ RUN apt-get update && \
     tar -xzf karma-linux-${ARCH:-$ARM_ARCH}.tar.gz && \
     mv karma-linux-${ARCH:-$ARM_ARCH} /usr/local/bin/karma && \
     rm -rf *.tar.gz && \
-    apt-get purge -y --auto-remove curl wget tar && \
-    rm -rf /var/lib/apt/lists/*
+    apk del wget tar && \
+    rm -rf /var/cache/apk/*
 
 COPY run.sh /
 COPY prometheus.yml /etc/prometheus/

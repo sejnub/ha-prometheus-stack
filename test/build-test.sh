@@ -4,7 +4,7 @@
 # PROMETHEUS STACK ADD-ON - LOCAL TESTING SCRIPT
 # =============================================================================
 # PURPOSE: Build and run the Home Assistant add-on locally for testing
-# USAGE:   ./test/build-test.sh
+# USAGE:   ./test/build-test.sh (from project root) OR ./build-test.sh (from test folder)
 # 
 # This script:
 # 1. Builds the Docker image with your add-on code
@@ -17,8 +17,22 @@
 
 set -e  # Exit on any error
 
+# Determine script location and project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ "$SCRIPT_DIR" == */test ]]; then
+    # Running from test folder
+    PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+    TEST_DIR="$SCRIPT_DIR"
+else
+    # Running from project root
+    PROJECT_ROOT="$SCRIPT_DIR"
+    TEST_DIR="$SCRIPT_DIR/test"
+fi
+
 echo "🐳 Building and Testing Prometheus Stack Add-on"
 echo "================================================"
+echo " Project root: $PROJECT_ROOT"
+echo "📁 Test directory: $TEST_DIR"
 
 # Check if Docker is available
 if ! command -v docker &> /dev/null; then
@@ -40,19 +54,18 @@ echo "🧹 Cleaning up previous test containers..."
 docker stop prometheus-stack-test 2>/dev/null || true
 docker rm prometheus-stack-test 2>/dev/null || true
 
-# Build the add-on image (from parent directory)
+# Build the add-on image
 echo "🔨 Building add-on image..."
-cd ..
+cd "$PROJECT_ROOT"
 docker build -t prometheus-stack-test .
-cd test
 
 # Create test directories and configuration
 echo "📁 Setting up test environment..."
-mkdir -p ../test-data/prometheus
-mkdir -p ../test-data/alertmanager
+mkdir -p "$PROJECT_ROOT/test-data/prometheus"
+mkdir -p "$PROJECT_ROOT/test-data/alertmanager"
 
 # Create test options.json (simulates Home Assistant add-on config)
-cat > ../test-data/options.json <<EOF
+cat > "$PROJECT_ROOT/test-data/options.json" <<EOF
 {
   "alertmanager_receiver": "test-receiver",
   "alertmanager_to_email": "test@example.com"
@@ -66,7 +79,7 @@ docker run -d \
   -p 9090:9090 \
   -p 9093:9093 \
   -p 8080:8080 \
-  -v $(pwd)/../test-data:/data \
+  -v "$PROJECT_ROOT/test-data:/data" \
   prometheus-stack-test
 
 # Wait for services to start
@@ -100,9 +113,9 @@ echo "📋 Useful Commands:"
 echo "   View logs:      docker logs -f prometheus-stack-test"
 echo "   Stop container: docker stop prometheus-stack-test"
 echo "   Remove container: docker rm prometheus-stack-test"
-echo "   Health check:   ./test/health-check.sh"
-echo "   Monitor resources: ./test/monitor.sh"
-echo "   Cleanup:        ./test/cleanup.sh"
+echo "   Health check:   $TEST_DIR/health-check.sh"
+echo "   Monitor resources: $TEST_DIR/monitor.sh"
+echo "   Cleanup:        $TEST_DIR/cleanup.sh"
 echo ""
 echo "💡 Next Steps:"
 echo "   1. Open the URLs above in your browser"

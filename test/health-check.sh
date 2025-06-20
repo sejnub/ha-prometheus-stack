@@ -4,7 +4,7 @@
 # PROMETHEUS STACK ADD-ON - HEALTH CHECK SCRIPT
 # =============================================================================
 # PURPOSE: Verify that all services in the add-on are running and healthy
-# USAGE:   ./health-check.sh
+# USAGE:   ./test/health-check.sh (from project root) OR ./health-check.sh (from test folder)
 # 
 # This script performs comprehensive health checks on:
 # 1. Prometheus - Main monitoring service
@@ -25,14 +25,28 @@
 
 set -e  # Exit on any error
 
+# Determine script location and project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ "$SCRIPT_DIR" == */test ]]; then
+    # Running from test folder
+    PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+    TEST_DIR="$SCRIPT_DIR"
+else
+    # Running from project root
+    PROJECT_ROOT="$SCRIPT_DIR"
+    TEST_DIR="$SCRIPT_DIR/test"
+fi
+
 echo "🏥 Health Check for Prometheus Stack Add-on"
 echo "============================================"
+echo "📁 Project root: $PROJECT_ROOT"
+echo "📁 Test directory: $TEST_DIR"
 
 # Check if container is running
 if ! docker ps | grep -q prometheus-stack; then
     echo "❌ Container 'prometheus-stack-test' or 'prometheus-stack-dev' is not running"
-    echo "   Start the container first with: ./build-test.sh"
-    echo "   Or with docker-compose: docker-compose -f docker-compose.dev.yml up -d"
+    echo "   Start the container first with: $TEST_DIR/build-test.sh"
+    echo "   Or with docker-compose: docker-compose -f $TEST_DIR/docker-compose.dev.yml up -d"
     exit 1
 fi
 
