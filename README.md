@@ -1,6 +1,6 @@
 # Prometheus Stack Add-on for Home Assistant
 
-A comprehensive monitoring stack for Home Assistant that includes Prometheus, Alertmanager, and Karma in a single add-on.
+A comprehensive monitoring stack for Home Assistant that includes Prometheus, Alertmanager, Karma, and Blackbox Exporter in a single add-on.
 
 ## 📊 What is this?
 
@@ -9,6 +9,7 @@ This add-on provides a complete monitoring solution for your Home Assistant envi
 - **Prometheus**: Time-series database for metrics collection and storage
 - **Alertmanager**: Alert routing and notification management
 - **Karma**: Modern web UI for alert management and visualization
+- **Blackbox Exporter**: External service monitoring via HTTP and TCP probes
 
 ## ✨ Features
 
@@ -18,6 +19,8 @@ This add-on provides a complete monitoring solution for your Home Assistant envi
 - ⚙️ **Dynamic configuration**: Alertmanager configures automatically from add-on settings
 - 💾 **Persistent storage**: Data survives add-on updates and restarts
 - 🎯 **Home Assistant integration**: Scrapes Home Assistant metrics automatically
+- 🔍 **External monitoring**: Monitors Home Assistant add-ons and services via HTTP/TCP probes
+- 📈 **Comprehensive coverage**: Monitors 50+ common Home Assistant add-ons out of the box
 
 ## 🚀 Installation
 
@@ -41,6 +44,10 @@ The add-on can be configured through the Home Assistant UI:
 |--------|------|---------|-------------|
 | `alertmanager_receiver` | string | `default` | Name of the alert receiver |
 | `alertmanager_to_email` | email | `example@example.com` | Email address for notifications |
+| `monitor_home_assistant` | boolean | `true` | Monitor Home Assistant Core |
+| `monitor_supervisor` | boolean | `true` | Monitor Home Assistant Supervisor |
+| `monitor_addons` | boolean | `true` | Monitor Home Assistant add-ons |
+| `custom_targets` | list | `[]` | Additional monitoring targets |
 
 ### Advanced Configuration
 You can also configure the add-on using YAML in your `configuration.yaml`:
@@ -50,6 +57,12 @@ addons:
   prometheus_stack:
     alertmanager_receiver: "home-alerts"
     alertmanager_to_email: "your-email@example.com"
+    monitor_home_assistant: true
+    monitor_supervisor: true
+    monitor_addons: true
+    custom_targets:
+      - "http://your-custom-service:8080"
+      - "your-custom-db:5432"
 ```
 
 ## 🌐 Access
@@ -58,6 +71,7 @@ Once installed and started, you can access the services at:
 
 - **Prometheus**: `http://your-ha-ip:9090`
 - **Alertmanager**: `http://your-ha-ip:9093`
+- **Blackbox Exporter**: `http://your-ha-ip:9115`
 - **Karma UI**: Through Home Assistant Ingress (no additional port needed)
 
 ### Ingress Access
@@ -79,6 +93,33 @@ The add-on automatically scrapes Home Assistant metrics from:
 - Automation triggers
 - Integration status
 - And more...
+
+## 🔍 External Service Monitoring
+
+The add-on includes Blackbox Exporter for comprehensive external monitoring:
+
+### HTTP Monitoring
+Monitors web interfaces and APIs for:
+- Home Assistant Core and API
+- Media servers (Plex, Jellyfin, Emby)
+- Download clients (SABnzbd, qBittorrent, Transmission)
+- Media management (Sonarr, Radarr, Lidarr, Readarr)
+- Network tools (Pi-hole, AdGuard, Traefik)
+- Development tools (Node-RED, ESPHome, Zigbee2MQTT)
+- And 30+ more add-ons
+
+### TCP Monitoring
+Monitors network services for:
+- Databases (MariaDB, PostgreSQL, Redis, InfluxDB)
+- MQTT brokers (Mosquitto)
+- File sharing (Samba, FTP, rsync)
+- VPN services (WireGuard)
+- SSH access
+
+### Blackbox Exporter Endpoints
+- **Metrics**: `http://localhost:9115/metrics`
+- **Probe Example**: `http://localhost:9115/probe?target=google.com&module=http_2xx`
+- **Health Check**: `http://localhost:9115/-/healthy`
 
 ## 🔔 Alert Configuration
 
@@ -128,7 +169,7 @@ docker build -t prometheus-stack .
 # Run locally
 docker run -d \
   --name prometheus-stack-test \
-  -p 9090:9090 -p 9093:9093 -p 8080:8080 \
+  -p 9090:9090 -p 9093:9093 -p 8080:8080 -p 9115:9115 \
   -v $(pwd)/test-data:/data \
   prometheus-stack
 ```
@@ -142,6 +183,8 @@ ha-prometheus-stack/
 ├── run.sh                 # Startup script
 ├── config.json            # Add-on configuration
 ├── prometheus.yml         # Prometheus configuration
+├── alertmanager.yml       # Alertmanager configuration
+├── blackbox.yml           # Blackbox Exporter configuration
 └── test/                  # Testing tools
     ├── README.md          # Testing guide
     ├── build-test.sh      # Build and test script
@@ -175,6 +218,11 @@ ha-prometheus-stack/
    - Verify Home Assistant is accessible
    - Check Prometheus targets page
    - Review scrape configuration
+
+5. **Blackbox Exporter not responding**
+   - Check if port 9115 is accessible
+   - Verify Blackbox Exporter is running
+   - Check container logs for errors
 
 ### Logs
 View logs in Home Assistant:

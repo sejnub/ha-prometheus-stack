@@ -1,5 +1,29 @@
 # Testing Guide for Prometheus Stack Add-on
 
+- [1. 📁 Test Directory Structure](#1--test-directory-structure)
+- [2. 🚀 Quick Start Testing](#2--quick-start-testing)
+  - [2.1. Prerequisites](#21-prerequisites)
+  - [2.2. Basic Testing Workflow](#22-basic-testing-workflow)
+- [3. 📋 Detailed Script Documentation](#3--detailed-script-documentation)
+  - [3.1. `build-test.sh` - Build and Test Script](#31-build-testsh---build-and-test-script)
+  - [3.2. `docker-compose.dev.yml` - Development Configuration](#32-docker-composedevyml---development-configuration)
+  - [3.3. `health-check.sh` - Health Verification](#33-health-checksh---health-verification)
+  - [3.4. `test-config.sh` - Configuration Testing](#34-test-configsh---configuration-testing)
+  - [3.5. `monitor.sh` - Resource Monitoring](#35-monitorsh---resource-monitoring)
+  - [3.6. `cleanup.sh` - Environment Cleanup](#36-cleanupsh---environment-cleanup)
+- [4. 🔄 Testing Workflows](#4--testing-workflows)
+  - [4.1. Development Testing](#41-development-testing)
+  - [4.2. Quick Validation](#42-quick-validation)
+  - [4.3. Performance Testing](#43-performance-testing)
+- [5. 🐛 Troubleshooting](#5--troubleshooting)
+  - [5.1. Common Issues](#51-common-issues)
+  - [5.2. Debug Mode](#52-debug-mode)
+- [6. 📊 Performance Optimization](#6--performance-optimization)
+  - [6.1. WSL2 Configuration](#61-wsl2-configuration)
+  - [6.2. Docker Configuration](#62-docker-configuration)
+- [7. 🎯 Next Steps](#7--next-steps)
+- [8. 📝 Notes](#8--notes)
+
 ## 1. 📁 Test Directory Structure
 
 This directory contains all testing tools and scripts for the Prometheus Stack Home Assistant add-on.
@@ -54,9 +78,10 @@ test/
 **Requirements**: Docker Desktop with WSL2 backend enabled
 
 **Output**:
-- Prometheus: http://localhost:9090
-- Alertmanager: http://localhost:9093
-- Karma: http://localhost:8080
+- Prometheus:        http://localhost:9090
+- Alertmanager:      http://localhost:9093
+- Blackbox Exporter: http://localhost:9115
+- Karma:             http://localhost:8080
 
 ### 3.2. `docker-compose.dev.yml` - Development Configuration
 **Purpose**: Alternative way to run the add-on for development
@@ -75,6 +100,7 @@ test/
 **Health checks performed**:
 - Prometheus: `/-/healthy` endpoint
 - Alertmanager: `/-/healthy` endpoint
+- Blackbox Exporter: `/metrics` endpoint
 - Karma: Web interface availability
 
 **Return codes**:
@@ -190,6 +216,7 @@ docker-compose -f test/docker-compose.dev.yml up -d
    sudo netstat -tulpn | grep :9090
    sudo netstat -tulpn | grep :9093
    sudo netstat -tulpn | grep :8080
+   sudo netstat -tulpn | grep :9115
    ```
 
 3. **Container won't start**
@@ -211,7 +238,7 @@ docker-compose -f test/docker-compose.dev.yml up -d
 ```bash
 # Run container interactively
 docker run -it --rm \
-  -p 9090:9090 -p 9093:9093 -p 8080:8080 \
+  -p 9090:9090 -p 9093:9093 -p 8080:8080 -p 9115:9115 \
   -v $(pwd)/test-data:/data \
   prometheus-stack-test /bin/bash
 

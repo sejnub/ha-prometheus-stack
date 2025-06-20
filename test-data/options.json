@@ -1,4 +1,0 @@
-{
-  "alertmanager_receiver": "test-receiver",
-  "alertmanager_to_email": "test@example.com"
-}
