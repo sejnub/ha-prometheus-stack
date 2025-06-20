@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'home_assistant'
+    static_configs:
+      - targets: ['a0d7b954-homeassistant:8123']
