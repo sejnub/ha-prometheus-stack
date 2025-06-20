@@ -9,6 +9,7 @@ ALERTMANAGER_TO_EMAIL=$(jq --raw-output '.alertmanager_to_email' $CONFIG_PATH)
 # Create necessary directories
 mkdir -p /etc/alertmanager
 mkdir -p /etc/karma
+mkdir -p /etc/blackbox_exporter
 mkdir -p /data/prometheus
 mkdir -p /data/alertmanager
 
@@ -141,6 +142,23 @@ for i in {1..30}; do
   sleep 2
 done
 
+# Start Blackbox Exporter
+echo "Starting Blackbox Exporter..."
+/opt/blackbox_exporter/blackbox_exporter \
+  --config.file=/etc/blackbox_exporter/blackbox.yml \
+  --web.listen-address=:9115 &
+
+# Wait for Blackbox Exporter to be ready
+echo "Waiting for Blackbox Exporter to be ready..."
+for i in {1..30}; do
+  if curl -s http://localhost:9115/metrics > /dev/null 2>&1; then
+    echo "Blackbox Exporter is ready!"
+    break
+  fi
+  echo "Waiting for Blackbox Exporter... ($i/30)"
+  sleep 2
+done
+
 # Start Prometheus
 echo "Starting Prometheus..."
 /opt/prometheus/prometheus \
@@ -164,7 +182,3 @@ done
 # Start Karma
 echo "Starting Karma..."
 karma --config.file=/etc/karma/karma.yml
-
-# Check Karma logs for successful connection to Alertmanager
-echo "Checking Karma logs for successful connection to Alertmanager..."
-docker logs prometheus-stack-test | grep karma

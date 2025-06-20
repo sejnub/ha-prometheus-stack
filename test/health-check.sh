@@ -10,11 +10,13 @@
 # 1. Prometheus - Main monitoring service
 # 2. Alertmanager - Alert routing and notification service  
 # 3. Karma - Alert dashboard and management interface
+# 4. Blackbox Exporter - External service monitoring
 #
 # HEALTH CHECK ENDPOINTS:
 # - Prometheus: /-/healthy (built-in health endpoint)
 # - Alertmanager: /-/healthy (built-in health endpoint)
 # - Karma: / (web interface availability)
+# - Blackbox Exporter: /metrics (metrics endpoint)
 #
 # RETURN CODES:
 # - 0: All services healthy
@@ -57,6 +59,7 @@ declare -A services=(
     ["Prometheus"]="http://localhost:9090/-/healthy"
     ["Alertmanager"]="http://localhost:9093/-/healthy"
     ["Karma"]="http://localhost:8080/"
+    ["Blackbox Exporter"]="http://localhost:9115/metrics"
 )
 
 # Health check timeout (seconds)
@@ -67,7 +70,7 @@ check_service() {
     local service_name="$1"
     local url="$2"
     
-    echo -n "🔍 Checking $service_name... "
+    printf "🔍 Checking %-18s... " "$service_name"
     
     # Use curl with timeout and follow redirects
     if curl -f -s --max-time $TIMEOUT "$url" > /dev/null 2>&1; then
@@ -99,11 +102,17 @@ echo "======================="
 if [ $failed_checks -eq 0 ]; then
     echo "🎉 ALL SERVICES ARE HEALTHY!"
     echo ""
-    echo "✅ Prometheus:     http://localhost:9090"
-    echo "✅ Alertmanager:   http://localhost:9093"
-    echo "✅ Karma:          http://localhost:8080"
+    printf "✅ %-18s http://localhost:9090\n" "Prometheus:"
+    printf "✅ %-18s http://localhost:9093\n" "Alertmanager:"
+    printf "✅ %-18s http://localhost:8080\n" "Karma:"
+    printf "✅ %-18s http://localhost:9115\n" "Blackbox Exporter:"
     echo ""
     echo "💡 Your add-on is ready for use!"
+    echo ""
+    echo "🔍 Blackbox Exporter Endpoints:"
+    echo "   - Metrics:         http://localhost:9115/metrics"
+    echo "   - Probe Example:   http://localhost:9115/probe?target=google.com&module=http_2xx"
+    echo "   - Status:          http://localhost:9115/-/healthy"
     exit 0
 else
     echo "⚠️  $failed_checks service(s) are unhealthy"
@@ -117,9 +126,9 @@ else
     echo "📋 Service Status:"
     for service in "${!services[@]}"; do
         if curl -f -s --max-time 5 "${services[$service]}" > /dev/null 2>&1; then
-            echo "   ✅ $service: HEALTHY"
+            printf "   ✅ %-18s HEALTHY\n" "$service:"
         else
-            echo "   ❌ $service: UNHEALTHY"
+            printf "   ❌ %-18s UNHEALTHY\n" "$service:"
         fi
     done
     exit 1

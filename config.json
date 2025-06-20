@@ -12,19 +12,32 @@
   "ports": {
     "9090/tcp": 9090,
     "9093/tcp": 9093,
+    "9115/tcp": 9115,
     "8080/tcp": null
   },
   "ports_description": {
     "9090/tcp": "Prometheus",
-    "9093/tcp": "Alertmanager"
+    "9093/tcp": "Alertmanager",
+    "9115/tcp": "Blackbox Exporter"
   },
   "webui": "http://[HOST]:[PORT:9090]",
+  "host_network": false,
+  "hassio_api": true,
+  "hassio_role": "admin",
   "options": {
     "alertmanager_receiver": "default",
-    "alertmanager_to_email": "example@example.com"
+    "alertmanager_to_email": "example@example.com",
+    "monitor_home_assistant": true,
+    "monitor_supervisor": true,
+    "monitor_addons": true,
+    "custom_targets": []
   },
   "schema": {
     "alertmanager_receiver": "str",
-    "alertmanager_to_email": "email"
+    "alertmanager_to_email": "email",
+    "monitor_home_assistant": "bool",
+    "monitor_supervisor": "bool",
+    "monitor_addons": "bool",
+    "custom_targets": ["str"]
   }
 }

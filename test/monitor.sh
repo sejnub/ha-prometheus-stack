@@ -107,6 +107,7 @@ check_service_performance() {
     local services=(
         "Prometheus:http://localhost:9090/-/healthy"
         "Alertmanager:http://localhost:9093/-/healthy"
+        "Blackbox Exporter:http://localhost:9115/metrics"
         "Karma:http://localhost:8080/"
     )
     

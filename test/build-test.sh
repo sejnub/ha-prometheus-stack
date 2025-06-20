@@ -78,6 +78,7 @@ docker run -d \
   --name prometheus-stack-test \
   -p 9090:9090 \
   -p 9093:9093 \
+  -p 9115:9115 \
   -p 8080:8080 \
   -v "$PROJECT_ROOT/test-data:/data" \
   prometheus-stack-test
@@ -100,14 +101,21 @@ echo ""
 echo "🎉 Add-on is running and ready for testing!"
 echo "============================================="
 echo "📊 Service URLs:"
-echo "   Prometheus:     http://localhost:9090"
-echo "   Alertmanager:   http://localhost:9093"
-echo "   Karma UI:       http://localhost:8080"
+echo "   Prometheus:        http://localhost:9090"
+echo "   Alertmanager:      http://localhost:9093"
+echo "   Blackbox Exporter: http://localhost:9115"
+echo "   Karma UI:          http://localhost:8080"
 echo ""
 echo "🔍 Health Check URLs:"
-echo "   Prometheus:     http://localhost:9090/-/healthy"
-echo "   Alertmanager:   http://localhost:9093/-/healthy"
-echo "   Karma:          http://localhost:8080/"
+echo "   Prometheus:        http://localhost:9090/-/healthy"
+echo "   Alertmanager:      http://localhost:9093/-/healthy"
+echo "   Blackbox Exporter: http://localhost:9115/metrics"
+echo "   Karma:             http://localhost:8080/"
+echo ""
+echo "🔍 Blackbox Exporter Endpoints:"
+echo "   - Metrics:         http://localhost:9115/metrics"
+echo "   - Probe Example:   http://localhost:9115/probe?target=google.com&module=http_2xx"
+echo "   - Status:          http://localhost:9115/-/healthy"
 echo ""
 echo "📋 Useful Commands:"
 echo "   View logs:      docker logs -f prometheus-stack-test"

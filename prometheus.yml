@@ -1,7 +1,243 @@
 global:
   scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
 
 scrape_configs:
+  # Blackbox Exporter
+  - job_name: 'blackbox'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      # Home Assistant Core
+      - targets:
+        - 'http://a0d7b954-homeassistant:8123/api/'
+        - 'http://a0d7b954-homeassistant:8123/'
+        labels:
+          group: 'home_assistant'
+          service: 'home_assistant'
+      # Common add-ons HTTP endpoints
+      - targets:
+        - 'http://a0d7b954-zigbee2mqtt:8080/'
+        - 'http://a0d7b954-zwavejs2mqtt:8091/'
+        - 'http://a0d7b954-esphome:6052/'
+        - 'http://a0d7b954-node-red:1880/'
+        - 'http://a0d7b954-grafana:3000/'
+        - 'http://a0d7b954-nginx-proxy-manager:81/'
+        - 'http://a0d7b954-traefik:8080/'
+        - 'http://a0d7b954-portainer:9000/'
+        - 'http://a0d7b954-pihole:80/'
+        - 'http://a0d7b954-adguard:3000/'
+        - 'http://a0d7b954-vaultwarden:80/'
+        - 'http://a0d7b954-jellyfin:8096/'
+        - 'http://a0d7b954-plex:32400/'
+        - 'http://a0d7b954-sonarr:8989/'
+        - 'http://a0d7b954-radarr:7878/'
+        - 'http://a0d7b954-lidarr:8686/'
+        - 'http://a0d7b954-readarr:8787/'
+        - 'http://a0d7b954-sabnzbd:8080/'
+        - 'http://a0d7b954-qbittorrent:8080/'
+        - 'http://a0d7b954-transmission:9091/'
+        - 'http://a0d7b954-deluge:8112/'
+        - 'http://a0d7b954-jackett:9117/'
+        - 'http://a0d7b954-prowlarr:9696/'
+        - 'http://a0d7b954-ombi:3579/'
+        - 'http://a0d7b954-tautulli:8181/'
+        - 'http://a0d7b954-overseerr:5055/'
+        - 'http://a0d7b954-bazarr:6767/'
+        - 'http://a0d7b954-whisparr:6969/'
+        - 'http://a0d7b954-emby:8096/'
+        - 'http://a0d7b954-kodi:8080/'
+        - 'http://a0d7b954-homebridge:8581/'
+        - 'http://a0d7b954-habridge:8080/'
+        - 'http://a0d7b954-deconz:80/'
+        - 'http://a0d7b954-phoscon:80/'
+        - 'http://a0d7b954-appdaemon:5050/'
+        - 'http://a0d7b954-hass-configurator:3218/'
+        - 'http://a0d7b954-google-drive-backup:8080/'
+        - 'http://a0d7b954-dropbox-sync:8080/'
+        - 'http://a0d7b954-syncthing:8384/'
+        - 'http://a0d7b954-resilio-sync:8888/'
+        - 'http://a0d7b954-nextcloud:8080/'
+        - 'http://a0d7b954-seafile:8000/'
+        - 'http://a0d7b954-owncloud:8080/'
+        - 'http://a0d7b954-webdav:8080/'
+        - 'http://a0d7b954-calibre:8080/'
+        - 'http://a0d7b954-ubooquity:2202/'
+        labels:
+          group: 'addons'
+          service: 'http'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: localhost:9115
+
+  # Blackbox TCP checks
+  - job_name: 'blackbox_tcp'
+    metrics_path: /probe
+    params:
+      module: [tcp_connect]
+    static_configs:
+      # Database services
+      - targets:
+        - 'a0d7b954-mariadb:3306'
+        - 'a0d7b954-postgresql:5432'
+        - 'a0d7b954-redis:6379'
+        - 'a0d7b954-influxdb:8086'
+        labels:
+          group: 'databases'
+          service: 'tcp'
+      # MQTT and messaging
+      - targets:
+        - 'a0d7b954-mosquitto:1883'
+        - 'a0d7b954-mosquitto:8883'
+        labels:
+          group: 'mqtt'
+          service: 'tcp'
+      # File sharing and backup
+      - targets:
+        - 'a0d7b954-samba:139'
+        - 'a0d7b954-samba:445'
+        - 'a0d7b954-ftp:21'
+        - 'a0d7b954-rsync:873'
+        - 'a0d7b954-backup:2020'
+        labels:
+          group: 'file_sharing'
+          service: 'tcp'
+      # VPN and networking
+      - targets:
+        - 'a0d7b954-wireguard:51820'
+        labels:
+          group: 'vpn'
+          service: 'tcp'
+      # SSH
+      - targets:
+        - 'a0d7b954-ssh:22'
+        labels:
+          group: 'ssh'
+          service: 'tcp'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: localhost:9115
+
+  # Home Assistant Core
   - job_name: 'home_assistant'
     static_configs:
       - targets: ['a0d7b954-homeassistant:8123']
+    metrics_path: '/api/prometheus'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Home Assistant Supervisor
+  - job_name: 'supervisor'
+    static_configs:
+      - targets: ['supervisor:80']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Home Assistant Add-ons (common monitoring endpoints)
+  - job_name: 'addons'
+    static_configs:
+      # Common add-on monitoring endpoints
+      - targets: 
+        - 'a0d7b954-mosquitto:1883'  # Mosquitto MQTT
+        - 'a0d7b954-zigbee2mqtt:8080'  # Zigbee2MQTT
+        - 'a0d7b954-zwavejs2mqtt:8091'  # Z-Wave JS to MQTT
+        - 'a0d7b954-esphome:6052'  # ESPHome
+        - 'a0d7b954-node-red:1880'  # Node-RED
+        - 'a0d7b954-influxdb:8086'  # InfluxDB
+        - 'a0d7b954-grafana:3000'  # Grafana
+        - 'a0d7b954-mariadb:3306'  # MariaDB
+        - 'a0d7b954-postgresql:5432'  # PostgreSQL
+        - 'a0d7b954-redis:6379'  # Redis
+        - 'a0d7b954-nginx-proxy-manager:81'  # Nginx Proxy Manager
+        - 'a0d7b954-traefik:8080'  # Traefik
+        - 'a0d7b954-portainer:9000'  # Portainer
+        - 'a0d7b954-pihole:80'  # Pi-hole
+        - 'a0d7b954-adguard:3000'  # AdGuard Home
+        - 'a0d7b954-wireguard:51820'  # WireGuard
+        - 'a0d7b954-vaultwarden:80'  # Vaultwarden
+        - 'a0d7b954-jellyfin:8096'  # Jellyfin
+        - 'a0d7b954-plex:32400'  # Plex
+        - 'a0d7b954-sonarr:8989'  # Sonarr
+        - 'a0d7b954-radarr:7878'  # Radarr
+        - 'a0d7b954-lidarr:8686'  # Lidarr
+        - 'a0d7b954-readarr:8787'  # Readarr
+        - 'a0d7b954-sabnzbd:8080'  # SABnzbd
+        - 'a0d7b954-qbittorrent:8080'  # qBittorrent
+        - 'a0d7b954-transmission:9091'  # Transmission
+        - 'a0d7b954-deluge:8112'  # Deluge
+        - 'a0d7b954-rtorrent:80'  # rTorrent
+        - 'a0d7b954-jackett:9117'  # Jackett
+        - 'a0d7b954-prowlarr:9696'  # Prowlarr
+        - 'a0d7b954-ombi:3579'  # Ombi
+        - 'a0d7b954-tautulli:8181'  # Tautulli
+        - 'a0d7b954-overseerr:5055'  # Overseerr
+        - 'a0d7b954-bazarr:6767'  # Bazarr
+        - 'a0d7b954-whisparr:6969'  # Whisparr
+        - 'a0d7b954-readarr:8787'  # Readarr
+        - 'a0d7b954-lidarr:8686'  # Lidarr
+        - 'a0d7b954-sonarr:8989'  # Sonarr
+        - 'a0d7b954-radarr:7878'  # Radarr
+        - 'a0d7b954-jellyfin:8096'  # Jellyfin
+        - 'a0d7b954-plex:32400'  # Plex
+        - 'a0d7b954-emby:8096'  # Emby
+        - 'a0d7b954-kodi:8080'  # Kodi
+        - 'a0d7b954-homebridge:8581'  # Homebridge
+        - 'a0d7b954-habridge:8080'  # HA Bridge
+        - 'a0d7b954-deconz:80'  # deCONZ
+        - 'a0d7b954-phoscon:80'  # Phoscon
+        - 'a0d7b954-zigbee2mqtt:8080'  # Zigbee2MQTT
+        - 'a0d7b954-zwavejs2mqtt:8091'  # Z-Wave JS to MQTT
+        - 'a0d7b954-esphome:6052'  # ESPHome
+        - 'a0d7b954-node-red:1880'  # Node-RED
+        - 'a0d7b954-appdaemon:5050'  # AppDaemon
+        - 'a0d7b954-hass-configurator:3218'  # Hass Configurator
+        - 'a0d7b954-ssh:22'  # SSH & Web Terminal
+        - 'a0d7b954-samba:139'  # Samba share
+        - 'a0d7b954-ftp:21'  # FTP
+        - 'a0d7b954-rsync:873'  # rsync
+        - 'a0d7b954-backup:2020'  # Backup
+        - 'a0d7b954-google-drive-backup:8080'  # Google Drive Backup
+        - 'a0d7b954-dropbox-sync:8080'  # Dropbox Sync
+        - 'a0d7b954-syncthing:8384'  # Syncthing
+        - 'a0d7b954-resilio-sync:8888'  # Resilio Sync
+        - 'a0d7b954-nextcloud:8080'  # Nextcloud
+        - 'a0d7b954-seafile:8000'  # Seafile
+        - 'a0d7b954-owncloud:8080'  # ownCloud
+        - 'a0d7b954-webdav:8080'  # WebDAV
+        - 'a0d7b954-calibre:8080'  # Calibre
+        - 'a0d7b954-ubooquity:2202'  # Ubooquity
+    scrape_interval: 60s
+    scrape_timeout: 10s
+    metrics_path: '/metrics'
+    scheme: 'http'
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 15s
+
+  # Alertmanager
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['localhost:9093']
+    scrape_interval: 15s
+
+  # Blackbox Exporter
+  - job_name: 'blackbox_exporter'
+    static_configs:
+      - targets: ['localhost:9115']
+    scrape_interval: 15s
