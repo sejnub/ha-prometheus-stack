@@ -2,7 +2,7 @@
 
 A comprehensive monitoring stack for Home Assistant that includes Prometheus, Alertmanager, Karma, and Blackbox Exporter in a single add-on.
 
-## 📊 What is this?
+## What is this?
 
 This add-on provides a complete monitoring solution for your Home Assistant environment:
 
@@ -11,18 +11,18 @@ This add-on provides a complete monitoring solution for your Home Assistant envi
 - **Karma**: Modern web UI for alert management and visualization
 - **Blackbox Exporter**: External service monitoring via HTTP and TCP probes
 
-## ✨ Features
+## Features
 
-- 🔄 **Multi-architecture support**: Works on `amd64`, `arm64`, and `armv7`
-- 📧 **Email notifications**: Configurable alert notifications via email
-- 🌐 **Ingress support**: Access Karma UI directly through Home Assistant
-- ⚙️ **Dynamic configuration**: Alertmanager configures automatically from add-on settings
-- 💾 **Persistent storage**: Data survives add-on updates and restarts
-- 🎯 **Home Assistant integration**: Scrapes Home Assistant metrics automatically
-- 🔍 **External monitoring**: Monitors Home Assistant add-ons and services via HTTP/TCP probes
-- 📈 **Comprehensive coverage**: Monitors 50+ common Home Assistant add-ons out of the box
+- **Multi-architecture support**: Works on `amd64`, `arm64`, and `armv7`
+- **Email notifications**: Configurable alert notifications via email
+- **Ingress support**: Access Karma UI directly through Home Assistant
+- **Dynamic configuration**: Alertmanager configures automatically from add-on settings
+- **Persistent storage**: Data survives add-on updates and restarts
+- **Home Assistant integration**: Scrapes Home Assistant metrics automatically
+- **External monitoring**: Monitors Home Assistant add-ons and services via HTTP/TCP probes
+- **Comprehensive coverage**: Monitors 50+ common Home Assistant add-ons out of the box
 
-## 🚀 Installation
+## Installation
 
 ### Prerequisites
 - Home Assistant (Supervisor or Core)
@@ -35,7 +35,7 @@ This add-on provides a complete monitoring solution for your Home Assistant envi
 4. Find "Prometheus Stack" in the add-on store
 5. Click **Install**
 
-## ⚙️ Configuration
+## Configuration
 
 ### Basic Configuration
 The add-on can be configured through the Home Assistant UI:
@@ -65,7 +65,7 @@ addons:
       - "your-custom-db:5432"
 ```
 
-## 🌐 Access
+## Access
 
 Once installed and started, you can access the services at:
 
@@ -80,7 +80,7 @@ The Karma UI is available through Home Assistant's ingress system:
 2. Click **OPEN WEB UI**
 3. This opens Karma in your Home Assistant interface
 
-## 📈 Monitoring Home Assistant
+## Monitoring Home Assistant
 
 The add-on automatically scrapes Home Assistant metrics from:
 - **Target**: `a0d7b954-homeassistant:8123`
@@ -94,7 +94,7 @@ The add-on automatically scrapes Home Assistant metrics from:
 - Integration status
 - And more...
 
-## 🔍 External Service Monitoring
+## External Service Monitoring
 
 The add-on includes Blackbox Exporter for comprehensive external monitoring:
 
@@ -121,7 +121,7 @@ Monitors network services for:
 - **Probe Example**: `http://localhost:9115/probe?target=google.com&module=http_2xx`
 - **Health Check**: `http://localhost:9115/-/healthy`
 
-## 🔔 Alert Configuration
+## Alert Configuration
 
 ### Email Notifications
 The add-on automatically configures email notifications based on your settings:
@@ -143,7 +143,7 @@ receivers:
 ### Creating Alerts
 You can create custom alerts by adding them to your Prometheus configuration or through the Prometheus web interface.
 
-## 🛠️ Development
+## Development
 
 ### Local Testing
 If you want to test this add-on locally before installing:
@@ -174,7 +174,7 @@ docker run -d \
   prometheus-stack
 ```
 
-## 📁 File Structure
+## File Structure
 
 ```
 ha-prometheus-stack/
@@ -195,7 +195,7 @@ ha-prometheus-stack/
     └── docker-compose.dev.yml # Development environment
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -234,7 +234,7 @@ Or via SSH:
 docker logs addon_local_prometheus_stack
 ```
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -242,18 +242,18 @@ docker logs addon_local_prometheus_stack
 4. Test thoroughly using the provided test scripts
 5. Submit a pull request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [Prometheus](https://prometheus.io/) - Monitoring system
 - [Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager/) - Alert routing
 - [Karma](https://github.com/prymitive/karma) - Alert dashboard
 - [Home Assistant](https://www.home-assistant.io/) - Home automation platform
 
-## 📞 Support
+## Support
 
 - **Issues**: [GitHub Issues](https://github.com/yourusername/ha-prometheus-stack/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/yourusername/ha-prometheus-stack/discussions)

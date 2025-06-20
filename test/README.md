@@ -1,30 +1,30 @@
 # Testing Guide for Prometheus Stack Add-on
 
-- [1. 📁 Test Directory Structure](#1--test-directory-structure)
-- [2. 🚀 Quick Start Testing](#2--quick-start-testing)
+- [1. Test Directory Structure](#1-test-directory-structure)
+- [2. Quick Start Testing](#2-quick-start-testing)
   - [2.1. Prerequisites](#21-prerequisites)
   - [2.2. Basic Testing Workflow](#22-basic-testing-workflow)
-- [3. 📋 Detailed Script Documentation](#3--detailed-script-documentation)
+- [3. Detailed Script Documentation](#3-detailed-script-documentation)
   - [3.1. `build-test.sh` - Build and Test Script](#31-build-testsh---build-and-test-script)
   - [3.2. `docker-compose.dev.yml` - Development Configuration](#32-docker-composedevyml---development-configuration)
   - [3.3. `health-check.sh` - Health Verification](#33-health-checksh---health-verification)
   - [3.4. `test-config.sh` - Configuration Testing](#34-test-configsh---configuration-testing)
   - [3.5. `monitor.sh` - Resource Monitoring](#35-monitorsh---resource-monitoring)
   - [3.6. `cleanup.sh` - Environment Cleanup](#36-cleanupsh---environment-cleanup)
-- [4. 🔄 Testing Workflows](#4--testing-workflows)
+- [4. Testing Workflows](#4-testing-workflows)
   - [4.1. Development Testing](#41-development-testing)
   - [4.2. Quick Validation](#42-quick-validation)
   - [4.3. Performance Testing](#43-performance-testing)
-- [5. 🐛 Troubleshooting](#5--troubleshooting)
+- [5. Troubleshooting](#5-troubleshooting)
   - [5.1. Common Issues](#51-common-issues)
   - [5.2. Debug Mode](#52-debug-mode)
-- [6. 📊 Performance Optimization](#6--performance-optimization)
+- [6. Performance Optimization](#6-performance-optimization)
   - [6.1. WSL2 Configuration](#61-wsl2-configuration)
   - [6.2. Docker Configuration](#62-docker-configuration)
-- [7. 🎯 Next Steps](#7--next-steps)
-- [8. 📝 Notes](#8--notes)
+- [7. Next Steps](#7-next-steps)
+- [8. Notes](#8-notes)
 
-## 1. 📁 Test Directory Structure
+## 1. Test Directory Structure
 
 This directory contains all testing tools and scripts for the Prometheus Stack Home Assistant add-on.
 
@@ -39,7 +39,7 @@ test/
 └── cleanup.sh             # Clean up test environment
 ```
 
-## 2. 🚀 Quick Start Testing
+## 2. Quick Start Testing
 
 ### 2.1. Prerequisites
 - Docker Desktop for Windows (with WSL2 backend)
@@ -63,7 +63,7 @@ test/
 ./test/cleanup.sh
 ```
 
-## 3. 📋 Detailed Script Documentation
+## 3. Detailed Script Documentation
 
 ### 3.1. `build-test.sh` - Build and Test Script
 **Purpose**: Build and run the add-on locally for testing
@@ -154,7 +154,7 @@ test/
 - `--all`: Clean up everything including images and networks
 - `--force`: Force stop and remove containers
 
-## 4. 🔄 Testing Workflows
+## 4. Testing Workflows
 
 ### 4.1. Development Testing
 ```bash
@@ -198,96 +198,88 @@ docker-compose -f test/docker-compose.dev.yml up -d
 ./test/monitor.sh
 ```
 
-## 5. 🐛 Troubleshooting
+## 5. Troubleshooting
 
 ### 5.1. Common Issues
 
-1. **Docker not running**
-   ```bash
-   # Check Docker status
-   docker info
-   
-   # Start Docker Desktop if needed
-   ```
-
-2. **Ports already in use**
-   ```bash
-   # Check what's using the ports
-   sudo netstat -tulpn | grep :9090
-   sudo netstat -tulpn | grep :9093
-   sudo netstat -tulpn | grep :8080
-   sudo netstat -tulpn | grep :9115
-   ```
-
-3. **Container won't start**
-   ```bash
-   # Check container logs
-   docker logs prometheus-stack-test
-   
-   # Run interactively for debugging
-   docker run -it --rm prometheus-stack-test /bin/bash
-   ```
-
-4. **Permission issues**
-   ```bash
-   # Fix test-data permissions
-   sudo chown -R $USER:$USER test-data/
-   ```
-
-### 5.2. Debug Mode
+**Docker not running**
 ```bash
-# Run container interactively
-docker run -it --rm \
-  -p 9090:9090 -p 9093:9093 -p 8080:8080 -p 9115:9115 \
-  -v $(pwd)/test-data:/data \
-  prometheus-stack-test /bin/bash
-
-# Inside container, run manually:
-# /run.sh
+# Start Docker Desktop
+# Or on Linux:
+sudo systemctl start docker
 ```
 
-## 6. 📊 Performance Optimization
+**Port conflicts**
+```bash
+# Check what's using the ports
+netstat -tulpn | grep :9090
+netstat -tulpn | grep :9093
+netstat -tulpn | grep :8080
+netstat -tulpn | grep :9115
+```
+
+**Permission issues**
+```bash
+# Make scripts executable
+chmod +x test/*.sh
+```
+
+**WSL2 performance issues**
+```bash
+# Check WSL2 memory allocation
+cat /proc/meminfo | grep MemTotal
+```
+
+### 5.2. Debug Mode
+
+Enable debug mode for more verbose output:
+
+```bash
+# Set debug environment variable
+export DEBUG=1
+
+# Run with debug output
+./test/build-test.sh
+```
+
+## 6. Performance Optimization
 
 ### 6.1. WSL2 Configuration
+
+For better performance in WSL2, create or edit `~/.wslconfig`:
+
 ```ini
-# %UserProfile%\.wslconfig
 [wsl2]
-memory=8GB
+memory=4GB
 processors=4
 swap=2GB
-localhostForwarding=true
 ```
 
 ### 6.2. Docker Configuration
-```bash
-# Create /etc/docker/daemon.json
-sudo mkdir -p /etc/docker
-sudo tee /etc/docker/daemon.json <<EOF
-{
-  "storage-driver": "overlay2",
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "10m",
-    "max-file": "3"
-  }
-}
-EOF
 
-# Restart Docker
-sudo service docker restart
-```
+Optimize Docker settings in Docker Desktop:
 
-## 7. 🎯 Next Steps
+1. Go to **Settings** → **Resources**
+2. Increase memory allocation to 4GB+
+3. Increase CPU allocation to 4+
+4. Enable **Use the WSL 2 based engine**
 
-1. **Test locally**: Use the provided scripts to test your add-on
-2. **Deploy to Home Assistant**: Copy files to your Home Assistant machine
-3. **Monitor performance**: Use the monitoring tools to ensure optimal performance
-4. **Iterate**: Make improvements based on testing results
+## 7. Next Steps
 
-## 8. 📝 Notes
+After successful testing:
 
-- All scripts are designed to work from the `test/` directory
-- Scripts automatically detect running containers (both `prometheus-stack-test` and `prometheus-stack-dev`)
-- Test data is stored in `../test-data/` relative to the test directory
-- Scripts include comprehensive error handling and user feedback
-- All scripts are documented with their purpose, usage, and requirements 
+1. **Create GitHub repository** and push your code
+2. **Set up CI/CD** for automated testing
+3. **Create releases** for version management
+4. **Document deployment** procedures
+5. **Set up monitoring** for the add-on itself
+
+## 8. Notes
+
+- All test scripts are designed to be idempotent
+- Test data is stored in `test-data/` directory
+- Containers are named with `-test` suffix to avoid conflicts
+- Scripts use `set -e` to exit on any error
+- All URLs use `localhost` for local testing
+
+For more information, see the main [README.md](../README.md). 
