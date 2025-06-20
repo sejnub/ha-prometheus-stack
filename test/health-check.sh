@@ -1,0 +1,112 @@
+#!/bin/bash
+
+# =============================================================================
+# PROMETHEUS STACK ADD-ON - HEALTH CHECK SCRIPT
+# =============================================================================
+# PURPOSE: Verify that all services in the add-on are running and healthy
+# USAGE:   ./health-check.sh
+# 
+# This script performs comprehensive health checks on:
+# 1. Prometheus - Main monitoring service
+# 2. Alertmanager - Alert routing and notification service  
+# 3. Karma - Alert dashboard and management interface
+#
+# HEALTH CHECK ENDPOINTS:
+# - Prometheus: /-/healthy (built-in health endpoint)
+# - Alertmanager: /-/healthy (built-in health endpoint)
+# - Karma: / (web interface availability)
+#
+# RETURN CODES:
+# - 0: All services healthy
+# - 1: One or more services unhealthy
+#
+# REQUIREMENTS: Container must be running (use build-test.sh first)
+# =============================================================================
+
+set -e  # Exit on any error
+
+echo "🏥 Health Check for Prometheus Stack Add-on"
+echo "============================================"
+
+# Check if container is running
+if ! docker ps | grep -q prometheus-stack; then
+    echo "❌ Container 'prometheus-stack-test' or 'prometheus-stack-dev' is not running"
+    echo "   Start the container first with: ./build-test.sh"
+    echo "   Or with docker-compose: docker-compose -f docker-compose.dev.yml up -d"
+    exit 1
+fi
+
+echo "✅ Container is running"
+
+# Define services to check
+declare -A services=(
+    ["Prometheus"]="http://localhost:9090/-/healthy"
+    ["Alertmanager"]="http://localhost:9093/-/healthy"
+    ["Karma"]="http://localhost:8080/"
+)
+
+# Health check timeout (seconds)
+TIMEOUT=10
+
+# Function to check service health
+check_service() {
+    local service_name="$1"
+    local url="$2"
+    
+    echo -n "🔍 Checking $service_name... "
+    
+    # Use curl with timeout and follow redirects
+    if curl -f -s --max-time $TIMEOUT "$url" > /dev/null 2>&1; then
+        echo "✅ HEALTHY"
+        return 0
+    else
+        echo "❌ UNHEALTHY"
+        return 1
+    fi
+}
+
+# Perform health checks
+echo ""
+echo "📊 Performing health checks..."
+echo "-------------------------------"
+
+failed_checks=0
+
+for service in "${!services[@]}"; do
+    if ! check_service "$service" "${services[$service]}"; then
+        ((failed_checks++))
+    fi
+done
+
+echo ""
+echo "📋 Health Check Summary"
+echo "======================="
+
+if [ $failed_checks -eq 0 ]; then
+    echo "🎉 ALL SERVICES ARE HEALTHY!"
+    echo ""
+    echo "✅ Prometheus:     http://localhost:9090"
+    echo "✅ Alertmanager:   http://localhost:9093"
+    echo "✅ Karma:          http://localhost:8080"
+    echo ""
+    echo "💡 Your add-on is ready for use!"
+    exit 0
+else
+    echo "⚠️  $failed_checks service(s) are unhealthy"
+    echo ""
+    echo "🔧 Troubleshooting:"
+    echo "   1. Check container logs: docker logs prometheus-stack-test"
+    echo "   2. Verify ports are not in use: netstat -tulpn | grep :9090"
+    echo "   3. Restart container: docker restart prometheus-stack-test"
+    echo "   4. Check Docker Desktop is running"
+    echo ""
+    echo "📋 Service Status:"
+    for service in "${!services[@]}"; do
+        if curl -f -s --max-time 5 "${services[$service]}" > /dev/null 2>&1; then
+            echo "   ✅ $service: HEALTHY"
+        else
+            echo "   ❌ $service: UNHEALTHY"
+        fi
+    done
+    exit 1
+fi 
