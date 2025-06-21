@@ -1,0 +1,120 @@
+# Grafana Dashboards for Prometheus Stack
+
+This directory contains pre-configured Grafana dashboards for monitoring your Prometheus Stack add-on.
+
+## Available Dashboards
+
+### 1. Prometheus Stack Overview (`01-overview.json`)
+- **Purpose**: High-level overview of all monitored services
+- **Features**:
+  - Services status summary
+  - Response times across all probes
+  - Overall uptime percentage
+  - Services grouped by monitoring category
+  - Complete status table
+
+### 2. Home Assistant Monitoring (`02-home-assistant.json`)
+- **Purpose**: Detailed monitoring of Home Assistant instance
+- **Features**:
+  - Home Assistant service status
+  - CPU and memory usage
+  - Entity states count
+  - Entity states by domain
+  - Detailed entity states table
+
+### 3. Blackbox Exporter Monitoring (`03-blackbox-exporter.json`)
+- **Purpose**: Monitor all HTTP/TCP probes and their performance
+- **Features**:
+  - Probe success rates
+  - Response times for all probes
+  - HTTP status codes
+  - SSL certificate expiry monitoring
+  - Complete probe status table
+
+### 4. Alertmanager Monitoring (`04-alertmanager.json`)
+- **Purpose**: Monitor alert management and notification system
+- **Features**:
+  - Currently firing alerts count
+  - Invalid alerts tracking
+  - Notifications sent/failed
+  - Alert trends over time
+  - Notification rate monitoring
+
+### 5. Prometheus Server Monitoring (`05-prometheus.json`)
+- **Purpose**: Monitor Prometheus server performance and health
+- **Features**:
+  - Scrape errors and limits
+  - Sample processing metrics
+  - Active series count
+  - Storage performance
+  - Data ingestion rates
+
+## Installation
+
+### Option 1: Manual Import
+1. Open Grafana in your browser
+2. Go to Dashboards → Import
+3. Upload each JSON file individually
+4. Select your Prometheus data source
+5. Import the dashboard
+
+### Option 2: Automatic Provisioning (Recommended)
+1. Copy the `dashboard-provider.yml` to your Grafana provisioning directory
+2. Copy all JSON files to the same directory
+3. Restart Grafana
+4. Dashboards will appear automatically in a "Prometheus Stack" folder
+
+### Option 3: Home Assistant Add-on
+If using this as a Home Assistant add-on:
+1. The dashboards will be automatically provisioned
+2. Access Grafana through the add-on interface
+3. All dashboards will be available in the "Prometheus Stack" folder
+
+## Configuration
+
+### Data Source
+All dashboards expect a Prometheus data source with UID `prometheus`. If your data source has a different UID:
+1. Edit each dashboard JSON file
+2. Replace `"uid": "prometheus"` with your actual data source UID
+3. Save and re-import
+
+### Customization
+- **Time Range**: Default is last 1 hour, adjustable via dashboard controls
+- **Refresh Rate**: Default is 30 seconds, can be changed per dashboard
+- **Thresholds**: Color-coded thresholds are set for critical values
+- **Units**: Appropriate units are set for each metric type
+
+## Troubleshooting
+
+### No Data Showing
+1. Verify Prometheus data source is configured correctly
+2. Check that metrics are being collected (visit Prometheus targets page)
+3. Ensure time range includes data collection period
+4. Verify metric names match your actual Prometheus metrics
+
+### Missing Metrics
+Some metrics may not be available depending on your configuration:
+- Home Assistant metrics require Prometheus integration to be enabled
+- SSL metrics require HTTPS endpoints
+- Alertmanager metrics require alerts to be configured
+
+### Performance Issues
+- Reduce refresh rate for better performance
+- Limit time range for large datasets
+- Consider using recording rules for complex queries
+
+## Metric Sources
+
+The dashboards use metrics from:
+- **Prometheus**: `up`, `prometheus_*` metrics
+- **Blackbox Exporter**: `probe_*` metrics
+- **Alertmanager**: `alertmanager_*` metrics
+- **Home Assistant**: `hass_*` metrics (when Prometheus integration is enabled)
+
+## Support
+
+For issues with the dashboards:
+1. Check Grafana logs for errors
+2. Verify Prometheus targets are healthy
+3. Test queries directly in Prometheus UI
+4. Ensure all required exporters are running 

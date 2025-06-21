@@ -6,6 +6,27 @@ rule_files:
   - /etc/prometheus/rules/*.yml
 
 scrape_configs:
+
+  ##############################
+  # When running as standalone #
+  ##############################
+
+  # Home Assistant Core
+  - job_name: 'test_home_assistant'
+    static_configs:
+      - targets: ['192.168.1.30:8123']
+    metrics_path: '/api/prometheus'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    authorization:
+      type: Bearer
+      credentials: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI3NTQ1MjgyN2E1ODc0OTZiODMwMTg5OTUwOTE2YzNkOSIsImlhdCI6MTc1MDUwNjY5NywiZXhwIjoyMDY1ODY2Njk3fQ.VZEISEuDUOaLt26Rop6hJR60KEBgZS25QWPIlCuLHxg
+
+
+  #########################
+  # When running as addon #
+  #########################
+
   # Blackbox Exporter
   - job_name: 'blackbox'
     metrics_path: /probe

@@ -21,6 +21,7 @@ This add-on provides a complete monitoring solution for your Home Assistant envi
 - **Home Assistant integration**: Scrapes Home Assistant metrics automatically
 - **External monitoring**: Monitors Home Assistant add-ons and services via HTTP/TCP probes
 - **Comprehensive coverage**: Monitors 50+ common Home Assistant add-ons out of the box
+- **Pre-built Grafana dashboards**: Ready-to-use dashboards for comprehensive monitoring
 
 ## Installation
 
@@ -79,6 +80,40 @@ The Karma UI is available through Home Assistant's ingress system:
 1. Go to **Settings** → **Add-ons** → **Prometheus Stack**
 2. Click **OPEN WEB UI**
 3. This opens Karma in your Home Assistant interface
+
+## Grafana Dashboards
+
+This add-on includes pre-configured Grafana dashboards for comprehensive monitoring visualization. The dashboards are located in the `dashboards/` directory and provide:
+
+### Available Dashboards
+
+1. **Prometheus Stack Overview** - High-level overview of all monitored services
+2. **Home Assistant Monitoring** - Detailed Home Assistant metrics and performance
+3. **Blackbox Exporter Monitoring** - HTTP/TCP probe results and response times
+4. **Alertmanager Monitoring** - Alert status and notification metrics
+5. **Prometheus Server Monitoring** - Prometheus server performance and health
+
+### Installation Options
+
+#### Option 1: Manual Import (Grafana Add-on)
+1. Install the Grafana add-on in Home Assistant
+2. Configure Prometheus as a data source in Grafana
+3. Import each dashboard JSON file from the `dashboards/` directory
+4. All dashboards will be available for monitoring
+
+#### Option 2: Automatic Provisioning
+1. Copy the `dashboards/` directory to your Grafana provisioning folder
+2. Restart Grafana
+3. Dashboards will appear automatically in a "Prometheus Stack" folder
+
+### Dashboard Features
+- **Real-time monitoring**: 30-second refresh intervals
+- **Color-coded thresholds**: Visual indicators for critical values
+- **Comprehensive metrics**: Covers all aspects of your monitoring stack
+- **Responsive design**: Works on desktop and mobile devices
+- **Customizable**: Easy to modify and extend
+
+For detailed dashboard documentation, see [dashboards/README.md](dashboards/README.md).
 
 ## Monitoring Home Assistant
 
@@ -185,6 +220,14 @@ ha-prometheus-stack/
 ├── prometheus.yml         # Prometheus configuration
 ├── alertmanager.yml       # Alertmanager configuration
 ├── blackbox.yml           # Blackbox Exporter configuration
+├── dashboards/            # Grafana dashboards
+│   ├── README.md          # Dashboard documentation
+│   ├── dashboard-provider.yml # Grafana provisioning config
+│   ├── 01-overview.json   # Prometheus Stack overview
+│   ├── 02-home-assistant.json # Home Assistant monitoring
+│   ├── 03-blackbox-exporter.json # Blackbox Exporter monitoring
+│   ├── 04-alertmanager.json # Alertmanager monitoring
+│   └── 05-prometheus.json # Prometheus server monitoring
 └── test/                  # Testing tools
     ├── README.md          # Testing guide
     ├── build-test.sh      # Build and test script
