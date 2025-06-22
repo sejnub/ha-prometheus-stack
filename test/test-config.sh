@@ -55,7 +55,7 @@ test_configuration() {
     echo "----------------------------------------"
     
     # Create test configuration
-    echo "$config_json" > ../test-data/options.json
+    echo "$config_json" > test-data/options.json
     
     # Restart container to apply new configuration
     echo "🔄 Restarting container with new configuration..."
