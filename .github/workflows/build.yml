@@ -39,8 +39,8 @@ jobs:
             docker logs prometheus-stack-test
             exit 1
           fi
-          echo "⏳ Waiting 15 seconds before next attempt..."
-          sleep 15
+          echo "⏳ Waiting 10 seconds before next attempt..."
+          sleep 10
         done
         
         echo "🧪 Running configuration tests..."
