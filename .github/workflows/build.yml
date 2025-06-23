@@ -83,11 +83,23 @@ jobs:
         
         echo "🧹 Cleaning up..."
         ./test/cleanup.sh --all --force
-        
+
+    # Only do multi-arch build on release
     - name: Build multi-arch image
+      if: github.event_name == 'release'
       uses: docker/build-push-action@v5
       with:
         context: ./prometheus-stack
         platforms: linux/amd64,linux/arm64,linux/arm/v7
+        push: false
+        tags: prometheus-stack:test
+        
+    # Do single-arch build for regular pushes and PRs
+    - name: Build single-arch image
+      if: github.event_name != 'release'
+      uses: docker/build-push-action@v5
+      with:
+        context: ./prometheus-stack
+        platforms: linux/amd64
         push: false
         tags: prometheus-stack:test 
