@@ -44,15 +44,22 @@ jobs:
           echo "Testing individual endpoints:"
           
           # Test Prometheus
+          echo "Testing Prometheus..."
           curl -v http://localhost:9090/-/healthy
+          sleep 2
           
           # Test Alertmanager
+          echo "Testing Alertmanager..."
           curl -v http://localhost:9093/-/healthy
+          sleep 2
           
           # Test Blackbox Exporter
+          echo "Testing Blackbox Exporter..."
           curl -v http://localhost:9115/metrics
+          sleep 2
           
           # Test Karma
+          echo "Testing Karma..."
           curl -v http://localhost:8080/metrics | grep karma_alertmanager
           
           if ./test/health-check.sh; then
