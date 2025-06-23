@@ -11,12 +11,14 @@
 # 2. Alertmanager - Alert routing and notification service  
 # 3. Karma - Alert dashboard and management interface
 # 4. Blackbox Exporter - External service monitoring
+# 5. NGINX - Ingress routing and path handling
 #
 # HEALTH CHECK ENDPOINTS:
 # - Prometheus: /-/healthy (built-in health endpoint)
 # - Alertmanager: /-/healthy (built-in health endpoint)
 # - Karma: /metrics (metrics endpoint)
 # - Blackbox Exporter: /metrics (metrics endpoint)
+# - NGINX: /nginx_status (status endpoint)
 #
 # RETURN CODES:
 # - 0: All services healthy
@@ -44,6 +46,7 @@ declare -A SERVICES=(
     ["Alertmanager"]="http://localhost:9093/-/healthy"
     ["Karma"]="http://localhost:8080/"
     ["Blackbox Exporter"]="http://localhost:9115/metrics"
+    ["NGINX"]="http://localhost:80/nginx_status"
 )
 
 # Configuration files to check
@@ -52,6 +55,7 @@ CONFIG_FILES=(
     "/etc/alertmanager/alertmanager.yml"
     "/etc/blackbox_exporter/blackbox.yml"
     "/etc/karma/karma.yml"
+    "/etc/nginx/servers/ingress.conf"
 )
 
 # Data directories to check
@@ -170,6 +174,22 @@ check_service_functionality() {
                 curl -s "http://localhost:8080/metrics" | grep -E "karma_alertmanager_(up|errors)" || true
                 echo "📋 Alertmanager status:"
                 curl -s "http://localhost:9093/-/ready" || true
+                return 1
+            fi
+            ;;
+        "NGINX")
+            # Check if NGINX can proxy requests to all services
+            local failed=0
+            for path in "" "prometheus/" "alertmanager/" "blackbox/"; do
+                if ! retry_check "NGINX proxy to ${path:-karma}" "curl -s -f -H 'Host: ingress' http://localhost:80/$path > /dev/null"; then
+                    echo "❌ Cannot proxy to ${path:-karma}"
+                    ((failed++))
+                fi
+            done
+            if [ $failed -eq 0 ]; then
+                echo "✅ All paths working"
+                return 0
+            else
                 return 1
             fi
             ;;
