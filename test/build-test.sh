@@ -17,6 +17,25 @@
 
 set -e  # Exit on any error
 
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+print_status() {
+    local status="$1"
+    local message="$2"
+    case $status in
+        "OK") echo -e "${GREEN}✅ $message${NC}" ;;
+        "WARN") echo -e "${YELLOW}⚠️  $message${NC}" ;;
+        "ERROR") echo -e "${RED}❌ $message${NC}" ;;
+        "INFO") echo -e "${BLUE}ℹ️  $message${NC}" ;;
+    esac
+}
+
 # Determine script location and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [[ "$SCRIPT_DIR" == */test ]]; then
@@ -36,18 +55,17 @@ echo "📁 Test directory: $TEST_DIR"
 
 # Check if Docker is available
 if ! command -v docker &> /dev/null; then
-    echo "❌ Docker not found. Please install Docker Desktop for Windows."
-    echo "   Visit: https://docs.docker.com/desktop/install/windows-install/"
+    print_status "ERROR" "❌ Build failed: Docker not installed ❌"
     exit 1
 fi
 
 # Check if Docker is running
 if ! docker info &> /dev/null; then
-    echo "❌ Docker is not running. Please start Docker Desktop."
+    print_status "ERROR" "❌ Build failed: Docker not running ❌"
     exit 1
 fi
 
-echo "✅ Docker is available and running"
+print_status "OK" "Docker is available and running"
 
 # Clean up any existing test container
 echo "🧹 Cleaning up previous test containers..."
@@ -109,11 +127,12 @@ sleep 10
 
 # Check if container is running
 if docker ps | grep -q prometheus-stack-test; then
-    echo "✅ Container is running successfully!"
+    print_status "OK" "Container is running successfully!"
 else
-    echo "❌ Container failed to start"
     echo "📋 Container logs:"
     docker logs prometheus-stack-test
+    echo ""
+    print_status "ERROR" "❌ Build failed: Container failed to start ❌"
     exit 1
 fi
 
@@ -153,8 +172,4 @@ echo "   Health check:   $TEST_DIR/health-check.sh"
 echo "   Monitor resources: $TEST_DIR/monitor.sh"
 echo "   Cleanup:        $TEST_DIR/cleanup.sh"
 echo ""
-echo "💡 Next Steps:"
-echo "   1. Open the URLs above in your browser"
-echo "   2. Test the configuration and functionality"
-echo "   3. Run health checks to verify everything works"
-echo "   4. Use cleanup script when done testing" 
+print_status "OK" "✨ Build and test setup completed successfully ✨" 

@@ -59,13 +59,16 @@ get_container_stats() {
         # Get container stats (single snapshot)
         echo ""
         echo "🔍 Current Resource Usage:"
-        docker stats --no-stream prometheus-stack-test 2>/dev/null || docker stats --no-stream prometheus-stack-dev 2>/dev/null || {
-            print_status "ERROR" "Could not get container stats"
-            return 1
-        }
+        if ! docker stats --no-stream prometheus-stack-test 2>/dev/null && \
+           ! docker stats --no-stream prometheus-stack-dev 2>/dev/null; then
+            echo ""
+            print_status "ERROR" "❌ Monitoring failed: Could not get container stats ❌"
+            exit 1
+        fi
     else
-        print_status "ERROR" "Container is not running"
-        return 1
+        echo ""
+        print_status "ERROR" "❌ Monitoring failed: Container is not running ❌"
+        exit 1
     fi
 }
 
@@ -77,23 +80,25 @@ check_disk_usage() {
     
     # Check host disk usage
     echo "📁 Host Disk Usage:"
-    df -h . | grep -E "(Filesystem|$(pwd))"
+    if ! df -h . | grep -E "(Filesystem|$(pwd))"; then
+        echo ""
+        print_status "ERROR" "❌ Monitoring failed: Could not get host disk usage ❌"
+        exit 1
+    fi
     
     # Check container disk usage
     echo ""
     echo "📦 Container Disk Usage:"
-    if docker exec prometheus-stack-test df -h /data 2>/dev/null || docker exec prometheus-stack-dev df -h /data 2>/dev/null; then
-        print_status "OK" "Container disk usage retrieved"
-    else
+    if ! docker exec prometheus-stack-test df -h /data 2>/dev/null && \
+       ! docker exec prometheus-stack-dev df -h /data 2>/dev/null; then
         print_status "WARN" "Could not get container disk usage"
     fi
     
     # Check specific directories
     echo ""
     echo "📂 Data Directory Sizes:"
-    if docker exec prometheus-stack-test ls -lah /data/ 2>/dev/null || docker exec prometheus-stack-dev ls -lah /data/ 2>/dev/null; then
-        print_status "OK" "Data directory listing retrieved"
-    else
+    if ! docker exec prometheus-stack-test ls -lah /data/ 2>/dev/null && \
+       ! docker exec prometheus-stack-dev ls -lah /data/ 2>/dev/null; then
         print_status "WARN" "Could not list data directories"
     fi
 }
@@ -199,16 +204,20 @@ main() {
     
     # Check if continuous mode is requested
     if [ "$1" = "continuous" ]; then
-        continuous_monitoring
+        if ! continuous_monitoring; then
+            echo ""
+            print_status "ERROR" "❌ Monitoring failed: Continuous monitoring error ❌"
+            exit 1
+        fi
         exit 0
     fi
     
     # Single snapshot monitoring
-    get_container_stats
-    check_disk_usage
-    check_service_performance
-    check_processes
-    check_logs
+    if ! get_container_stats || ! check_disk_usage || ! check_service_performance || ! check_processes || ! check_logs; then
+        echo ""
+        print_status "ERROR" "❌ Monitoring failed: Could not complete all checks ❌"
+        exit 1
+    fi
     
     echo ""
     echo "📊 Monitoring Summary"
@@ -224,6 +233,9 @@ main() {
     echo "   - Check disk usage for data growth"
     echo "   - Watch response times for performance issues"
     echo "   - Review logs for errors or warnings"
+    echo ""
+    print_status "OK" "✨ Monitoring completed successfully ✨"
+    exit 0
 }
 
 # Run main function

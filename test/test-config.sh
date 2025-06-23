@@ -26,6 +26,25 @@
 
 set -e  # Exit on any error
 
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+print_status() {
+    local status="$1"
+    local message="$2"
+    case $status in
+        "OK") echo -e "${GREEN}✅ $message${NC}" ;;
+        "WARN") echo -e "${YELLOW}⚠️  $message${NC}" ;;
+        "ERROR") echo -e "${RED}❌ $message${NC}" ;;
+        "INFO") echo -e "${BLUE}ℹ️  $message${NC}" ;;
+    esac
+}
+
 echo "⚙️  Configuration Testing for Prometheus Stack Add-on"
 echo "====================================================="
 
@@ -128,6 +147,66 @@ validate_config_syntax() {
     fi
 }
 
+# Function to test Prometheus config
+test_prometheus_config() {
+    echo ""
+    echo "🔍 Testing Prometheus configuration..."
+    if ! docker exec prometheus-stack-test promtool check config /etc/prometheus/prometheus.yml; then
+        echo ""
+        print_status "ERROR" "❌ Config test failed: Invalid Prometheus configuration ❌"
+        exit 1
+    fi
+    print_status "OK" "Prometheus configuration is valid"
+}
+
+# Function to test Alertmanager config
+test_alertmanager_config() {
+    echo ""
+    echo "🔍 Testing Alertmanager configuration..."
+    if ! docker exec prometheus-stack-test amtool check-config /etc/alertmanager/alertmanager.yml; then
+        echo ""
+        print_status "ERROR" "❌ Config test failed: Invalid Alertmanager configuration ❌"
+        exit 1
+    fi
+    print_status "OK" "Alertmanager configuration is valid"
+}
+
+# Function to test Blackbox config
+test_blackbox_config() {
+    echo ""
+    echo "🔍 Testing Blackbox configuration..."
+    if ! docker exec prometheus-stack-test blackbox_exporter --config.check /etc/blackbox/blackbox.yml; then
+        echo ""
+        print_status "ERROR" "❌ Config test failed: Invalid Blackbox configuration ❌"
+        exit 1
+    fi
+    print_status "OK" "Blackbox configuration is valid"
+}
+
+# Function to test Karma config
+test_karma_config() {
+    echo ""
+    echo "🔍 Testing Karma configuration..."
+    if ! docker exec prometheus-stack-test karma --check-config; then
+        echo ""
+        print_status "ERROR" "❌ Config test failed: Invalid Karma configuration ❌"
+        exit 1
+    fi
+    print_status "OK" "Karma configuration is valid"
+}
+
+# Function to test NGINX config
+test_nginx_config() {
+    echo ""
+    echo "🔍 Testing NGINX configuration..."
+    if ! docker exec prometheus-stack-test nginx -t; then
+        echo ""
+        print_status "ERROR" "❌ Config test failed: Invalid NGINX configuration ❌"
+        exit 1
+    fi
+    print_status "OK" "NGINX configuration is valid"
+}
+
 # Main testing sequence
 echo "🚀 Starting configuration tests..."
 echo "=================================="
@@ -143,6 +222,31 @@ done
 
 # Validate configuration syntax
 if ! validate_config_syntax; then
+    ((failed_tests++))
+fi
+
+# Test Prometheus configuration
+if ! test_prometheus_config; then
+    ((failed_tests++))
+fi
+
+# Test Alertmanager configuration
+if ! test_alertmanager_config; then
+    ((failed_tests++))
+fi
+
+# Test Blackbox configuration
+if ! test_blackbox_config; then
+    ((failed_tests++))
+fi
+
+# Test Karma configuration
+if ! test_karma_config; then
+    ((failed_tests++))
+fi
+
+# Test NGINX configuration
+if ! test_nginx_config; then
     ((failed_tests++))
 fi
 

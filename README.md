@@ -2,7 +2,10 @@
 
 A comprehensive monitoring stack for Home Assistant that includes Prometheus, Alertmanager, Karma, and Blackbox Exporter in a single add-on.
 
-## 📦 What is this?
+
+
+
+## 1. 📦 What is this?
 
 This add-on provides a complete monitoring solution for your Home Assistant environment:
 
@@ -11,7 +14,13 @@ This add-on provides a complete monitoring solution for your Home Assistant envi
 - **Karma**: Modern web UI for alert management and visualization
 - **Blackbox Exporter**: External service monitoring via HTTP and TCP probes
 
-## ⭐ Key Features
+It must run equally well in the following modes
+
+- **Test mode**: When started on the development computer
+- **Github Mode**: When Run by Github actions
+- **Addon Mode**: When run as a home Assistant Add-On
+
+## 2. ⭐ Key Features
 
 - **Multi-architecture**: Works on `amd64`, `arm64`, and `armv7`
 - **Email Alerts**: Configurable alert notifications via email
@@ -21,22 +30,22 @@ This add-on provides a complete monitoring solution for your Home Assistant envi
 - **HA Integration**: Automatic Home Assistant metrics collection
 - **Pre-built Dashboards**: Ready-to-use Grafana dashboards
 
-## 🚀 Installation
+## 3. 🚀 Installation
 
-### Prerequisites
+### 3.1. Prerequisites
 - Home Assistant (Supervisor or Core)
 - Add-on store access
 
-### Steps
+### 3.2. Steps
 1. In Home Assistant, go to **Settings** → **Add-ons** → **Add-on Store**
 2. Click the three dots in the top right and select **Repositories**
 3. Add this repository URL: `https://github.com/sejnub/ha-prometheus-stack`
 4. Find "Prometheus Stack" in the add-on store
 5. Click **Install**
 
-## ⚙️ Configuration
+## 4. ⚙️ Configuration
 
-### Add-on Configuration
+### 4.1. Add-on Configuration
 
 ```yaml
 alertmanager_receiver: "default"
@@ -48,7 +57,7 @@ blackbox_targets:
     url: "http://supervisor/core"
 ```
 
-### Option Descriptions
+### 4.2. Option Descriptions
 
 - `alertmanager_receiver`: Name of the default alert receiver
 - `alertmanager_to_email`: Email address for alert notifications
@@ -58,7 +67,7 @@ blackbox_targets:
   - `name`: Display name for the target
   - `url`: URL to monitor
 
-## 🌐 Access
+## 5. 🌐 Access
 
 All services are accessible through Home Assistant's ingress feature:
 
@@ -71,9 +80,9 @@ No additional port configuration is needed - everything works through Home Assis
 
 For technical implementation details, see [prometheus-stack/README.md](prometheus-stack/README.md).
 
-## 📊 Monitoring
+## 6. 📊 Monitoring
 
-### Home Assistant Metrics
+### 6.1. Home Assistant Metrics
 The add-on automatically collects:
 - System performance metrics
 - Entity state information
@@ -81,7 +90,7 @@ The add-on automatically collects:
 - Integration status
 - And more...
 
-### External Service Monitoring
+### 6.2. External Service Monitoring
 Built-in monitoring for:
 - Home Assistant services
 - Media servers and clients
@@ -92,9 +101,9 @@ Built-in monitoring for:
 
 For detailed monitoring capabilities and dashboard setup, see [dashboards/README.md](dashboards/README.md).
 
-## ⚡ Alert Configuration
+## 7. ⚡ Alert Configuration
 
-### Email Notifications
+### 7.1. Email Notifications
 The add-on automatically configures email notifications:
 
 ```yaml
@@ -111,20 +120,20 @@ receivers:
       - to: 'your-email@example.com'
 ```
 
-### Custom Alerts
+### 7.2. Custom Alerts
 Create custom alerts through:
 - Prometheus configuration
 - Prometheus web interface
 
-## 🛠️ Development and Testing
+## 8. 🛠️ Development and Testing
 
 For development and testing instructions, see [test/README.md](test/README.md).
 
-## 💬 Support
+## 9. 💬 Support
 
 - [Documentation](https://github.com/sejnub/ha-prometheus-stack/wiki)
 - [Issue Tracker](https://github.com/sejnub/ha-prometheus-stack/issues)
 
-## 📄 License
+## 10. 📄 License
 
 MIT License - see LICENSE file for details 

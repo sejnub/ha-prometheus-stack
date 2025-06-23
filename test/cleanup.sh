@@ -22,11 +22,10 @@
 #
 # OPTIONS:
 # --all:    Clean up everything including images and networks
-# --force:  Force stop and remove containers (use with caution)
+# --force:  Force stop containers (use with caution)
 #
 # SAFETY FEATURES:
-# - Confirms before deleting containers
-# - Checks for running containers before cleanup
+# - Waits for containers to fully stop before cleanup
 # - Preserves non-test containers and images
 # - Provides detailed cleanup report
 #
@@ -70,15 +69,36 @@ print_status() {
 check_docker() {
     if ! command -v docker &> /dev/null; then
         print_status "ERROR" "Docker is not installed"
-        exit 1
+        return 1
     fi
     
     if ! docker info &> /dev/null; then
         print_status "ERROR" "Docker is not running"
-        exit 1
+        return 1
     fi
     
     print_status "OK" "Docker is available and running"
+    return 0
+}
+
+# Function to wait for container to stop
+wait_for_container_stop() {
+    local container="$1"
+    local max_attempts=30  # Maximum number of attempts (30 * 2 seconds = 60 seconds timeout)
+    local attempts=0
+    
+    while docker ps -q --filter "name=$container" | grep -q . && [ $attempts -lt $max_attempts ]; do
+        print_status "INFO" "Waiting for container $container to stop... ($(( max_attempts - attempts )) seconds remaining)"
+        sleep 2
+        attempts=$((attempts + 1))
+    done
+    
+    if [ $attempts -eq $max_attempts ]; then
+        print_status "ERROR" "Timeout waiting for container $container to stop"
+        return 1
+    fi
+    
+    return 0
 }
 
 # Function to stop and remove containers
@@ -89,6 +109,7 @@ cleanup_containers() {
     
     local containers=("prometheus-stack-test" "prometheus-stack-dev")
     local containers_found=0
+    local all_containers_stopped=0  # 0 means success in bash
     
     for container in "${containers[@]}"; do
         if docker ps -a --format "table {{.Names}}" | grep -q "^$container$"; then
@@ -106,17 +127,30 @@ cleanup_containers() {
                     print_status "INFO" "Stopping container $container gracefully"
                     docker stop "$container" 2>/dev/null || true
                 fi
+                
+                # Wait for container to stop
+                if ! wait_for_container_stop "$container"; then
+                    all_containers_stopped=1  # 1 means failure in bash
+                    continue
+                fi
             fi
             
             # Remove container
             print_status "INFO" "Removing container $container"
-            docker rm "$container" 2>/dev/null && print_status "OK" "Container $container removed" || print_status "WARN" "Could not remove container $container"
+            if ! docker rm "$container" 2>/dev/null; then
+                print_status "WARN" "Could not remove container $container"
+                all_containers_stopped=1  # 1 means failure in bash
+            else
+                print_status "OK" "Container $container removed"
+            fi
         fi
     done
     
     if [ $containers_found -eq 0 ]; then
         print_status "INFO" "No test containers found"
     fi
+    
+    return $all_containers_stopped
 }
 
 # Function to remove images
@@ -205,42 +239,31 @@ cleanup_test_data() {
         
         # Show what will be deleted
         echo "📋 Contents to be removed:"
-        find "$PROJECT_ROOT/test-data" -type f -exec echo "   {}" \;
+        ls -la "$PROJECT_ROOT/test-data" 2>/dev/null || true
         
-        # Use Docker to clean up the test data
-        print_status "INFO" "Removing test-data directory"
-        docker run --rm -v "$PROJECT_ROOT/test-data:/data" alpine:latest rm -rf /data
-        print_status "OK" "Test data directory removed"
+        # First try native removal
+        if rm -rf "$PROJECT_ROOT/test-data" 2>/dev/null; then
+            print_status "OK" "Test data directory removed"
+            return 0
+        fi
+        
+        # If native removal fails, try with Docker
+        print_status "INFO" "Using Docker to remove test-data directory"
+        if docker run --rm -v "$PROJECT_ROOT/test-data:/data" alpine:latest rm -rf /data/* 2>/dev/null; then
+            # Try removing the empty directory
+            if rm -rf "$PROJECT_ROOT/test-data" 2>/dev/null; then
+                print_status "OK" "Test data directory removed"
+                return 0
+            fi
+        fi
+        
+        print_status "WARN" "Could not remove test-data directory completely"
+        print_status "INFO" "You may need to remove it manually when no containers are using it"
+        return 1
     else
         print_status "INFO" "No test-data directory found"
+        return 0
     fi
-}
-
-# Function to show cleanup summary
-show_summary() {
-    echo ""
-    echo "📊 Cleanup Summary"
-    echo "=================="
-    
-    print_status "INFO" "Cleanup completed"
-    
-    if [ "$CLEAN_ALL" = "true" ]; then
-        echo "🧹 Full cleanup performed:"
-        echo "   - Containers removed"
-        echo "   - Images removed"
-        echo "   - Networks removed"
-        echo "   - Volumes removed"
-        echo "   - Test data removed"
-    else
-        echo "🧹 Basic cleanup performed:"
-        echo "   - Containers removed"
-        echo "   - Test data removed"
-    fi
-    
-    echo ""
-    echo "💡 Next Steps:"
-    echo "   - Run $TEST_DIR/build-test.sh to start fresh testing"
-    echo "   - Or deploy to Home Assistant for production use"
 }
 
 # Parse command line arguments
@@ -257,24 +280,14 @@ while [[ $# -gt 0 ]]; do
             FORCE=true
             shift
             ;;
-        -h|--help)
-            echo "Usage: $0 [--all] [--force]"
-            echo ""
-            echo "Options:"
-            echo "  --all     Clean up everything (containers, images, networks, volumes)"
-            echo "  --force   Force stop containers before removal"
-            echo "  -h, --help Show this help message"
-            exit 0
-            ;;
         *)
-            print_status "ERROR" "Unknown option: $1"
-            echo "Use -h or --help for usage information"
+            echo "Unknown option: $1"
             exit 1
             ;;
     esac
 done
 
-# Main cleanup process
+# Main cleanup sequence
 main() {
     echo "🧹 Cleanup for Prometheus Stack Add-on"
     echo "======================================"
@@ -282,7 +295,11 @@ main() {
     echo "📁 Test directory: $TEST_DIR"
     
     # Check Docker availability
-    check_docker
+    if ! check_docker; then
+        echo ""
+        print_status "ERROR" "❌ Cleanup failed: Docker not available ❌"
+        exit 1
+    fi
     
     # Show cleanup mode
     if [ "$CLEAN_ALL" = "true" ]; then
@@ -295,15 +312,40 @@ main() {
         print_status "WARN" "Force mode enabled - containers will be killed"
     fi
     
-    # Perform cleanup
-    cleanup_containers
-    cleanup_images
-    cleanup_networks
-    cleanup_volumes
-    cleanup_test_data
-    
-    # Show summary
-    show_summary
+    # Stop and remove containers first
+    if cleanup_containers; then
+        # Only proceed with other cleanups if containers are properly stopped
+        cleanup_images
+        cleanup_networks
+        cleanup_volumes
+        cleanup_test_data
+        
+        # Show summary
+        echo ""
+        echo "📊 Cleanup Summary"
+        echo "=================="
+        
+        if [ "$CLEAN_ALL" = "true" ]; then
+            echo "🧹 Full cleanup performed:"
+            echo "   - Containers removed"
+            echo "   - Images removed"
+            echo "   - Networks removed"
+            echo "   - Volumes removed"
+            echo "   - Test data removed"
+        else
+            echo "🧹 Basic cleanup performed:"
+            echo "   - Containers removed"
+            echo "   - Test data removed"
+        fi
+        
+        echo ""
+        print_status "OK" "✨ Cleanup completed successfully ✨"
+        exit 0
+    else
+        echo ""
+        print_status "ERROR" "❌ Cleanup failed: Could not stop/remove containers ❌"
+        exit 1
+    fi
 }
 
 # Run main function

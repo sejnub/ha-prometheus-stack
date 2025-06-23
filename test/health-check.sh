@@ -64,6 +64,13 @@ DATA_DIRS=(
     "/data/alertmanager"
 )
 
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
 # =============================================================================
 # FUNCTIONS
 # =============================================================================
@@ -196,6 +203,36 @@ check_service_functionality() {
     esac
 }
 
+# Function to print colored output
+print_status() {
+    local status="$1"
+    local message="$2"
+    case $status in
+        "OK") echo -e "${GREEN}✅ $message${NC}" ;;
+        "WARN") echo -e "${YELLOW}⚠️  $message${NC}" ;;
+        "ERROR") echo -e "${RED}❌ $message${NC}" ;;
+        "INFO") echo -e "${BLUE}ℹ️  $message${NC}" ;;
+    esac
+}
+
+# Main health check sequence
+main() {
+    echo "🏥 Health Check for Prometheus Stack Add-on"
+    echo "=========================================="
+    
+    # Run all health checks
+    check_prometheus_health
+    check_alertmanager_health
+    check_blackbox_health
+    check_karma_health
+    check_nginx_health
+    
+    # All checks passed if we got here
+    echo ""
+    print_status "OK" "✨ All health checks passed successfully ✨"
+    exit 0
+}
+
 # =============================================================================
 # MAIN SCRIPT
 # =============================================================================
@@ -269,4 +306,64 @@ else
     echo ""
     echo "❌ $failed checks failed"
     exit 1
-fi 
+fi
+
+# Function to check Prometheus health
+check_prometheus_health() {
+    echo ""
+    echo "🔍 Checking Prometheus..."
+    if ! curl -s "http://localhost:9090/-/healthy" > /dev/null; then
+        echo ""
+        print_status "ERROR" "❌ Health check failed: Prometheus is not healthy ❌"
+        exit 1
+    fi
+    print_status "OK" "Prometheus is healthy"
+}
+
+# Function to check Alertmanager health
+check_alertmanager_health() {
+    echo ""
+    echo "🔍 Checking Alertmanager..."
+    if ! curl -s "http://localhost:9093/-/healthy" > /dev/null; then
+        echo ""
+        print_status "ERROR" "❌ Health check failed: Alertmanager is not healthy ❌"
+        exit 1
+    fi
+    print_status "OK" "Alertmanager is healthy"
+}
+
+# Function to check Blackbox health
+check_blackbox_health() {
+    echo ""
+    echo "🔍 Checking Blackbox Exporter..."
+    if ! curl -s "http://localhost:9115/metrics" > /dev/null; then
+        echo ""
+        print_status "ERROR" "❌ Health check failed: Blackbox Exporter is not healthy ❌"
+        exit 1
+    fi
+    print_status "OK" "Blackbox Exporter is healthy"
+}
+
+# Function to check Karma health
+check_karma_health() {
+    echo ""
+    echo "🔍 Checking Karma..."
+    if ! curl -s "http://localhost:8080/" > /dev/null; then
+        echo ""
+        print_status "ERROR" "❌ Health check failed: Karma is not healthy ❌"
+        exit 1
+    fi
+    print_status "OK" "Karma is healthy"
+}
+
+# Function to check NGINX health
+check_nginx_health() {
+    echo ""
+    echo "🔍 Checking NGINX..."
+    if ! curl -s "http://localhost:80/nginx_status" > /dev/null; then
+        echo ""
+        print_status "ERROR" "❌ Health check failed: NGINX is not healthy ❌"
+        exit 1
+    fi
+    print_status "OK" "NGINX is healthy"
+} 
