@@ -72,6 +72,16 @@ cat > "$PROJECT_ROOT/test-data/options.json" <<EOF
 }
 EOF
 
+# Create test .env file from template
+if [ -f "$PROJECT_ROOT/env.example" ]; then
+    echo "📄 Creating test .env file from template..."
+    cp "$PROJECT_ROOT/env.example" "$PROJECT_ROOT/test-data/.env"
+    # Update with test values
+    sed -i 's/HOME_ASSISTANT_IP=.*/HOME_ASSISTANT_IP=192.168.1.30/' "$PROJECT_ROOT/test-data/.env"
+    sed -i 's/HOME_ASSISTANT_LONG_LIVED_TOKEN=.*/HOME_ASSISTANT_LONG_LIVED_TOKEN=test-token/' "$PROJECT_ROOT/test-data/.env"
+    sed -i 's/ALERTMANAGER_EMAIL=.*/ALERTMANAGER_EMAIL=test@example.com/' "$PROJECT_ROOT/test-data/.env"
+fi
+
 # Run the container with test configuration
 echo "🚀 Starting test container..."
 docker run -d \

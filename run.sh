@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Load environment variables if .env file exists
+if [ -f /data/.env ]; then
+    echo "Loading environment variables from .env file..."
+    export $(cat /data/.env | grep -v '^#' | xargs)
+fi
+
 CONFIG_PATH=/data/options.json
 
 # Read configuration from options.json

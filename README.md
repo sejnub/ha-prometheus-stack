@@ -38,6 +38,27 @@ This add-on provides a complete monitoring solution for your Home Assistant envi
 
 ## Configuration
 
+### Environment Variables (Optional)
+
+For advanced configuration, you can create a `.env` file in the add-on data directory:
+
+1. Copy the template: `cp env.example .env`
+2. Edit the `.env` file with your actual values:
+
+```bash
+# Home Assistant Configuration
+HOME_ASSISTANT_IP=192.168.1.30
+HOME_ASSISTANT_PORT=8123
+HOME_ASSISTANT_LONG_LIVED_TOKEN=your-long-lived-access-token-here
+
+# Email Configuration
+ALERTMANAGER_EMAIL=your-email@example.com
+ALERTMANAGER_SMTP_HOST=localhost
+ALERTMANAGER_SMTP_PORT=25
+```
+
+**Note:** The `.env` file is optional and should NOT be committed to version control.
+
 ### Basic Configuration
 The add-on can be configured through the Home Assistant UI:
 

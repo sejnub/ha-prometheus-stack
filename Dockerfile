@@ -38,6 +38,7 @@ RUN apk add --no-cache \
 COPY run.sh /
 COPY prometheus.yml /etc/prometheus/
 COPY blackbox.yml /etc/blackbox_exporter/
+COPY env.example /env.example
 
 RUN chmod a+x /run.sh
 

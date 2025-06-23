@@ -3,7 +3,8 @@
 - [1. Test Directory Structure](#1-test-directory-structure)
 - [2. Quick Start Testing](#2-quick-start-testing)
   - [2.1. Prerequisites](#21-prerequisites)
-  - [2.2. Basic Testing Workflow](#22-basic-testing-workflow)
+  - [2.2. Environment Variables (Optional)](#22-environment-variables-optional)
+  - [2.3. Basic Testing Workflow](#23-basic-testing-workflow)
 - [3. Detailed Script Documentation](#3-detailed-script-documentation)
   - [3.1. `build-test.sh` - Build and Test Script](#31-build-testsh---build-and-test-script)
   - [3.2. `docker-compose.dev.yml` - Development Configuration](#32-docker-composedevyml---development-configuration)
@@ -45,7 +46,17 @@ test/
 - Docker Desktop for Windows (with WSL2 backend)
 - WSL2 Ubuntu environment
 
-### 2.2. Basic Testing Workflow
+### 2.2. Environment Variables (Optional)
+For testing with real Home Assistant instance:
+1. Copy the environment template: `cp ../env.example ../test-data/.env`
+2. Edit the `.env` file with your actual values:
+   ```bash
+   HOME_ASSISTANT_IP=192.168.1.30
+   HOME_ASSISTANT_LONG_LIVED_TOKEN=your-actual-token
+   ALERTMANAGER_EMAIL=your-email@example.com
+   ```
+
+### 2.3. Basic Testing Workflow
 ```bash
 # 1. Build and start the add-on
 ./test/build-test.sh
