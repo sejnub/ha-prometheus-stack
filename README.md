@@ -260,12 +260,17 @@ docker run -d \
 ```
 ha-prometheus-stack/
 ├── README.md              # This file
-├── Dockerfile             # Multi-architecture build
-├── run.sh                 # Startup script
-├── config.json            # Add-on configuration
-├── prometheus.yml         # Prometheus configuration
-├── alertmanager.yml       # Alertmanager configuration
-├── blackbox.yml           # Blackbox Exporter configuration
+├── LICENSE                # MIT License
+├── RELEASE_TEMPLATE.md    # Release template
+├── .github/               # GitHub Actions
+├── test/                  # Testing tools
+│   ├── README.md          # Testing guide
+│   ├── build-test.sh      # Build and test script
+│   ├── health-check.sh    # Health verification
+│   ├── test-config.sh     # Configuration testing
+│   ├── monitor.sh         # Resource monitoring
+│   ├── cleanup.sh         # Environment cleanup
+│   └── docker-compose.dev.yml # Development environment
 ├── dashboards/            # Grafana dashboards
 │   ├── README.md          # Dashboard documentation
 │   ├── dashboard-provider.yml # Grafana provisioning config
@@ -274,14 +279,13 @@ ha-prometheus-stack/
 │   ├── 03-blackbox-exporter.json # Blackbox Exporter monitoring
 │   ├── 04-alertmanager.json # Alertmanager monitoring
 │   └── 05-prometheus.json # Prometheus server monitoring
-└── test/                  # Testing tools
-    ├── README.md          # Testing guide
-    ├── build-test.sh      # Build and test script
-    ├── health-check.sh    # Health verification
-    ├── test-config.sh     # Configuration testing
-    ├── monitor.sh         # Resource monitoring
-    ├── cleanup.sh         # Environment cleanup
-    └── docker-compose.dev.yml # Development environment
+└── prometheus-stack/      # Add-on code
+    ├── config.json        # Add-on configuration
+    ├── Dockerfile         # Multi-architecture build
+    ├── run.sh            # Startup script
+    ├── prometheus.yml    # Prometheus configuration
+    ├── blackbox.yml      # Blackbox Exporter configuration
+    └── env.example       # Environment variables template
 ```
 
 ## Troubleshooting

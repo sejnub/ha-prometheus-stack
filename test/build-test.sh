@@ -56,7 +56,7 @@ docker rm prometheus-stack-test 2>/dev/null || true
 
 # Build the add-on image
 echo "🔨 Building add-on image..."
-cd "$PROJECT_ROOT"
+cd "$PROJECT_ROOT/prometheus-stack"
 docker build -t prometheus-stack-test .
 
 # Create test directories and configuration
@@ -82,9 +82,9 @@ cat > "$PROJECT_ROOT/test-data/options.json" <<EOF
 EOF
 
 # Create test .env file from template
-if [ -f "$PROJECT_ROOT/env.example" ]; then
+if [ -f "$PROJECT_ROOT/prometheus-stack/env.example" ]; then
     echo "📄 Creating test .env file from template..."
-    cp "$PROJECT_ROOT/env.example" "$PROJECT_ROOT/test-data/.env"
+    cp "$PROJECT_ROOT/prometheus-stack/env.example" "$PROJECT_ROOT/test-data/.env"
     # Update with test values
     sed -i 's/HOME_ASSISTANT_IP=.*/HOME_ASSISTANT_IP=192.168.1.30/' "$PROJECT_ROOT/test-data/.env"
     sed -i 's/HOME_ASSISTANT_LONG_LIVED_TOKEN=.*/HOME_ASSISTANT_LONG_LIVED_TOKEN=test-token/' "$PROJECT_ROOT/test-data/.env"
