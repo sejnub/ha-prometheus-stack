@@ -29,6 +29,8 @@ services:
       dockerfile: Dockerfile
     container_name: prometheus-stack-dev
     restart: unless-stopped
+    init: false
+    entrypoint: /init
     ports:
       - "9090:9090"  # Prometheus web interface
       - "9093:9093"  # Alertmanager web interface
