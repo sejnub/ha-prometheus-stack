@@ -12,7 +12,8 @@ RUN apk add --no-cache \
         curl \
         tar \
         wget \
-        jq && \
+        jq \
+        nginx && \
     ARCH="" && \
     ARM_ARCH="" && \
     case `uname -m` in \
@@ -41,7 +42,7 @@ COPY prometheus.yml /etc/prometheus/
 COPY blackbox.yml /etc/blackbox_exporter/
 
 # Create necessary directories
-RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /data/prometheus /data/alertmanager
+RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /data/prometheus /data/alertmanager /etc/nginx/servers
 
 # Copy s6-overlay configuration
 COPY rootfs/ /
@@ -56,4 +57,6 @@ RUN chmod +x /etc/cont-init.d/00-init.sh && \
     chmod +x /etc/s6-overlay/s6-rc.d/prometheus/up && \
     chmod +x /etc/s6-overlay/s6-rc.d/karma/run && \
     chmod +x /etc/s6-overlay/s6-rc.d/karma/up && \
+    chmod +x /etc/s6-overlay/s6-rc.d/nginx/run && \
+    chmod +x /etc/s6-overlay/s6-rc.d/nginx/up && \
     chmod +x /etc/s6-overlay/s6-rc.d/user/run

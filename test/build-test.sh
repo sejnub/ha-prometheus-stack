@@ -94,6 +94,7 @@ docker run -d \
   -p 9093:9093 \
   -p 9115:9115 \
   -p 8080:8080 \
+  -p 80:80 \
   -v "$PROJECT_ROOT/test-data:/data" \
   -e SUPERVISOR_TOKEN="test-supervisor-token" \
   -e HASSIO_TOKEN="test-hassio-token" \

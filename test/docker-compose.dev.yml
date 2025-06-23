@@ -34,7 +34,9 @@ services:
     ports:
       - "9090:9090"  # Prometheus web interface
       - "9093:9093"  # Alertmanager web interface
+      - "9115:9115"  # Blackbox Exporter interface
       - "8080:8080"  # Karma web interface
+      - "80:80"      # NGINX ingress interface
     volumes:
       - ../test-data:/data  # Persistent configuration and data
     environment:
