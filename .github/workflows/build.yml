@@ -1,0 +1,48 @@
+name: Build and Test Add-on
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  release:
+    types: [ published ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Build and test
+      run: |
+        # Make test scripts executable
+        chmod +x test/*.sh
+        
+        # Run build test
+        ./test/build-test.sh
+        
+        # Wait for services to start
+        sleep 30
+        
+        # Run health check
+        ./test/health-check.sh
+        
+        # Run configuration test
+        ./test/test-config.sh
+        
+        # Clean up
+        ./test/cleanup.sh --all
+        
+    - name: Build multi-arch image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64,linux/arm/v7
+        push: false
+        tags: prometheus-stack:test 
