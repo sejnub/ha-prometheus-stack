@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/with-contenv bashio
 
 CONFIG_PATH=/data/options.json
 
@@ -29,13 +29,6 @@ else
     SMTP_HOST=${SMTP_HOST:-"localhost"}
     SMTP_PORT=${SMTP_PORT:-"25"}
 fi
-
-# Create necessary directories
-mkdir -p /etc/alertmanager
-mkdir -p /etc/karma
-mkdir -p /etc/blackbox_exporter
-mkdir -p /data/prometheus
-mkdir -p /data/alertmanager
 
 # Create alertmanager.yml
 cat > /etc/alertmanager/alertmanager.yml <<EOF
@@ -203,6 +196,6 @@ for i in {1..30}; do
   sleep 2
 done
 
-# Start Karma
+# Start Karma (this will be the main process)
 echo "Starting Karma..."
-karma --config.file=/etc/karma/karma.yml
+exec karma --config.file=/etc/karma/karma.yml 

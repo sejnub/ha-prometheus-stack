@@ -1,11 +1,12 @@
 ARG BUILD_FROM
-FROM ${BUILD_FROM:-alpine:3.19}
+FROM ${BUILD_FROM:-ghcr.io/hassio-addons/base:14.2.2}
 
 ENV PROM_VERSION=2.52.0
 ENV ALERTMANAGER_VERSION=0.27.0
 ENV KARMA_VERSION=v0.116
 ENV BLACKBOX_VERSION=0.25.0
 
+# Install required packages
 RUN apk add --no-cache \
         bash \
         curl \
@@ -35,11 +36,17 @@ RUN apk add --no-cache \
     apk del wget tar && \
     rm -rf /var/cache/apk/*
 
-COPY run.sh /
+# Copy configuration files
 COPY prometheus.yml /etc/prometheus/
 COPY blackbox.yml /etc/blackbox_exporter/
 COPY env.example /env.example
 
+# Create necessary directories
+RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /data/prometheus /data/alertmanager
+
+# Copy the startup script
+COPY run.sh /
 RUN chmod a+x /run.sh
 
-CMD [ "/run.sh" ]
+# Set the default command
+CMD ["/run.sh"]
