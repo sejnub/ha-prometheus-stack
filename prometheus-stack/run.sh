@@ -1,5 +1,8 @@
 #!/usr/bin/with-contenv bashio
 
+# Simple startup script for Home Assistant addon
+# This runs under the s6-overlay system provided by the base image
+
 CONFIG_PATH=/data/options.json
 
 # Load environment variables if .env file exists (for development/testing)

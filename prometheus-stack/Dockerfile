@@ -47,6 +47,3 @@ RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /data/prometheu
 # Copy the startup script
 COPY run.sh /
 RUN chmod a+x /run.sh
-
-# Set the default command
-CMD ["/run.sh"]
