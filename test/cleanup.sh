@@ -207,19 +207,18 @@ cleanup_test_data() {
         echo "📋 Contents to be removed:"
         find "$PROJECT_ROOT/test-data" -type f -exec echo "   {}" \;
         
-        # Confirm deletion
-        if [ "$FORCE" != "true" ]; then
-            echo ""
-            read -p "🗑️  Delete test data? (y/N): " -n 1 -r
-            echo
-            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-                print_status "INFO" "Test data cleanup skipped"
-                return
-            fi
+        # First try to remove files from within the container if it's still running
+        if docker ps --format "{{.Names}}" | grep -q "^prometheus-stack-test$"; then
+            print_status "INFO" "Cleaning up files using container permissions"
+            docker exec prometheus-stack-test rm -rf /data/prometheus/* /data/alertmanager/* || true
         fi
         
-        # Remove test data
-        rm -rf "$PROJECT_ROOT/test-data"
+        # Now remove the directory with sudo if needed
+        print_status "INFO" "Removing test-data directory"
+        if ! rm -rf "$PROJECT_ROOT/test-data" 2>/dev/null; then
+            print_status "INFO" "Using elevated permissions to remove test data"
+            sudo rm -rf "$PROJECT_ROOT/test-data"
+        fi
         print_status "OK" "Test data directory removed"
     else
         print_status "INFO" "No test-data directory found"
