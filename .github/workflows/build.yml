@@ -37,28 +37,23 @@ jobs:
         docker info
         
         echo "⏳ Waiting for services to initialize..."
-        # Initial wait to give services time to start up in CI environment
-        echo "Initial wait of 30 seconds..."
-        sleep 30
-        
-        echo "🔍 Container Status:"
-        docker ps
-        echo -e "\n📋 Container Logs:"
-        docker logs prometheus-stack-test
-        
-        echo -e "\n🌐 Network Status:"
-        echo "Checking port availability..."
-        netstat -tulpn | grep -E ':(9090|9093|9115|8080)'
         
         for i in {1..3}; do
-          echo -e "\n🔄 Health Check Attempt $i of 3"
+          echo "🔄 Health Check Attempt $i of 3"
           echo "================================"
-          
           echo "Testing individual endpoints:"
-          curl -v --max-time 5 http://localhost:9090/-/healthy 2>&1 || echo "Prometheus health check failed"
-          curl -v --max-time 5 http://localhost:9093/-/healthy 2>&1 || echo "Alertmanager health check failed"
-          curl -v --max-time 5 http://localhost:9115/metrics 2>&1 || echo "Blackbox health check failed"
-          curl -v --max-time 5 http://localhost:8080/ 2>&1 || echo "Karma health check failed"
+          
+          # Test Prometheus
+          curl -v http://localhost:9090/-/healthy
+          
+          # Test Alertmanager
+          curl -v http://localhost:9093/-/healthy
+          
+          # Test Blackbox Exporter
+          curl -v http://localhost:9115/metrics
+          
+          # Test Karma
+          curl -v http://localhost:8080/metrics | grep karma_alertmanager
           
           if ./test/health-check.sh; then
             echo "✅ All services are healthy!"
@@ -66,15 +61,9 @@ jobs:
           fi
           
           if [ $i -eq 3 ]; then
-            echo -e "\n❌ Services failed to start after 3 attempts"
-            echo -e "\n📋 Final Container Status:"
-            docker ps
-            echo -e "\n📋 Container Logs:"
+            echo "❌ Services failed to start after 3 attempts"
+            echo "📋 Container Logs:"
             docker logs prometheus-stack-test
-            echo -e "\n📋 Resource Usage:"
-            docker stats --no-stream prometheus-stack-test
-            echo -e "\n📋 Container Inspection:"
-            docker inspect prometheus-stack-test
             exit 1
           fi
           
