@@ -14,32 +14,25 @@
   - [Bug fix 1]
   - [Bug fix 2]
 
-## 📋 Installation
+## 📋 Installation & Configuration
 
-### Standard Installation
-1. In Home Assistant, go to **Settings** → **Add-ons** → **Add-on Store**
-2. Click the three dots in the top right and select **Repositories**
-3. Add this repository URL: `https://github.com/sejnub/ha-prometheus-stack`
-4. Find "Prometheus Stack" in the add-on store
-5. Click **Install**
+For installation instructions and configuration options, see the [main documentation](README.md).
 
-### Manual Installation
-1. Download the latest release
-2. Extract to your Home Assistant add-ons directory
-3. Restart Home Assistant
-4. Install via Add-on Store
+## 🔍 Changes in this Version
 
-## 🔧 Configuration
+### Configuration Changes
+- [List any changes to configuration options]
+- [List any new configuration options]
+- [List any deprecated options]
 
-The add-on can be configured through the Home Assistant UI:
+### Breaking Changes
+- [List any breaking changes]
+- [Migration instructions if needed]
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `alertmanager_receiver` | string | `default` | Name of the alert receiver |
-| `alertmanager_to_email` | email | `example@example.com` | Email address for notifications |
-| `home_assistant_url` | string | `http://supervisor/core` | Home Assistant URL |
-| `home_assistant_token` | string | `` | Long-lived access token |
-| `blackbox_targets` | list | `[{"name": "Home Assistant", "url": "http://supervisor/core"}]` | Monitoring targets |
+### Dependency Updates
+- [List updated dependencies]
+- [List new dependencies]
+- [List removed dependencies]
 
 ## 📊 Features
 
@@ -69,6 +62,13 @@ Once installed and started:
 
 - [Issue 1]
 - [Issue 2]
+
+## 🔧 Upgrade Instructions
+
+If upgrading from a previous version:
+1. [Special step 1 if needed]
+2. [Special step 2 if needed]
+3. [Special step 3 if needed]
 
 ## 📞 Support
 
