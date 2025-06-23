@@ -68,7 +68,16 @@ mkdir -p "$PROJECT_ROOT/test-data/alertmanager"
 cat > "$PROJECT_ROOT/test-data/options.json" <<EOF
 {
   "alertmanager_receiver": "test-receiver",
-  "alertmanager_to_email": "test@example.com"
+  "alertmanager_to_email": "test@example.com",
+  "monitor_home_assistant": true,
+  "monitor_supervisor": true,
+  "monitor_addons": true,
+  "custom_targets": [],
+  "home_assistant_ip": "192.168.1.30",
+  "home_assistant_port": 8123,
+  "home_assistant_long_lived_token": "test-token",
+  "smtp_host": "localhost",
+  "smtp_port": 25
 }
 EOF
 
@@ -80,6 +89,7 @@ if [ -f "$PROJECT_ROOT/env.example" ]; then
     sed -i 's/HOME_ASSISTANT_IP=.*/HOME_ASSISTANT_IP=192.168.1.30/' "$PROJECT_ROOT/test-data/.env"
     sed -i 's/HOME_ASSISTANT_LONG_LIVED_TOKEN=.*/HOME_ASSISTANT_LONG_LIVED_TOKEN=test-token/' "$PROJECT_ROOT/test-data/.env"
     sed -i 's/ALERTMANAGER_EMAIL=.*/ALERTMANAGER_EMAIL=test@example.com/' "$PROJECT_ROOT/test-data/.env"
+    sed -i 's/ALERTMANAGER_TO_EMAIL=.*/ALERTMANAGER_TO_EMAIL=test@example.com/' "$PROJECT_ROOT/test-data/.env"
 fi
 
 # Run the container with test configuration

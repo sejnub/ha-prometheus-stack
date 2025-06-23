@@ -38,9 +38,27 @@ This add-on provides a complete monitoring solution for your Home Assistant envi
 
 ## Configuration
 
-### Environment Variables (Optional)
+### Add-on Mode (Production)
 
-For advanced configuration, you can create a `.env` file in the add-on data directory:
+The add-on can be configured through the Home Assistant UI in the **Configuration** tab:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `alertmanager_receiver` | string | `default` | Name of the alert receiver |
+| `alertmanager_to_email` | email | `example@example.com` | Email address for notifications |
+| `monitor_home_assistant` | boolean | `true` | Monitor Home Assistant Core |
+| `monitor_supervisor` | boolean | `true` | Monitor Home Assistant Supervisor |
+| `monitor_addons` | boolean | `true` | Monitor Home Assistant add-ons |
+| `custom_targets` | list | `[]` | Additional monitoring targets |
+| `home_assistant_ip` | string | `192.168.1.30` | Home Assistant IP address |
+| `home_assistant_port` | port | `8123` | Home Assistant port |
+| `home_assistant_long_lived_token` | string | `` | Long-lived access token |
+| `smtp_host` | string | `localhost` | SMTP server hostname |
+| `smtp_port` | port | `25` | SMTP server port |
+
+### Development/Test Mode
+
+For development and testing, you can use a `.env` file:
 
 1. Copy the template: `cp env.example .env`
 2. Edit the `.env` file with your actual values:
@@ -53,11 +71,18 @@ HOME_ASSISTANT_LONG_LIVED_TOKEN=your-long-lived-access-token-here
 
 # Email Configuration
 ALERTMANAGER_EMAIL=your-email@example.com
-ALERTMANAGER_SMTP_HOST=localhost
-ALERTMANAGER_SMTP_PORT=25
+SMTP_HOST=localhost
+SMTP_PORT=25
 ```
 
-**Note:** The `.env` file is optional and should NOT be committed to version control.
+**Note:** The `.env` file is for development only and should NOT be committed to version control.
+
+### Configuration Priority
+
+The add-on uses the following priority for configuration:
+1. **Add-on Configuration Tab** (highest priority)
+2. **Environment Variables** (from `.env` file)
+3. **Default Values** (lowest priority)
 
 ### Basic Configuration
 The add-on can be configured through the Home Assistant UI:

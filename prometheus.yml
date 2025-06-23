@@ -20,7 +20,7 @@ scrape_configs:
     scrape_timeout: 10s
     authorization:
       type: Bearer
-      credentials: "${HOME_ASSISTANT_LONG_LIVED_TOKEN:-your-long-lived-access-token-here}"
+      credentials: "${HOME_ASSISTANT_TOKEN:-your-long-lived-access-token-here}"
 
 
   #########################

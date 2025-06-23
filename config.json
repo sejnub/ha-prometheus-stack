@@ -30,7 +30,12 @@
     "monitor_home_assistant": true,
     "monitor_supervisor": true,
     "monitor_addons": true,
-    "custom_targets": []
+    "custom_targets": [],
+    "home_assistant_ip": "192.168.1.30",
+    "home_assistant_port": 8123,
+    "home_assistant_long_lived_token": "",
+    "smtp_host": "localhost",
+    "smtp_port": 25
   },
   "schema": {
     "alertmanager_receiver": "str",
@@ -38,6 +43,11 @@
     "monitor_home_assistant": "bool",
     "monitor_supervisor": "bool",
     "monitor_addons": "bool",
-    "custom_targets": ["str"]
+    "custom_targets": ["str"],
+    "home_assistant_ip": "str",
+    "home_assistant_port": "port",
+    "home_assistant_long_lived_token": "str",
+    "smtp_host": "str",
+    "smtp_port": "port"
   }
 }
