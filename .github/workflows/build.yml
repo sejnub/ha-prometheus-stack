@@ -24,19 +24,29 @@ jobs:
         # Make test scripts executable
         chmod +x test/*.sh
         
-        # Run build test
+        echo "🔨 Building add-on..."
         ./test/build-test.sh
         
-        # Wait for services to start
-        sleep 30
+        echo "⏳ Waiting for services to initialize..."
+        for i in {1..6}; do
+          echo "Attempt $i of 6..."
+          if ./test/health-check.sh; then
+            echo "✅ All services are healthy!"
+            break
+          fi
+          if [ $i -eq 6 ]; then
+            echo "❌ Services failed to start after 6 attempts"
+            docker logs prometheus-stack-test
+            exit 1
+          fi
+          echo "⏳ Waiting 10 seconds before next attempt..."
+          sleep 10
+        done
         
-        # Run health check
-        ./test/health-check.sh
-        
-        # Run configuration test
+        echo "🧪 Running configuration tests..."
         ./test/test-config.sh
         
-        # Clean up
+        echo "🧹 Cleaning up..."
         ./test/cleanup.sh --all
         
     - name: Build multi-arch image

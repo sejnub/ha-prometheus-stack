@@ -1,2 +1,11 @@
 #!/usr/bin/with-contenv bashio
-#shellcheck shell=bash 
+#shellcheck shell=bash
+
+# Run init script to create configuration files
+/etc/cont-init.d/00-init.sh
+
+# Create marker file to indicate initialization is complete
+touch /tmp/.init-complete
+
+# Keep the service running
+sleep infinity 

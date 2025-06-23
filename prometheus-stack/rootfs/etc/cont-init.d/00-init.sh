@@ -44,97 +44,25 @@ EOF
 # Create karma.yml configuration
 cat > /etc/karma/karma.yml <<EOF
 alertmanager:
-  interval: 1m
   servers:
     - name: "default"
       uri: "http://localhost:9093"
-      timeout: 40s
+      timeout: 10s
       proxy: false
       readonly: false
-      cors:
-        credentials: "include"
-      tls:
-        ca: ""
-        cert: ""
-        key: ""
 
 listen:
   address: "0.0.0.0"
   port: 8080
-  prefix: "/"
 
 log:
-  level: "info"
-  format: "text"
-  timestamp: false
-  requests: false
-
-ui:
-  refresh: "30s"
-  theme: "auto"
-  animations: true
-  colorTitlebar: false
-  hideFiltersWhenIdle: true
-  minimalGroupWidth: 420
-  alertsPerGroup: 5
-  collapseGroups: "collapsedOnMobile"
-
-annotations:
-  default:
-    hidden: false
-  hidden: []
-  visible: []
-  keep: []
-  strip: []
-  order: []
-  actions: []
-  enableInsecureHTML: false
+  level: info
+  format: text
 
 labels:
-  keep: []
-  strip: []
-  order: []
   color:
-    static: []
-    unique: []
-  valueOnly: []
-  keep_re: []
-  strip_re: []
-  valueOnly_re: []
-
-grid:
-  sorting:
-    order: "startsAt"
-    reverse: true
-    label: "alertname"
-  groupLimit: 40
-  auto:
-    ignore: []
-    order: []
-
-silenceForm:
-  strip:
-    labels: []
-  defaultAlertmanagers: []
-
-receivers:
-  keep: []
-  strip: []
-
-karma:
-  name: "karma"
-
-history:
-  enabled: true
-  timeout: 20s
-  workers: 30
-
-authorization:
-  acl:
-    silences: ""
-
-filters:
-  default: []
+    static:
+      - "@alertmanager=default"
 EOF
 
 echo "Configuration initialized successfully" 
