@@ -1,0 +1,9 @@
+#!/usr/bin/with-contenv bashio
+
+echo "Starting Prometheus..."
+exec /opt/prometheus/prometheus \
+  --config.file=/etc/prometheus/prometheus.yml \
+  --storage.tsdb.path=/data/prometheus \
+  --web.console.libraries=/opt/prometheus/console_libraries \
+  --web.console.templates=/opt/prometheus/consoles \
+  --web.enable-lifecycle 

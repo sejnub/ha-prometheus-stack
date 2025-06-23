@@ -1,0 +1,6 @@
+#!/usr/bin/with-contenv bashio
+
+echo "Starting Blackbox Exporter..."
+exec /opt/blackbox_exporter/blackbox_exporter \
+  --config.file=/etc/blackbox_exporter/blackbox.yml \
+  --web.listen-address=:9115 

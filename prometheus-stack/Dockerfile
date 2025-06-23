@@ -44,6 +44,12 @@ COPY env.example /env.example
 # Create necessary directories
 RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /data/prometheus /data/alertmanager
 
-# Copy the startup script
-COPY run.sh /
-RUN chmod a+x /run.sh
+# Copy s6-overlay configuration
+COPY rootfs/ /
+
+# Make s6-overlay scripts executable
+RUN chmod +x /etc/cont-init.d/00-init.sh && \
+    chmod +x /etc/s6-overlay/s6-rc.d/alertmanager/run && \
+    chmod +x /etc/s6-overlay/s6-rc.d/blackbox-exporter/run && \
+    chmod +x /etc/s6-overlay/s6-rc.d/prometheus/run && \
+    chmod +x /etc/s6-overlay/s6-rc.d/karma/run

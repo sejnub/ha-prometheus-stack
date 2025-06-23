@@ -1,0 +1,4 @@
+#!/usr/bin/with-contenv bashio
+
+echo "Starting Karma..."
+exec karma --config.file=/etc/karma/karma.yml 
