@@ -1,6 +1,6 @@
 {
   "name": "Prometheus Stack",
-  "version": "1.10.4",
+  "version": "1.10.5",
   "slug": "prometheus-stack",
   "description": "Prometheus, Alertmanager and Karma in one add-on",
   "arch": ["aarch64", "amd64", "armv7"],
@@ -9,23 +9,43 @@
   "boot": "auto",
   "ingress": true,
   "ingress_port": 8080,
+  "ingress_entry": {
+    "prometheus": {
+      "path": "prometheus",
+      "port": 9090
+    },
+    "alertmanager": {
+      "path": "alertmanager",
+      "port": 9093
+    },
+    "karma": {
+      "path": "karma",
+      "port": 8080
+    },
+    "blackbox": {
+      "path": "blackbox",
+      "port": 9115
+    }
+  },
   "panel_icon": "mdi:chart-timeline",
+  "panel_title": "Prometheus Stack",
+  "panel_admin": true,
   "build": {
     "dockerfile": "Dockerfile",
     "args": []
   },
   "ports": {
-    "9090/tcp": 9090,
-    "9093/tcp": 9093,
-    "9115/tcp": 9115,
+    "9090/tcp": null,
+    "9093/tcp": null,
+    "9115/tcp": null,
     "8080/tcp": null
   },
   "ports_description": {
-    "9090/tcp": "Prometheus",
-    "9093/tcp": "Alertmanager",
-    "9115/tcp": "Blackbox Exporter"
+    "9090/tcp": "Prometheus (disabled by default, use ingress)",
+    "9093/tcp": "Alertmanager (disabled by default, use ingress)",
+    "9115/tcp": "Blackbox Exporter (disabled by default, use ingress)"
   },
-  "webui": "http://[HOST]:[PORT:9090]",
+  "webui": "http://[HOST]/prometheus",
   "host_network": false,
   "hassio_api": true,
   "hassio_role": "admin",
