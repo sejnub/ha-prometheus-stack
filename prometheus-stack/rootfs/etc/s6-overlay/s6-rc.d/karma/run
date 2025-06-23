@@ -1,6 +1,25 @@
 #!/usr/bin/with-contenv bashio
 
 echo "Starting Karma..."
+
+# Wait for Alertmanager to be ready
+max_attempts=5
+attempt=1
+while [ $attempt -le $max_attempts ]; do
+    if curl -s -f -m 2 http://localhost:9093/-/ready > /dev/null; then
+        echo "Alertmanager is ready"
+        break
+    fi
+    echo "Waiting for Alertmanager to be ready (attempt $attempt/$max_attempts)..."
+    sleep 1
+    attempt=$((attempt + 1))
+done
+
+if [ $attempt -gt $max_attempts ]; then
+    echo "Alertmanager did not become ready in time"
+    exit 1
+fi
+
 exec s6-setuidgid root /usr/local/bin/karma \
     --config.file=/etc/karma/karma.yml \
     --alertmanager.uri=http://localhost:9093 

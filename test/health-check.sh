@@ -31,13 +31,14 @@ set -e  # Exit on any error
 # CONFIGURATION
 # =============================================================================
 
-# Health check timeout (seconds)
-TIMEOUT=10
+# Maximum number of retries for each check
+MAX_RETRIES=5
+# Interval between retries in seconds
+RETRY_INTERVAL=1
+# Timeout for individual curl requests
+CURL_TIMEOUT=2
 
-# Initial wait time for services to fully start (seconds)
-INITIAL_WAIT=30
-
-# Service definitions
+# Service definitions with their health check endpoints
 declare -A SERVICES=(
     ["Prometheus"]="http://localhost:9090/-/healthy"
     ["Alertmanager"]="http://localhost:9093/-/healthy"
@@ -63,13 +64,32 @@ DATA_DIRS=(
 # FUNCTIONS
 # =============================================================================
 
+# Function to perform retried checks
+retry_check() {
+    local check_name="$1"
+    local check_command="$2"
+    local attempt=1
+    
+    while [ $attempt -le $MAX_RETRIES ]; do
+        if eval "$check_command"; then
+            return 0
+        fi
+        if [ $attempt -lt $MAX_RETRIES ]; then
+            echo "⏳ Retry $attempt/$MAX_RETRIES for $check_name..."
+            sleep $RETRY_INTERVAL
+        fi
+        ((attempt++))
+    done
+    return 1
+}
+
 # Function to check if a service is healthy
 check_service() {
     local service_name="$1"
     local url="$2"
     printf "🔍 Checking %-18s ... " "$service_name"
     
-    if curl -f -s --max-time $TIMEOUT "$url" > /dev/null; then
+    if retry_check "$service_name" "curl -f -s --max-time $CURL_TIMEOUT '$url' > /dev/null"; then
         echo "✅ HEALTHY"
         return 0
     else
@@ -113,7 +133,7 @@ check_service_functionality() {
     
     case "$service_name" in
         "Prometheus")
-            if curl -s "http://localhost:9090/api/v1/targets" | grep -q '"health":"up"'; then
+            if retry_check "Prometheus targets" "curl -s 'http://localhost:9090/api/v1/targets' | grep -q '\"health\":\"up\"'"; then
                 echo "✅ Can scrape targets"
                 return 0
             else
@@ -122,7 +142,7 @@ check_service_functionality() {
             fi
             ;;
         "Alertmanager")
-            if curl -s "http://localhost:9093/-/ready" | grep -q "OK"; then
+            if retry_check "Alertmanager config" "curl -s 'http://localhost:9093/-/ready' | grep -q 'OK'"; then
                 echo "✅ Configuration valid"
                 return 0
             else
@@ -131,7 +151,7 @@ check_service_functionality() {
             fi
             ;;
         "Blackbox Exporter")
-            if curl -s "http://localhost:9115/probe?target=google.com&module=http_2xx" | grep -q "probe_success 1"; then
+            if retry_check "Blackbox probe" "curl -s 'http://localhost:9115/probe?target=google.com&module=http_2xx' | grep -q 'probe_success 1'"; then
                 echo "✅ Probe working"
                 return 0
             else
@@ -140,29 +160,18 @@ check_service_functionality() {
             fi
             ;;
         "Karma")
-            # First check if Karma is running
-            if ! curl -f -s --max-time $TIMEOUT "http://localhost:8080/" > /dev/null; then
-                echo "❌ Karma UI not accessible"
-                return 1
-            fi
-            
-            # Check Alertmanager connection via Karma's metrics
-            local metrics
-            metrics=$(curl -s "http://localhost:8080/metrics")
-            
-            # Check if Karma can connect to Alertmanager at all
-            if echo "$metrics" | grep -q 'karma_alertmanager_up{alertmanager="default"} 1'; then
+            # Check if Karma is running and can connect to Alertmanager
+            if retry_check "Karma Alertmanager connection" "curl -s 'http://localhost:8080/metrics' | grep -q 'karma_alertmanager_up{alertmanager=\"default\"} 1'"; then
                 echo "✅ Connected to Alertmanager"
                 return 0
+            else
+                echo "❌ Cannot connect to Alertmanager"
+                echo "📋 Karma metrics:"
+                curl -s "http://localhost:8080/metrics" | grep -E "karma_alertmanager_(up|errors)" || true
+                echo "📋 Alertmanager status:"
+                curl -s "http://localhost:9093/-/ready" || true
+                return 1
             fi
-            
-            # If not connected, show detailed diagnostics
-            echo "❌ Cannot connect to Alertmanager"
-            echo "📋 Karma metrics:"
-            echo "$metrics" | grep -E "karma_alertmanager_(up|errors)"
-            echo "📋 Alertmanager status:"
-            curl -s "http://localhost:9093/-/ready" || true
-            return 1
             ;;
     esac
 }
@@ -183,9 +192,12 @@ if ! docker ps | grep -q prometheus-stack-test; then
 fi
 echo "✅ Container is running"
 
-# Wait for initial startup
-echo "⏳ Waiting $INITIAL_WAIT seconds for services to fully start..."
-sleep $INITIAL_WAIT
+# Initial quick check for basic container readiness
+echo "⏳ Waiting for services to start..."
+if ! retry_check "basic container readiness" "docker exec prometheus-stack-test ps aux | grep -q prometheus"; then
+    echo "❌ Container services failed to start"
+    exit 1
+fi
 
 echo ""
 echo "📊 Performing health checks..."
@@ -199,6 +211,7 @@ for service in "${!SERVICES[@]}"; do
     fi
 done
 
+# Continue with configuration checks
 echo ""
 echo "📋 Checking configuration files..."
 for file in "${CONFIG_FILES[@]}"; do
@@ -207,6 +220,7 @@ for file in "${CONFIG_FILES[@]}"; do
     fi
 done
 
+# Check data directories
 echo ""
 echo "📁 Checking data directories..."
 for dir in "${DATA_DIRS[@]}"; do
@@ -215,6 +229,7 @@ for dir in "${DATA_DIRS[@]}"; do
     fi
 done
 
+# Check service functionality
 echo ""
 echo "🔬 Testing service functionality..."
 echo "-------------------------------"
@@ -224,12 +239,14 @@ for service in "${!SERVICES[@]}"; do
     fi
 done
 
-# Final status
-echo ""
+# Final result
 if [ $failed -eq 0 ]; then
+    echo ""
     echo "✅ ALL CHECKS PASSED"
+    echo "✅ All services are healthy!"
     exit 0
 else
-    echo "❌ $failed check(s) failed"
+    echo ""
+    echo "❌ $failed checks failed"
     exit 1
 fi 
