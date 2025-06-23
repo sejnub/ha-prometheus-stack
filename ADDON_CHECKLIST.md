@@ -41,8 +41,9 @@
 
 - [ ] **Both modes work: Add-on mode and Test mode**
   - Add-on mode: reads from `/data/options.json`
-  - Test mode: reads from `/data/.env`
-  - Priority: options.json > .env > defaults
+  - Test mode: also reads from `/data/options.json`
+  - Configuration preserved between test runs
+  - Test data directory properly gitignored
 
 ## ✅ Documentation Updates
 - [ ] **README.md reflects new structure**

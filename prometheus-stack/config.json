@@ -1,6 +1,6 @@
 {
   "name": "Prometheus Stack",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "slug": "prometheus-stack",
   "description": "Prometheus, Alertmanager and Karma in one add-on",
   "arch": ["aarch64", "amd64", "armv7"],
@@ -31,27 +31,25 @@
   "options": {
     "alertmanager_receiver": "default",
     "alertmanager_to_email": "example@example.com",
-    "monitor_home_assistant": true,
-    "monitor_supervisor": true,
-    "monitor_addons": true,
-    "custom_targets": [],
-    "home_assistant_ip": "192.168.1.30",
-    "home_assistant_port": 8123,
-    "home_assistant_long_lived_token": "",
-    "smtp_host": "localhost",
-    "smtp_port": 25
+    "home_assistant_url": "http://supervisor/core",
+    "home_assistant_token": "",
+    "blackbox_targets": [
+      {
+        "name": "Home Assistant",
+        "url": "http://supervisor/core"
+      }
+    ]
   },
   "schema": {
     "alertmanager_receiver": "str",
     "alertmanager_to_email": "email",
-    "monitor_home_assistant": "bool",
-    "monitor_supervisor": "bool",
-    "monitor_addons": "bool",
-    "custom_targets": ["str"],
-    "home_assistant_ip": "str",
-    "home_assistant_port": "int",
-    "home_assistant_long_lived_token": "str",
-    "smtp_host": "str",
-    "smtp_port": "int"
+    "home_assistant_url": "str",
+    "home_assistant_token": "str",
+    "blackbox_targets": [
+      {
+        "name": "str",
+        "url": "str"
+      }
+    ]
   }
 }

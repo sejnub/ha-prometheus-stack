@@ -3,15 +3,9 @@
 # Initialize configuration and directories
 CONFIG_PATH=/data/options.json
 
-# Load environment variables if .env file exists (for development/testing)
-if [ -f /data/.env ]; then
-    echo "Loading environment variables from .env file (development mode)..."
-    export $(cat /data/.env | grep -v '^#' | xargs)
-fi
-
-# Read configuration from options.json (add-on mode)
+# Read configuration from options.json
 if [ -f $CONFIG_PATH ]; then
-    echo "Loading configuration from options.json (add-on mode)..."
+    echo "Loading configuration from options.json..."
     ALERTMANAGER_RECEIVER=$(jq --raw-output '.alertmanager_receiver' $CONFIG_PATH)
     ALERTMANAGER_TO_EMAIL=$(jq --raw-output '.alertmanager_to_email' $CONFIG_PATH)
     HOME_ASSISTANT_IP=$(jq --raw-output '.home_assistant_ip' $CONFIG_PATH)
@@ -20,15 +14,15 @@ if [ -f $CONFIG_PATH ]; then
     SMTP_HOST=$(jq --raw-output '.smtp_host' $CONFIG_PATH)
     SMTP_PORT=$(jq --raw-output '.smtp_port' $CONFIG_PATH)
 else
-    echo "No options.json found, using environment variables or defaults..."
-    # Set defaults if neither file exists
-    ALERTMANAGER_RECEIVER=${ALERTMANAGER_RECEIVER:-"default"}
-    ALERTMANAGER_TO_EMAIL=${ALERTMANAGER_TO_EMAIL:-"example@example.com"}
-    HOME_ASSISTANT_IP=${HOME_ASSISTANT_IP:-"192.168.1.30"}
-    HOME_ASSISTANT_PORT=${HOME_ASSISTANT_PORT:-"8123"}
-    HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_LONG_LIVED_TOKEN:-""}
-    SMTP_HOST=${SMTP_HOST:-"localhost"}
-    SMTP_PORT=${SMTP_PORT:-"25"}
+    echo "No options.json found, using defaults..."
+    # Set defaults if file doesn't exist
+    ALERTMANAGER_RECEIVER="default"
+    ALERTMANAGER_TO_EMAIL="example@example.com"
+    HOME_ASSISTANT_IP="192.168.1.30"
+    HOME_ASSISTANT_PORT="8123"
+    HOME_ASSISTANT_TOKEN=""
+    SMTP_HOST="localhost"
+    SMTP_PORT="25"
 fi
 
 # Create alertmanager.yml

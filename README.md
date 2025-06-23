@@ -46,71 +46,38 @@ The add-on can be configured through the Home Assistant UI in the **Configuratio
 |--------|------|---------|-------------|
 | `alertmanager_receiver` | string | `default` | Name of the alert receiver |
 | `alertmanager_to_email` | email | `example@example.com` | Email address for notifications |
-| `monitor_home_assistant` | boolean | `true` | Monitor Home Assistant Core |
-| `monitor_supervisor` | boolean | `true` | Monitor Home Assistant Supervisor |
-| `monitor_addons` | boolean | `true` | Monitor Home Assistant add-ons |
-| `custom_targets` | list | `[]` | Additional monitoring targets |
-| `home_assistant_ip` | string | `192.168.1.30` | Home Assistant IP address |
-| `home_assistant_port` | port | `8123` | Home Assistant port |
-| `home_assistant_long_lived_token` | string | `` | Long-lived access token |
-| `smtp_host` | string | `localhost` | SMTP server hostname |
-| `smtp_port` | port | `25` | SMTP server port |
+| `home_assistant_url` | string | `http://supervisor/core` | Home Assistant URL |
+| `home_assistant_token` | string | `` | Long-lived access token |
+| `blackbox_targets` | list | `[]` | Additional monitoring targets |
 
 ### Development/Test Mode
 
-For development and testing, you can use a `.env` file:
+For development and testing:
 
-1. Copy the template: `cp env.example .env`
-2. Edit the `.env` file with your actual values:
+1. Run `./test/build-test.sh` to create the initial test environment
+2. Edit `test-data/options.json` with your actual values:
+   ```json
+   {
+     "alertmanager_receiver": "default",
+     "alertmanager_to_email": "your-email@example.com",
+     "home_assistant_url": "http://supervisor/core",
+     "home_assistant_token": "your-long-lived-access-token",
+     "blackbox_targets": [
+       {
+         "name": "Home Assistant",
+         "url": "http://supervisor/core"
+       }
+     ]
+   }
+   ```
 
-```bash
-# Home Assistant Configuration
-HOME_ASSISTANT_IP=192.168.1.30
-HOME_ASSISTANT_PORT=8123
-HOME_ASSISTANT_LONG_LIVED_TOKEN=your-long-lived-access-token-here
-
-# Email Configuration
-ALERTMANAGER_EMAIL=your-email@example.com
-SMTP_HOST=localhost
-SMTP_PORT=25
-```
-
-**Note:** The `.env` file is for development only and should NOT be committed to version control.
+**Note:** The `test-data` directory is gitignored to keep your credentials safe.
 
 ### Configuration Priority
 
 The add-on uses the following priority for configuration:
 1. **Add-on Configuration Tab** (highest priority)
-2. **Environment Variables** (from `.env` file)
-3. **Default Values** (lowest priority)
-
-### Basic Configuration
-The add-on can be configured through the Home Assistant UI:
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `alertmanager_receiver` | string | `default` | Name of the alert receiver |
-| `alertmanager_to_email` | email | `example@example.com` | Email address for notifications |
-| `monitor_home_assistant` | boolean | `true` | Monitor Home Assistant Core |
-| `monitor_supervisor` | boolean | `true` | Monitor Home Assistant Supervisor |
-| `monitor_addons` | boolean | `true` | Monitor Home Assistant add-ons |
-| `custom_targets` | list | `[]` | Additional monitoring targets |
-
-### Advanced Configuration
-You can also configure the add-on using YAML in your `configuration.yaml`:
-
-```yaml
-addons:
-  prometheus_stack:
-    alertmanager_receiver: "home-alerts"
-    alertmanager_to_email: "your-email@example.com"
-    monitor_home_assistant: true
-    monitor_supervisor: true
-    monitor_addons: true
-    custom_targets:
-      - "http://your-custom-service:8080"
-      - "your-custom-db:5432"
-```
+2. **Default Values** (lowest priority)
 
 ## Access
 
@@ -254,6 +221,76 @@ docker run -d \
   -v $(pwd)/test-data:/data \
   prometheus-stack
 ```
+
+## Service Configuration
+
+### S6-Overlay Service Management
+
+This add-on uses s6-overlay for service management. The services are configured in `/etc/s6-overlay/s6-rc.d/` with the following structure:
+
+```
+/etc/s6-overlay/s6-rc.d/
+├── alertmanager/
+│   ├── run                 # Service startup script
+│   ├── type               # Service type (longrun)
+│   └── up                 # Service up notification
+├── blackbox-exporter/
+│   ├── run
+│   ├── type
+│   └── up
+├── karma/
+│   ├── dependencies.d/    # Service dependencies
+│   │   ├── alertmanager  # Karma depends on Alertmanager
+│   │   └── prometheus    # Karma depends on Prometheus
+│   ├── run
+│   ├── type
+│   └── up
+├── prometheus/
+│   ├── dependencies.d/
+│   │   └── blackbox-exporter  # Prometheus depends on Blackbox
+│   ├── run
+│   ├── type
+│   └── up
+└── user/                  # Main service bundle
+    ├── contents.d/        # Services in the bundle
+    │   ├── alertmanager
+    │   ├── blackbox-exporter
+    │   ├── karma
+    │   └── prometheus
+    ├── dependencies.d/
+    │   └── legacy-cont-init
+    ├── type              # Bundle type
+    └── run               # Bundle startup
+```
+
+### Service Dependencies
+
+The services start in the following order:
+1. **Blackbox Exporter**: Starts first as other services depend on it
+2. **Prometheus**: Starts after Blackbox Exporter is ready
+3. **Alertmanager**: Starts independently
+4. **Karma**: Starts last, after both Prometheus and Alertmanager are ready
+
+### Service Types
+
+- All monitoring services are `longrun` type services
+- The `user` service is a `bundle` type that groups all services
+- Each service has an `up` script to notify when it's ready
+- Dependencies ensure proper startup order
+
+### Service Configuration
+
+Each service is configured with:
+- **run**: The main service script
+- **type**: Service type definition
+- **up**: Service readiness notification
+- **dependencies.d**: Required services (if any)
+
+The services are managed automatically by s6-overlay, providing:
+- Automatic service restarts on failure
+- Proper shutdown handling
+- Dependency management
+- Service bundling
 
 ## File Structure
 

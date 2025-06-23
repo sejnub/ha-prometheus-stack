@@ -3,7 +3,7 @@
 - [1. Test Directory Structure](#1-test-directory-structure)
 - [2. Quick Start Testing](#2-quick-start-testing)
   - [2.1. Prerequisites](#21-prerequisites)
-  - [2.2. Environment Variables (Optional)](#22-environment-variables-optional)
+  - [2.2. Configuration](#22-configuration)
   - [2.3. Basic Testing Workflow](#23-basic-testing-workflow)
 - [3. Detailed Script Documentation](#3-detailed-script-documentation)
   - [3.1. `build-test.sh` - Build and Test Script](#31-build-testsh---build-and-test-script)
@@ -46,15 +46,25 @@ test/
 - Docker Desktop for Windows (with WSL2 backend)
 - WSL2 Ubuntu environment
 
-### 2.2. Environment Variables (Optional)
+### 2.2. Configuration
 For testing with real Home Assistant instance:
-1. Copy the environment template: `cp ../env.example ../test-data/.env`
-2. Edit the `.env` file with your actual values:
-   ```bash
-   HOME_ASSISTANT_IP=192.168.1.30
-   HOME_ASSISTANT_LONG_LIVED_TOKEN=your-actual-token
-   ALERTMANAGER_EMAIL=your-email@example.com
+1. Edit the `test-data/options.json` file with your actual values:
+   ```json
+   {
+     "alertmanager_receiver": "default",
+     "alertmanager_to_email": "your-email@example.com",
+     "home_assistant_url": "http://supervisor/core",
+     "home_assistant_token": "your-long-lived-access-token",
+     "blackbox_targets": [
+       {
+         "name": "Home Assistant",
+         "url": "http://supervisor/core"
+       }
+     ]
+   }
    ```
+
+**Note:** The `options.json` file is automatically created with default values when you first run `build-test.sh`. Your changes to this file will be preserved between test runs, and the file is properly gitignored to keep your credentials safe.
 
 ### 2.3. Basic Testing Workflow
 ```bash
@@ -82,7 +92,8 @@ For testing with real Home Assistant instance:
 
 **What it does**:
 - Builds the Docker image with your add-on code
-- Creates test configuration data
+- Creates test configuration data (if not exists)
+- Preserves your existing configuration between runs
 - Runs the container with proper port mapping
 - Provides access URLs for testing
 
@@ -228,69 +239,3 @@ netstat -tulpn | grep :9093
 netstat -tulpn | grep :8080
 netstat -tulpn | grep :9115
 ```
-
-**Permission issues**
-```bash
-# Make scripts executable
-chmod +x test/*.sh
-```
-
-**WSL2 performance issues**
-```bash
-# Check WSL2 memory allocation
-cat /proc/meminfo | grep MemTotal
-```
-
-### 5.2. Debug Mode
-
-Enable debug mode for more verbose output:
-
-```bash
-# Set debug environment variable
-export DEBUG=1
-
-# Run with debug output
-./test/build-test.sh
-```
-
-## 6. Performance Optimization
-
-### 6.1. WSL2 Configuration
-
-For better performance in WSL2, create or edit `~/.wslconfig`:
-
-```ini
-[wsl2]
-memory=4GB
-processors=4
-swap=2GB
-```
-
-### 6.2. Docker Configuration
-
-Optimize Docker settings in Docker Desktop:
-
-1. Go to **Settings** → **Resources**
-2. Increase memory allocation to 4GB+
-3. Increase CPU allocation to 4+
-4. Enable **Use the WSL 2 based engine**
-
-## 7. Next Steps
-
-After successful testing:
-
-1. **Create GitHub repository** and push your code
-2. **Set up CI/CD** for automated testing
-3. **Create releases** for version management
-4. **Document deployment** procedures
-5. **Set up monitoring** for the add-on itself
-
-## 8. Notes
-
-- All test scripts are designed to be idempotent
-- Test data is stored in `test-data/` directory
-- Containers are named with `-test` suffix to avoid conflicts
-- Scripts use `set -e` to exit on any error
-- All URLs use `localhost` for local testing
-
-For more information, see the main [README.md](../README.md). 

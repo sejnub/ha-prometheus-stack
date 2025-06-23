@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # =============================================================================
-# PROMETHEUS STACK ADD-ON - LOCAL TESTING SCRIPT
+# PROMETHEUS STACK ADD-ON - LOCAL TESTING SCRIPT (ADDON MODE)
 # =============================================================================
-# PURPOSE: Build and run the Home Assistant add-on locally for testing
+# PURPOSE: Build and run the Home Assistant add-on locally in addon mode
 # USAGE:   ./test/build-test.sh (from project root) OR ./build-test.sh (from test folder)
 # 
 # This script:
 # 1. Builds the Docker image with your add-on code
-# 2. Creates test configuration data
-# 3. Runs the container with proper port mapping
+# 2. Creates test configuration data (options.json)
+# 3. Runs the container with proper s6-overlay init and Home Assistant environment
 # 4. Provides access URLs for testing
 #
 # REQUIREMENTS: Docker Desktop with WSL2 backend enabled
@@ -64,8 +64,10 @@ echo "📁 Setting up test environment..."
 mkdir -p "$PROJECT_ROOT/test-data/prometheus"
 mkdir -p "$PROJECT_ROOT/test-data/alertmanager"
 
-# Create test options.json (simulates Home Assistant add-on config)
-cat > "$PROJECT_ROOT/test-data/options.json" <<EOF
+# Create test options.json only if it doesn't exist
+if [ ! -f "$PROJECT_ROOT/test-data/options.json" ]; then
+    echo "📝 Creating default options.json..."
+    cat > "$PROJECT_ROOT/test-data/options.json" <<EOF
 {
   "alertmanager_receiver": "test-receiver",
   "alertmanager_to_email": "test@example.com",
@@ -80,20 +82,12 @@ cat > "$PROJECT_ROOT/test-data/options.json" <<EOF
   "smtp_port": 25
 }
 EOF
-
-# Create test .env file from template
-if [ -f "$PROJECT_ROOT/prometheus-stack/env.example" ]; then
-    echo "📄 Creating test .env file from template..."
-    cp "$PROJECT_ROOT/prometheus-stack/env.example" "$PROJECT_ROOT/test-data/.env"
-    # Update with test values
-    sed -i 's/HOME_ASSISTANT_IP=.*/HOME_ASSISTANT_IP=192.168.1.30/' "$PROJECT_ROOT/test-data/.env"
-    sed -i 's/HOME_ASSISTANT_LONG_LIVED_TOKEN=.*/HOME_ASSISTANT_LONG_LIVED_TOKEN=test-token/' "$PROJECT_ROOT/test-data/.env"
-    sed -i 's/ALERTMANAGER_EMAIL=.*/ALERTMANAGER_EMAIL=test@example.com/' "$PROJECT_ROOT/test-data/.env"
-    sed -i 's/ALERTMANAGER_TO_EMAIL=.*/ALERTMANAGER_TO_EMAIL=test@example.com/' "$PROJECT_ROOT/test-data/.env"
+else
+    echo "📝 Using existing options.json configuration..."
 fi
 
-# Run the container with test configuration
-echo "🚀 Starting test container..."
+# Run the container with test configuration (addon mode simulation)
+echo "🚀 Starting test container in addon mode..."
 docker run -d \
   --name prometheus-stack-test \
   -p 9090:9090 \
@@ -101,6 +95,9 @@ docker run -d \
   -p 9115:9115 \
   -p 8080:8080 \
   -v "$PROJECT_ROOT/test-data:/data" \
+  -e SUPERVISOR_TOKEN="test-supervisor-token" \
+  -e HASSIO_TOKEN="test-hassio-token" \
+  --entrypoint "/init" \
   prometheus-stack-test
 
 # Wait for services to start

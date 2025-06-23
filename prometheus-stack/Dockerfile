@@ -39,7 +39,6 @@ RUN apk add --no-cache \
 # Copy configuration files
 COPY prometheus.yml /etc/prometheus/
 COPY blackbox.yml /etc/blackbox_exporter/
-COPY env.example /env.example
 
 # Create necessary directories
 RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /data/prometheus /data/alertmanager

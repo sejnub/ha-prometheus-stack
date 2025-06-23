@@ -37,10 +37,9 @@ The add-on can be configured through the Home Assistant UI:
 |--------|------|---------|-------------|
 | `alertmanager_receiver` | string | `default` | Name of the alert receiver |
 | `alertmanager_to_email` | email | `example@example.com` | Email address for notifications |
-| `monitor_home_assistant` | boolean | `true` | Monitor Home Assistant Core |
-| `monitor_supervisor` | boolean | `true` | Monitor Home Assistant Supervisor |
-| `monitor_addons` | boolean | `true` | Monitor Home Assistant add-ons |
-| `custom_targets` | list | `[]` | Additional monitoring targets |
+| `home_assistant_url` | string | `http://supervisor/core` | Home Assistant URL |
+| `home_assistant_token` | string | `` | Long-lived access token |
+| `blackbox_targets` | list | `[{"name": "Home Assistant", "url": "http://supervisor/core"}]` | Monitoring targets |
 
 ## 📊 Features
 
