@@ -16,10 +16,10 @@
 
 ## 📋 Installation
 
-### Via HACS (Recommended)
+### Standard Installation
 1. In Home Assistant, go to **Settings** → **Add-ons** → **Add-on Store**
 2. Click the three dots in the top right and select **Repositories**
-3. Add this repository URL: `https://github.com/yourusername/ha-prometheus-stack`
+3. Add this repository URL: `https://github.com/sejnub/ha-prometheus-stack`
 4. Find "Prometheus Stack" in the add-on store
 5. Click **Install**
 
@@ -73,8 +73,8 @@ Once installed and started:
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/ha-prometheus-stack/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/ha-prometheus-stack/discussions)
+- **Issues**: [GitHub Issues](https://github.com/sejnub/ha-prometheus-stack/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/sejnub/ha-prometheus-stack/discussions)
 
 ## 📄 License
 

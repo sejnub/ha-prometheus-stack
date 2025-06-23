@@ -1,7 +1,0 @@
-{
-  "name": "Prometheus Stack",
-  "render_readme": true,
-  "domains": ["addon"],
-  "homeassistant": "2023.8.0",
-  "iot_class": "Local Push"
-} 

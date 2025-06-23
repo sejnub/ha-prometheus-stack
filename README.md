@@ -27,20 +27,12 @@ This add-on provides a complete monitoring solution for your Home Assistant envi
 
 ### Prerequisites
 - Home Assistant (Supervisor or Core)
-- HACS (Home Assistant Community Store) installed
+- Add-on store access
 
-### Installation via HACS (Recommended)
+### Installation Steps
 1. In Home Assistant, go to **Settings** → **Add-ons** → **Add-on Store**
 2. Click the three dots in the top right and select **Repositories**
-3. Add this repository URL: `https://github.com/yourusername/ha-prometheus-stack`
-4. Find "Prometheus Stack" in the add-on store
-5. Click **Install**
-
-### Alternative: Manual Installation
-If you prefer to install manually without HACS:
-1. In Home Assistant, go to **Settings** → **Add-ons** → **Add-on Store**
-2. Click the three dots in the top right and select **Repositories**
-3. Add this repository URL: `https://github.com/yourusername/ha-prometheus-stack`
+3. Add this repository URL: `https://github.com/sejnub/ha-prometheus-stack`
 4. Find "Prometheus Stack" in the add-on store
 5. Click **Install**
 
