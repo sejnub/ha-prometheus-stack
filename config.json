@@ -45,9 +45,9 @@
     "monitor_addons": "bool",
     "custom_targets": ["str"],
     "home_assistant_ip": "str",
-    "home_assistant_port": "port",
+    "home_assistant_port": "int",
     "home_assistant_long_lived_token": "str",
     "smtp_host": "str",
-    "smtp_port": "port"
+    "smtp_port": "int"
   }
 }
