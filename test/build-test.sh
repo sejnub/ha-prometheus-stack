@@ -63,6 +63,7 @@ docker build -t prometheus-stack-test .
 echo "📁 Setting up test environment..."
 mkdir -p "$PROJECT_ROOT/test-data/prometheus"
 mkdir -p "$PROJECT_ROOT/test-data/alertmanager"
+chown -R $(id -u):$(id -g) "$PROJECT_ROOT/test-data"
 
 # Create test options.json only if it doesn't exist
 if [ ! -f "$PROJECT_ROOT/test-data/options.json" ]; then
@@ -82,6 +83,7 @@ if [ ! -f "$PROJECT_ROOT/test-data/options.json" ]; then
   "smtp_port": 25
 }
 EOF
+    chown $(id -u):$(id -g) "$PROJECT_ROOT/test-data/options.json"
 else
     echo "📝 Using existing options.json configuration..."
 fi

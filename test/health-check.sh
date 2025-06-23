@@ -55,7 +55,7 @@ CONFIG_FILES=(
     "/etc/alertmanager/alertmanager.yml"
     "/etc/blackbox_exporter/blackbox.yml"
     "/etc/karma/karma.yml"
-    "/etc/nginx/servers/ingress.conf"
+    "/etc/nginx/http.d/ingress.conf"
 )
 
 # Data directories to check

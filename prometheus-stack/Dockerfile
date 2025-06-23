@@ -41,22 +41,16 @@ RUN apk add --no-cache \
 COPY prometheus.yml /etc/prometheus/
 COPY blackbox.yml /etc/blackbox_exporter/
 
-# Create necessary directories
-RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /data/prometheus /data/alertmanager /etc/nginx/servers
+# Create required directories
+RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /data/prometheus /data/alertmanager && \
+    mkdir -p /etc/nginx/http.d && \
+    rm -f /etc/nginx/http.d/default.conf
 
-# Copy s6-overlay configuration
+# Copy root filesystem
 COPY rootfs/ /
 
-# Make s6-overlay scripts executable
+# Set permissions
 RUN chmod +x /etc/cont-init.d/00-init.sh && \
-    chmod +x /etc/s6-overlay/s6-rc.d/alertmanager/run && \
-    chmod +x /etc/s6-overlay/s6-rc.d/alertmanager/up && \
-    chmod +x /etc/s6-overlay/s6-rc.d/blackbox-exporter/run && \
-    chmod +x /etc/s6-overlay/s6-rc.d/blackbox-exporter/up && \
-    chmod +x /etc/s6-overlay/s6-rc.d/prometheus/run && \
-    chmod +x /etc/s6-overlay/s6-rc.d/prometheus/up && \
-    chmod +x /etc/s6-overlay/s6-rc.d/karma/run && \
-    chmod +x /etc/s6-overlay/s6-rc.d/karma/up && \
-    chmod +x /etc/s6-overlay/s6-rc.d/nginx/run && \
-    chmod +x /etc/s6-overlay/s6-rc.d/nginx/up && \
-    chmod +x /etc/s6-overlay/s6-rc.d/user/run
+    chmod +x /etc/s6-overlay/s6-rc.d/*/run && \
+    find /etc/s6-overlay/s6-rc.d -name finish -type f -exec chmod +x {} \; && \
+    mv /etc/nginx/servers/ingress.conf /etc/nginx/http.d/ingress.conf
