@@ -81,7 +81,6 @@ docker build -t prometheus-stack-test .
 echo "📁 Setting up test environment..."
 mkdir -p "$PROJECT_ROOT/test-data/prometheus"
 mkdir -p "$PROJECT_ROOT/test-data/alertmanager"
-chown -R $(id -u):$(id -g) "$PROJECT_ROOT/test-data"
 
 # Create test options.json only if it doesn't exist
 if [ ! -f "$PROJECT_ROOT/test-data/options.json" ]; then
@@ -101,9 +100,6 @@ if [ ! -f "$PROJECT_ROOT/test-data/options.json" ]; then
   "smtp_port": 25
 }
 EOF
-    chown $(id -u):$(id -g) "$PROJECT_ROOT/test-data/options.json"
-else
-    echo "📝 Using existing options.json configuration..."
 fi
 
 # Run the container with test configuration (addon mode simulation)
@@ -114,30 +110,25 @@ docker run -d \
   -p 9093:9093 \
   -p 9115:9115 \
   -p 8080:8080 \
-  -p 80:80 \
+  -p 80:8081 \
   -v "$PROJECT_ROOT/test-data:/data" \
   -e SUPERVISOR_TOKEN="test-supervisor-token" \
   -e HASSIO_TOKEN="test-hassio-token" \
   --entrypoint "/init" \
   prometheus-stack-test
 
-# Wait for services to start
-echo "⏳ Waiting for services to start..."
-sleep 10
-
-# Check if container is running
-if docker ps | grep -q prometheus-stack-test; then
-    print_status "OK" "Container is running successfully!"
-else
+# Check if container started successfully
+if ! docker ps --format '{{.Names}}' | grep -q '^prometheus-stack-test$'; then
     echo "📋 Container logs:"
     docker logs prometheus-stack-test
     echo ""
     print_status "ERROR" "❌ Build failed: Container failed to start ❌"
     exit 1
 fi
+print_status "OK" "Container started successfully"
 
 echo ""
-echo "🎉 Add-on is running and ready for testing!"
+echo "🎉 Add-on is ready for testing!"
 echo "============================================="
 echo "📊 Service URLs:"
 echo "   Prometheus:        http://localhost:9090"

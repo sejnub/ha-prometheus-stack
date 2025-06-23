@@ -3,6 +3,18 @@
 A comprehensive monitoring stack for Home Assistant that includes Prometheus, Alertmanager, Karma, and Blackbox Exporter in a single add-on.
 
 
+## Remember
+
+- It must run equally well in the following modes
+
+  - **Test mode**: When started on the development computer
+  - **Github Mode**: When Run by Github actions
+  - **Addon Mode**: When run as a home Assistant Add-On
+
+- All waits must be loops that have a minimal fixed time (0.5 seconds) and then check what they are waiting for
+
+- Question: Is it enough that the "build"-script relies on the folders "dependencies.d" or must each service wait for the previous one really answering
+
 
 
 ## 1. 📦 What is this?
@@ -14,11 +26,6 @@ This add-on provides a complete monitoring solution for your Home Assistant envi
 - **Karma**: Modern web UI for alert management and visualization
 - **Blackbox Exporter**: External service monitoring via HTTP and TCP probes
 
-It must run equally well in the following modes
-
-- **Test mode**: When started on the development computer
-- **Github Mode**: When Run by Github actions
-- **Addon Mode**: When run as a home Assistant Add-On
 
 ## 2. ⭐ Key Features
 

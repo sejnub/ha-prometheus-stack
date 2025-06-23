@@ -14,10 +14,10 @@
 # 5. NGINX - Ingress routing and path handling
 #
 # HEALTH CHECK ENDPOINTS:
-# - Prometheus: /-/healthy (built-in health endpoint)
-# - Alertmanager: /-/healthy (built-in health endpoint)
-# - Karma: /metrics (metrics endpoint)
-# - Blackbox Exporter: /metrics (metrics endpoint)
+# - Prometheus: /-/ready (built-in health endpoint)
+# - Alertmanager: /-/ready (built-in health endpoint)
+# - Karma: /health (health endpoint)
+# - Blackbox Exporter: /health (health endpoint)
 # - NGINX: /nginx_status (status endpoint)
 #
 # RETURN CODES:
@@ -42,10 +42,10 @@ CURL_TIMEOUT=2
 
 # Service definitions with their health check endpoints
 declare -A SERVICES=(
-    ["Prometheus"]="http://localhost:9090/-/healthy"
-    ["Alertmanager"]="http://localhost:9093/-/healthy"
-    ["Karma"]="http://localhost:8080/"
-    ["Blackbox Exporter"]="http://localhost:9115/metrics"
+    ["Prometheus"]="http://localhost:9090/-/ready"
+    ["Alertmanager"]="http://localhost:9093/-/ready"
+    ["Karma"]="http://localhost:8080/health"
+    ["Blackbox Exporter"]="http://localhost:9115/health"
     ["NGINX"]="http://localhost:80/nginx_status"
 )
 
@@ -64,12 +64,50 @@ DATA_DIRS=(
     "/data/alertmanager"
 )
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
+# Color definitions
+RED='\033[1;31m'    # Bold Red
+GREEN='\033[1;32m'  # Bold Green
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'        # No Color
+
+# Function to print colored success message
+print_success() {
+    echo -e "${GREEN}$1${NC}"
+}
+
+# Function to print colored error message
+print_error() {
+    echo -e "${RED}$1${NC}"
+}
+
+# Print status messages in a standardized format
+print_status() {
+    local status="$1"
+    local message="$2"
+    
+    case "$status" in
+        "OK")
+            echo -e "${GREEN}${message}${NC}"
+            ;;
+        "ERROR")
+            echo -e "${RED}${message}${NC}"
+            ;;
+        "WARNING")
+            echo -e "${YELLOW}${message}${NC}"
+            ;;
+        "INFO")
+            echo -e "${BLUE}${message}${NC}"
+            ;;
+        *)
+            echo "$message"
+            ;;
+    esac
+}
+
+# Set script variables
+PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+TEST_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # =============================================================================
 # FUNCTIONS
@@ -94,107 +132,110 @@ retry_check() {
     return 1
 }
 
-# Function to check if a service is healthy
-check_service() {
-    local service_name="$1"
-    local url="$2"
-    printf "🔍 Checking %-18s ... " "$service_name"
-    
-    if retry_check "$service_name" "curl -f -s --max-time $CURL_TIMEOUT '$url' > /dev/null"; then
-        echo "✅ HEALTHY"
-        return 0
-    else
-        echo "❌ UNHEALTHY"
-        return 1
-    fi
-}
-
-# Function to check configuration files
+# Function to check configuration file
 check_config_file() {
-    local file="$1"
-    printf "🔍 Checking %-30s ... " "$(basename "$file")"
+    local file_name="$1"
+    local file_path="$2"
+    printf "🔍 Checking %-30s ... " "$file_name"
     
-    if docker exec prometheus-stack-test test -f "$file"; then
+    if docker exec prometheus-stack-test test -f "$file_path"; then
         echo "✅ OK"
         return 0
     else
-        echo "❌ MISSING"
+        print_error "❌ MISSING"
         return 1
     fi
 }
 
-# Function to check data directory permissions
-check_data_dir() {
+# Function to check service health with retries
+check_service() {
+    local service_name="$1"
+    local url="$2"
+    local max_attempts=30
+    local wait_time=1
+    
+    for ((i=1; i<=max_attempts; i++)); do
+        print_info "Checking $service_name (attempt $i/$max_attempts)..."
+        if curl -f -s "$url" > /dev/null; then
+            print_success "$service_name is healthy"
+            return 0
+        fi
+        if [ $i -lt $max_attempts ]; then
+            sleep $wait_time
+        fi
+    done
+    
+    print_error "$service_name failed health check at $url"
+    return 1
+}
+
+# Function to check directory existence
+check_directory() {
     local dir="$1"
     printf "🔍 Checking %-30s ... " "$dir"
     
-    if docker exec prometheus-stack-test test -w "$dir"; then
-        echo "✅ Writable"
+    if docker exec prometheus-stack-test test -d "$dir"; then
+        print_success "✅ Writable"
         return 0
     else
-        echo "❌ Not writable"
+        print_error "❌ Not writable"
         return 1
     fi
 }
 
-# Function to check service functionality
-check_service_functionality() {
+# Function to test service functionality
+test_service() {
     local service_name="$1"
-    printf "🔍 Testing %-18s functionality... " "$service_name"
+    local expected_status="$2"
+    printf "🔍 Testing %-30s functionality... " "$service_name"
     
     case "$service_name" in
-        "Prometheus")
-            if retry_check "Prometheus targets" "curl -s 'http://localhost:9090/api/v1/targets' | grep -q '\"health\":\"up\"'"; then
-                echo "✅ Can scrape targets"
+        "Karma")
+            if curl -s "http://localhost:8080/metrics" | grep -q 'karma_alertmanager_up{alertmanager="default"} 1'; then
+                print_success "✅ $expected_status"
                 return 0
             else
-                echo "❌ Cannot scrape targets"
+                print_error "❌ Cannot connect to Alertmanager"
                 return 1
             fi
             ;;
-        "Alertmanager")
-            if retry_check "Alertmanager config" "curl -s 'http://localhost:9093/-/ready' | grep -q 'OK'"; then
-                echo "✅ Configuration valid"
+        "Prometheus")
+            if curl -s "http://localhost:9090/api/v1/targets" | grep -q '"health":"up"'; then
+                print_success "✅ $expected_status"
                 return 0
             else
-                echo "❌ Configuration invalid"
+                print_error "❌ Cannot scrape targets"
                 return 1
             fi
             ;;
         "Blackbox Exporter")
-            if retry_check "Blackbox probe" "curl -s 'http://localhost:9115/probe?target=google.com&module=http_2xx' | grep -q 'probe_success 1'"; then
-                echo "✅ Probe working"
+            if curl -s "http://localhost:9115/probe?target=google.com&module=http_2xx" | grep -q "probe_success 1"; then
+                print_success "✅ $expected_status"
                 return 0
             else
-                echo "❌ Probe failed"
+                print_error "❌ Probe failed"
                 return 1
             fi
             ;;
-        "Karma")
-            # Check if Karma is running and can connect to Alertmanager
-            if retry_check "Karma Alertmanager connection" "curl -s 'http://localhost:8080/metrics' | grep -q 'karma_alertmanager_up{alertmanager=\"default\"} 1'"; then
-                echo "✅ Connected to Alertmanager"
+        "Alertmanager")
+            if curl -s "http://localhost:9093/-/ready" | grep -q "OK"; then
+                print_success "✅ $expected_status"
                 return 0
             else
-                echo "❌ Cannot connect to Alertmanager"
-                echo "📋 Karma metrics:"
-                curl -s "http://localhost:8080/metrics" | grep -E "karma_alertmanager_(up|errors)" || true
-                echo "📋 Alertmanager status:"
-                curl -s "http://localhost:9093/-/ready" || true
+                print_error "❌ Configuration invalid"
                 return 1
             fi
             ;;
         "NGINX")
-            # Check if NGINX can proxy requests to all services
             local failed=0
             for path in "" "prometheus/" "alertmanager/" "blackbox/"; do
-                if ! retry_check "NGINX proxy to ${path:-karma}" "curl -s -f -H 'Host: ingress' http://localhost:80/$path > /dev/null"; then
-                    echo "❌ Cannot proxy to ${path:-karma}"
+                if ! curl -s -f -H "Host: ingress" "http://localhost:80/$path" > /dev/null; then
+                    print_error "❌ Cannot proxy to ${path:-karma}"
                     ((failed++))
                 fi
             done
             if [ $failed -eq 0 ]; then
-                echo "✅ All paths working"
+                print_success "✅ $expected_status"
                 return 0
             else
                 return 1
@@ -203,116 +244,127 @@ check_service_functionality() {
     esac
 }
 
-# Function to print colored output
-print_status() {
-    local status="$1"
-    local message="$2"
-    case $status in
-        "OK") echo -e "${GREEN}✅ $message${NC}" ;;
-        "WARN") echo -e "${YELLOW}⚠️  $message${NC}" ;;
-        "ERROR") echo -e "${RED}❌ $message${NC}" ;;
-        "INFO") echo -e "${BLUE}ℹ️  $message${NC}" ;;
-    esac
+# Function to print final status
+print_final_status() {
+    local success=$1
+    echo ""
+    if [ "$success" = true ]; then
+        echo -e "${GREEN}✅ All services are healthy!${NC}"
+    else
+        echo -e "${RED}❌ Health check failed!${NC}"
+    fi
+}
+
+# Function to check if all core services are ready
+wait_for_services() {
+    local max_attempts=30
+    local attempt=1
+    local all_ready=false
+    
+    echo -n "⏳ Checking service readiness..."
+    
+    while [ $attempt -le $max_attempts ]; do
+        # Try to reach each core service
+        if curl -sf http://localhost:9090/-/ready >/dev/null 2>&1 && \
+           curl -sf http://localhost:9093/-/ready >/dev/null 2>&1 && \
+           curl -sf http://localhost:9115/health >/dev/null 2>&1 && \
+           curl -sf http://localhost:8080/health >/dev/null 2>&1; then
+            echo " ready!"
+            return 0
+        fi
+        
+        echo -n "."
+        sleep 0.5
+        attempt=$((attempt + 1))
+    done
+    
+    echo " timeout!"
+    return 1
 }
 
 # Main health check sequence
 main() {
     echo "🏥 Health Check for Prometheus Stack Add-on"
     echo "=========================================="
+    echo "📁 Project root: $PROJECT_ROOT"
+    echo "📁 Test directory: $TEST_DIR"
     
-    # Run all health checks
-    check_prometheus_health
-    check_alertmanager_health
-    check_blackbox_health
-    check_karma_health
-    check_nginx_health
+    # Check if container is running
+    if ! docker ps | grep -q prometheus-stack-test; then
+        echo ""
+        echo "❌ Health check failed: Container 'prometheus-stack-test' is not running ❌"
+        print_final_status false
+        exit 1
+    fi
+    echo "✅ Container is running"
     
-    # All checks passed if we got here
+    # Wait for services to be ready
+    if ! wait_for_services; then
+        echo "❌ Services failed to start within timeout period"
+        print_final_status false
+        exit 1
+    fi
+    
     echo ""
-    print_status "OK" "✨ All health checks passed successfully ✨"
+    echo "📊 Performing health checks..."
+    echo "-------------------------------"
+    
+    # Basic health checks
+    check_service "Karma" "http://localhost:8080/health"
+    check_service "Prometheus" "http://localhost:9090/-/ready"
+    check_service "Blackbox Exporter" "http://localhost:9115/health"
+    check_service "Alertmanager" "http://localhost:9093/-/ready"
+    check_service "NGINX" "http://localhost:80/nginx_status"
+    
+    echo ""
+    echo "📋 Checking configuration files..."
+    check_config_file "prometheus.yml" "/etc/prometheus/prometheus.yml"
+    check_config_file "alertmanager.yml" "/etc/alertmanager/alertmanager.yml"
+    check_config_file "blackbox.yml" "/etc/blackbox_exporter/blackbox.yml"
+    check_config_file "karma.yml" "/etc/karma/karma.yml"
+    check_config_file "ingress.conf" "/etc/nginx/http.d/ingress.conf"
+    
+    echo ""
+    echo "📁 Checking data directories..."
+    check_directory "/data/prometheus"
+    check_directory "/data/alertmanager"
+    
+    echo ""
+    echo "🔬 Testing service functionality..."
+    echo "-------------------------------"
+    test_service "Karma" "Connected to Alertmanager"
+    test_service "Prometheus" "Can scrape targets"
+    test_service "Blackbox Exporter" "Probe working"
+    test_service "Alertmanager" "Configuration valid"
+    test_service "NGINX" "All paths working"
+    
+    # If we got here, all checks passed
+    print_final_status true
     exit 0
 }
 
-# =============================================================================
-# MAIN SCRIPT
-# =============================================================================
-
-echo "🏥 Health Check for Prometheus Stack Add-on"
-echo "============================================"
-echo "📁 Project root: $(pwd)"
-echo "📁 Test directory: $(dirname "$0")"
-
-# Check if container is running
-if ! docker ps | grep -q prometheus-stack-test; then
-    echo "❌ Container is not running"
+# Error handler
+error_handler() {
+    print_final_status false
     exit 1
-fi
-echo "✅ Container is running"
+}
 
-# Initial quick check for basic container readiness
-echo "⏳ Waiting for services to start..."
-if ! retry_check "basic container readiness" "docker exec prometheus-stack-test ps aux | grep -q prometheus"; then
-    echo "❌ Container services failed to start"
-    exit 1
-fi
+# Set up error handling
+set -e
+trap error_handler ERR
 
-echo ""
-echo "📊 Performing health checks..."
-echo "-------------------------------"
+# Get the absolute path of the script directory
+TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$TEST_DIR/.." && pwd)"
 
-# Check basic service health
-failed=0
-for service in "${!SERVICES[@]}"; do
-    if ! check_service "$service" "${SERVICES[$service]}"; then
-        ((failed++))
-    fi
-done
-
-# Continue with configuration checks
-echo ""
-echo "📋 Checking configuration files..."
-for file in "${CONFIG_FILES[@]}"; do
-    if ! check_config_file "$file"; then
-        ((failed++))
-    fi
-done
-
-# Check data directories
-echo ""
-echo "📁 Checking data directories..."
-for dir in "${DATA_DIRS[@]}"; do
-    if ! check_data_dir "$dir"; then
-        ((failed++))
-    fi
-done
-
-# Check service functionality
-echo ""
-echo "🔬 Testing service functionality..."
-echo "-------------------------------"
-for service in "${!SERVICES[@]}"; do
-    if ! check_service_functionality "$service"; then
-        ((failed++))
-    fi
-done
-
-# Final result
-if [ $failed -eq 0 ]; then
-    echo ""
-    echo "✅ ALL CHECKS PASSED"
-    echo "✅ All services are healthy!"
-    exit 0
-else
-    echo ""
-    echo "❌ $failed checks failed"
-    exit 1
-fi
+# Run the main function
+main
 
 # Function to check Prometheus health
 check_prometheus_health() {
     echo ""
     echo "🔍 Checking Prometheus..."
-    if ! curl -s "http://localhost:9090/-/healthy" > /dev/null; then
+    if ! curl -s "http://localhost:9090/-/ready" > /dev/null; then
         echo ""
         print_status "ERROR" "❌ Health check failed: Prometheus is not healthy ❌"
         exit 1
@@ -324,7 +376,7 @@ check_prometheus_health() {
 check_alertmanager_health() {
     echo ""
     echo "🔍 Checking Alertmanager..."
-    if ! curl -s "http://localhost:9093/-/healthy" > /dev/null; then
+    if ! curl -s "http://localhost:9093/-/ready" > /dev/null; then
         echo ""
         print_status "ERROR" "❌ Health check failed: Alertmanager is not healthy ❌"
         exit 1
@@ -336,7 +388,7 @@ check_alertmanager_health() {
 check_blackbox_health() {
     echo ""
     echo "🔍 Checking Blackbox Exporter..."
-    if ! curl -s "http://localhost:9115/metrics" > /dev/null; then
+    if ! curl -s "http://localhost:9115/health" > /dev/null; then
         echo ""
         print_status "ERROR" "❌ Health check failed: Blackbox Exporter is not healthy ❌"
         exit 1
@@ -348,7 +400,7 @@ check_blackbox_health() {
 check_karma_health() {
     echo ""
     echo "🔍 Checking Karma..."
-    if ! curl -s "http://localhost:8080/" > /dev/null; then
+    if ! curl -s "http://localhost:8080/health" > /dev/null; then
         echo ""
         print_status "ERROR" "❌ Health check failed: Karma is not healthy ❌"
         exit 1
@@ -366,4 +418,7 @@ check_nginx_health() {
         exit 1
     fi
     print_status "OK" "NGINX is healthy"
-} 
+}
+
+# Print colored messages
+print_info() { echo -e "${BLUE}ℹ️  $1${NC}"; } 

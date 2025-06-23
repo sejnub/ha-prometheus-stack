@@ -64,25 +64,53 @@ declare -A test_configs=(
     ["special_chars"]='{"alertmanager_receiver":"test-receiver-123","alertmanager_to_email":"test+tag@example.com"}'
 )
 
-# Function to test a configuration
+# Function to wait for services to be ready
+wait_for_services() {
+    local max_attempts=30
+    local attempt=1
+    
+    echo -n "⏳ Checking service readiness..."
+    
+    while [ $attempt -le $max_attempts ]; do
+        # Try to reach each core service
+        if curl -sf http://localhost:9090/-/healthy >/dev/null 2>&1 && \
+           curl -sf http://localhost:9093/-/healthy >/dev/null 2>&1 && \
+           curl -sf http://localhost:9115/metrics >/dev/null 2>&1 && \
+           curl -sf http://localhost:8080/ >/dev/null 2>&1; then
+            echo " ready!"
+            return 0
+        fi
+        
+        echo -n "."
+        sleep 0.5
+        attempt=$((attempt + 1))
+    done
+    
+    echo " timeout!"
+    return 1
+}
+
+# Function to test configuration
 test_configuration() {
     local config_name="$1"
     local config_json="$2"
     
     echo ""
-    echo "🧪 Testing Configuration: $config_name"
-    echo "----------------------------------------"
+    echo "🔧 Testing configuration: $config_name"
+    echo "-------------------------------------"
     
-    # Create test configuration
-    echo "$config_json" > test-data/options.json
+    # Write the test configuration
+    echo "$config_json" > "$PROJECT_ROOT/test-data/options.json"
     
-    # Restart container to apply new configuration
     echo "🔄 Restarting container with new configuration..."
     docker restart prometheus-stack-test > /dev/null
     
     # Wait for services to start
     echo "⏳ Waiting for services to start..."
-    sleep 15
+    if ! wait_for_services; then
+        echo "❌ Services failed to start after configuration change"
+        return 1
+    fi
     
     # Check if Alertmanager configuration was generated correctly
     echo "📋 Checking generated Alertmanager configuration..."

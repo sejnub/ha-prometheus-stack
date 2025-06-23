@@ -235,31 +235,15 @@ cleanup_test_data() {
     echo "===================="
     
     if [ -d "$PROJECT_ROOT/test-data" ]; then
-        print_status "INFO" "Found test-data directory"
-        
-        # Show what will be deleted
+        echo "ℹ️  Found test-data directory"
         echo "📋 Contents to be removed:"
-        ls -la "$PROJECT_ROOT/test-data" 2>/dev/null || true
+        ls -la "$PROJECT_ROOT/test-data"
         
-        # First try native removal
-        if rm -rf "$PROJECT_ROOT/test-data" 2>/dev/null; then
-            print_status "OK" "Test data directory removed"
-            return 0
-        fi
+        # Use Docker to remove the entire test-data directory
+        docker run --rm -v "$PROJECT_ROOT:/workspace" alpine:latest rm -rf /workspace/test-data
         
-        # If native removal fails, try with Docker
-        print_status "INFO" "Using Docker to remove test-data directory"
-        if docker run --rm -v "$PROJECT_ROOT/test-data:/data" alpine:latest rm -rf /data/* 2>/dev/null; then
-            # Try removing the empty directory
-            if rm -rf "$PROJECT_ROOT/test-data" 2>/dev/null; then
-                print_status "OK" "Test data directory removed"
-                return 0
-            fi
-        fi
-        
-        print_status "WARN" "Could not remove test-data directory completely"
-        print_status "INFO" "You may need to remove it manually when no containers are using it"
-        return 1
+        print_status "OK" "Test data directory cleaned"
+        return 0
     else
         print_status "INFO" "No test-data directory found"
         return 0
