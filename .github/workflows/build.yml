@@ -28,19 +28,19 @@ jobs:
         ./test/build-test.sh
         
         echo "⏳ Waiting for services to initialize..."
-        for i in {1..6}; do
-          echo "Attempt $i of 6..."
+        for i in {1..3}; do
+          echo "Attempt $i of 3..."
           if ./test/health-check.sh; then
             echo "✅ All services are healthy!"
             break
           fi
-          if [ $i -eq 6 ]; then
-            echo "❌ Services failed to start after 6 attempts"
+          if [ $i -eq 3 ]; then
+            echo "❌ Services failed to start after 3 attempts"
             docker logs prometheus-stack-test
             exit 1
           fi
-          echo "⏳ Waiting 10 seconds before next attempt..."
-          sleep 10
+          echo "⏳ Waiting 15 seconds before next attempt..."
+          sleep 15
         done
         
         echo "🧪 Running configuration tests..."
