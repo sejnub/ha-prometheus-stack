@@ -15,7 +15,7 @@
 # HEALTH CHECK ENDPOINTS:
 # - Prometheus: /-/healthy (built-in health endpoint)
 # - Alertmanager: /-/healthy (built-in health endpoint)
-# - Karma: / (web interface availability)
+# - Karma: /metrics (metrics endpoint)
 # - Blackbox Exporter: /metrics (metrics endpoint)
 #
 # RETURN CODES:
@@ -33,6 +33,9 @@ set -e  # Exit on any error
 
 # Health check timeout (seconds)
 TIMEOUT=10
+
+# Initial wait time for services to fully start (seconds)
+INITIAL_WAIT=30
 
 # Service definitions
 declare -A SERVICES=(
@@ -57,58 +60,16 @@ DATA_DIRS=(
 )
 
 # =============================================================================
-# UTILITY FUNCTIONS
+# FUNCTIONS
 # =============================================================================
 
-# Initialize script environment
-init_environment() {
-    # Determine script location and project root
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    if [[ "$SCRIPT_DIR" == */test ]]; then
-        PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-        TEST_DIR="$SCRIPT_DIR"
-    else
-        PROJECT_ROOT="$SCRIPT_DIR"
-        TEST_DIR="$SCRIPT_DIR/test"
-    fi
-
-    echo "🏥 Health Check for Prometheus Stack Add-on"
-    echo "============================================"
-    echo "📁 Project root: $PROJECT_ROOT"
-    echo "📁 Test directory: $TEST_DIR"
-}
-
-# Print formatted status message
-print_status() {
-    local prefix="$1"
-    local message="$2"
-    local status="$3"
-    printf "%-10s %-40s %s\n" "$prefix" "$message" "$status"
-}
-
-# =============================================================================
-# CHECK FUNCTIONS
-# =============================================================================
-
-# Check if container is running
-check_container() {
-    if ! docker ps | grep -q prometheus-stack; then
-        echo "❌ Container 'prometheus-stack-test' or 'prometheus-stack-dev' is not running"
-        echo "   Start the container first with: $TEST_DIR/build-test.sh"
-        echo "   Or with docker-compose: docker-compose -f $TEST_DIR/docker-compose.dev.yml up -d"
-        return 1
-    fi
-    echo "✅ Container is running"
-    return 0
-}
-
-# Check basic service health
-check_service_health() {
+# Function to check if a service is healthy
+check_service() {
     local service_name="$1"
     local url="$2"
+    printf "🔍 Checking %-18s ... " "$service_name"
     
-    printf "🔍 Checking %-18s... " "$service_name"
-    if curl -f -s --max-time $TIMEOUT "$url" > /dev/null 2>&1; then
+    if curl -f -s --max-time $TIMEOUT "$url" > /dev/null; then
         echo "✅ HEALTHY"
         return 0
     else
@@ -117,7 +78,35 @@ check_service_health() {
     fi
 }
 
-# Check service functionality
+# Function to check configuration files
+check_config_file() {
+    local file="$1"
+    printf "🔍 Checking %-30s ... " "$(basename "$file")"
+    
+    if docker exec prometheus-stack-test test -f "$file"; then
+        echo "✅ OK"
+        return 0
+    else
+        echo "❌ MISSING"
+        return 1
+    fi
+}
+
+# Function to check data directory permissions
+check_data_dir() {
+    local dir="$1"
+    printf "🔍 Checking %-30s ... " "$dir"
+    
+    if docker exec prometheus-stack-test test -w "$dir"; then
+        echo "✅ Writable"
+        return 0
+    else
+        echo "❌ Not writable"
+        return 1
+    fi
+}
+
+# Function to check service functionality
 check_service_functionality() {
     local service_name="$1"
     printf "🔍 Testing %-18s functionality... " "$service_name"
@@ -158,147 +147,89 @@ check_service_functionality() {
             fi
             
             # Check Alertmanager connection via Karma's metrics
-            if curl -s "http://localhost:8080/metrics" | grep -q 'karma_alertmanager_up{alertmanager="default"} 1'; then
+            local metrics
+            metrics=$(curl -s "http://localhost:8080/metrics")
+            
+            # Check if Karma can connect to Alertmanager at all
+            if echo "$metrics" | grep -q 'karma_alertmanager_up{alertmanager="default"} 1'; then
                 echo "✅ Connected to Alertmanager"
                 return 0
-            else
-                echo "❌ Cannot connect to Alertmanager"
-                docker logs prometheus-stack-test 2>&1 | grep -i "karma.*error" || true
-                return 1
             fi
+            
+            # If not connected, show detailed diagnostics
+            echo "❌ Cannot connect to Alertmanager"
+            echo "📋 Karma metrics:"
+            echo "$metrics" | grep -E "karma_alertmanager_(up|errors)"
+            echo "📋 Alertmanager status:"
+            curl -s "http://localhost:9093/-/ready" || true
+            return 1
             ;;
     esac
-}
-
-# Check configuration files
-check_config_files() {
-    echo ""
-    echo "📋 Checking configuration files..."
-    local failed=0
-    
-    for file in "${CONFIG_FILES[@]}"; do
-        printf "🔍 Checking %-30s... " "$(basename $file)"
-        if docker exec prometheus-stack-test test -r "$file"; then
-            echo "✅ OK"
-        else
-            echo "❌ Missing or unreadable"
-            ((failed++))
-        fi
-    done
-    
-    return $failed
-}
-
-# Check data directories
-check_data_directories() {
-    echo ""
-    echo "📁 Checking data directories..."
-    local failed=0
-    
-    for dir in "${DATA_DIRS[@]}"; do
-        printf "🔍 Checking %-30s... " "$dir"
-        if docker exec prometheus-stack-test test -w "$dir"; then
-            echo "✅ Writable"
-        else
-            echo "❌ Not writable"
-            ((failed++))
-        fi
-    done
-    
-    return $failed
-}
-
-# Print summary based on check results
-print_summary() {
-    local failed_checks="$1"
-    
-    echo ""
-    echo "📋 Health Check Summary"
-    echo "======================="
-
-    if [ $failed_checks -eq 0 ]; then
-        echo "🎉 ALL SERVICES ARE HEALTHY!"
-        echo ""
-        printf "✅ %-18s http://localhost:9090\n" "Prometheus:"
-        printf "✅ %-18s http://localhost:9093\n" "Alertmanager:"
-        printf "✅ %-18s http://localhost:8080\n" "Karma:"
-        printf "✅ %-18s http://localhost:9115\n" "Blackbox Exporter:"
-        echo ""
-        echo "💡 Your add-on is ready for use!"
-        echo ""
-        echo "🔍 Blackbox Exporter Endpoints:"
-        echo "   - Metrics:         http://localhost:9115/metrics"
-        echo "   - Probe Example:   http://localhost:9115/probe?target=google.com&module=http_2xx"
-        echo "   - Status:          http://localhost:9115/-/healthy"
-        return 0
-    else
-        echo "⚠️  $failed_checks check(s) failed"
-        echo ""
-        echo "🔧 Troubleshooting:"
-        echo "   1. Check container logs: docker logs prometheus-stack-test"
-        echo "   2. Verify ports are not in use: netstat -tulpn | grep :9090"
-        echo "   3. Restart container: docker restart prometheus-stack-test"
-        echo "   4. Check Docker Desktop is running"
-        echo ""
-        echo "📋 Service Status:"
-        for service in "${!SERVICES[@]}"; do
-            if curl -f -s --max-time 5 "${SERVICES[$service]}" > /dev/null 2>&1; then
-                printf "   ✅ %-18s HEALTHY\n" "$service:"
-            else
-                printf "   ❌ %-18s UNHEALTHY\n" "$service:"
-            fi
-        done
-        return 1
-    fi
 }
 
 # =============================================================================
 # MAIN SCRIPT
 # =============================================================================
 
-main() {
-    local failed_checks=0
+echo "🏥 Health Check for Prometheus Stack Add-on"
+echo "============================================"
+echo "📁 Project root: $(pwd)"
+echo "📁 Test directory: $(dirname "$0")"
 
-    # Initialize environment
-    init_environment
+# Check if container is running
+if ! docker ps | grep -q prometheus-stack-test; then
+    echo "❌ Container is not running"
+    exit 1
+fi
+echo "✅ Container is running"
 
-    # Check container status
-    check_container || exit 1
+# Wait for initial startup
+echo "⏳ Waiting $INITIAL_WAIT seconds for services to fully start..."
+sleep $INITIAL_WAIT
 
-    # Check basic service health
-    echo ""
-    echo "📊 Performing health checks..."
-    echo "-------------------------------"
-    for service in "${!SERVICES[@]}"; do
-        if ! check_service_health "$service" "${SERVICES[$service]}"; then
-            ((failed_checks++))
-        fi
-    done
+echo ""
+echo "📊 Performing health checks..."
+echo "-------------------------------"
 
-    # Check configuration files
-    if ! check_config_files; then
-        ((failed_checks++))
+# Check basic service health
+failed=0
+for service in "${!SERVICES[@]}"; do
+    if ! check_service "$service" "${SERVICES[$service]}"; then
+        ((failed++))
     fi
+done
 
-    # Check data directories
-    if ! check_data_directories; then
-        ((failed_checks++))
+echo ""
+echo "📋 Checking configuration files..."
+for file in "${CONFIG_FILES[@]}"; do
+    if ! check_config_file "$file"; then
+        ((failed++))
     fi
+done
 
-    # Check service functionality
-    echo ""
-    echo "🔬 Testing service functionality..."
-    echo "-------------------------------"
-    for service in "${!SERVICES[@]}"; do
-        if ! check_service_functionality "$service"; then
-            ((failed_checks++))
-        fi
-    done
+echo ""
+echo "📁 Checking data directories..."
+for dir in "${DATA_DIRS[@]}"; do
+    if ! check_data_dir "$dir"; then
+        ((failed++))
+    fi
+done
 
-    # Print summary and exit
-    print_summary "$failed_checks"
-    exit $?
-}
+echo ""
+echo "🔬 Testing service functionality..."
+echo "-------------------------------"
+for service in "${!SERVICES[@]}"; do
+    if ! check_service_functionality "$service"; then
+        ((failed++))
+    fi
+done
 
-# Run main function
-main 
+# Final status
+echo ""
+if [ $failed -eq 0 ]; then
+    echo "✅ ALL CHECKS PASSED"
+    exit 0
+else
+    echo "❌ $failed check(s) failed"
+    exit 1
+fi 
