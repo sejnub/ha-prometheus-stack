@@ -82,7 +82,7 @@ jobs:
         ./test/test-config.sh
         
         echo "🧹 Cleaning up..."
-        ./test/cleanup.sh --all
+        ./test/cleanup.sh --all --force
         
     - name: Build multi-arch image
       uses: docker/build-push-action@v5
