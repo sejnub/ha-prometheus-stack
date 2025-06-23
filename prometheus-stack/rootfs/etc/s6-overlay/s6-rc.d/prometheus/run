@@ -1,6 +1,7 @@
 #!/usr/bin/with-contenv bashio
 
 echo "Starting Prometheus..."
+sleep 3
 exec /opt/prometheus/prometheus \
   --config.file=/etc/prometheus/prometheus.yml \
   --storage.tsdb.path=/data/prometheus \

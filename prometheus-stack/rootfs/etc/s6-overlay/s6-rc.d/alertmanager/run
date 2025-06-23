@@ -1,6 +1,7 @@
 #!/usr/bin/with-contenv bashio
 
 echo "Starting Alertmanager..."
+sleep 2
 exec /opt/alertmanager/alertmanager \
   --config.file=/etc/alertmanager/alertmanager.yml \
   --storage.path=/data/alertmanager 

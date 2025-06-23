@@ -50,6 +50,11 @@ COPY rootfs/ /
 # Make s6-overlay scripts executable
 RUN chmod +x /etc/cont-init.d/00-init.sh && \
     chmod +x /etc/s6-overlay/s6-rc.d/alertmanager/run && \
+    chmod +x /etc/s6-overlay/s6-rc.d/alertmanager/up && \
     chmod +x /etc/s6-overlay/s6-rc.d/blackbox-exporter/run && \
+    chmod +x /etc/s6-overlay/s6-rc.d/blackbox-exporter/up && \
     chmod +x /etc/s6-overlay/s6-rc.d/prometheus/run && \
-    chmod +x /etc/s6-overlay/s6-rc.d/karma/run
+    chmod +x /etc/s6-overlay/s6-rc.d/prometheus/up && \
+    chmod +x /etc/s6-overlay/s6-rc.d/karma/run && \
+    chmod +x /etc/s6-overlay/s6-rc.d/karma/up && \
+    chmod +x /etc/s6-overlay/s6-rc.d/user/run
