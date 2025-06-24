@@ -96,7 +96,7 @@
                 <div class="links">
                     <a href="prometheus/">🔗 Prometheus UI (Limited in Ingress)</a>
                     <a href="prometheus/api/v1/query?query=up">📡 API Example</a>
-                    <a href="http://[HOST]:9090">🚀 Direct Prometheus UI (Full Access)</a>
+                    <a href="#" id="prometheus-direct-link">🚀 Direct Prometheus UI (Full Access)</a>
                     <a href="prometheus/-/healthy">🏥 Health Status</a>
                     <a href="prometheus/metrics">📈 Metrics</a>
                 </div>
@@ -148,5 +148,14 @@
             </div>
         </div>
     </div>
+    <script>
+        // Set the direct Prometheus link to use the current hostname
+        document.addEventListener('DOMContentLoaded', function() {
+            const prometheusLink = document.getElementById('prometheus-direct-link');
+            if (prometheusLink) {
+                prometheusLink.href = `http://${window.location.hostname}:9090`;
+            }
+        });
+    </script>
 </body>
 </html> 
