@@ -217,10 +217,10 @@ test_service() {
             fi
             ;;
         "Prometheus")
-            # Give Prometheus a bit of time to perform its first scrape (default interval 15s)
-            for attempt in {1..30}; do
-                if curl -s "http://localhost:9090/api/v1/targets" | grep -q '"health":"up"'; then
-                    print_success "✅ $expected_status"
+            for n in {1..30}; do
+                if curl -s http://localhost:9090/prometheus/api/v1/targets |
+                   grep -q '"health":"up"'; then
+                    print_success "✅ Can scrape targets"
                     return 0
                 fi
                 sleep 1
@@ -312,7 +312,7 @@ wait_for_services() {
     
     while [ $attempt -le $max_attempts ]; do
         # Try to reach each core service
-        if curl -sf http://localhost:9090/-/ready >/dev/null 2>&1 && \
+        if curl -sf http://localhost:9090/prometheus/-/ready >/dev/null 2>&1 && \
            curl -sf http://localhost:9093/-/ready >/dev/null 2>&1 && \
            curl -sf http://localhost:9115/health >/dev/null 2>&1 && \
            curl -sf http://localhost:8080/health >/dev/null 2>&1; then
@@ -368,7 +368,7 @@ main() {
     
     # Basic health checks
     check_service "Karma" "http://localhost:8080/health"
-    check_service "Prometheus" "http://localhost:9090/-/ready"
+    check_service "Prometheus" "http://localhost:9090/prometheus/-/ready"
     check_service "Blackbox Exporter" "http://localhost:9115/health"
     check_service "Alertmanager" "http://localhost:9093/-/ready"
     check_service "NGINX" "http://localhost:80/nginx_status"
@@ -429,7 +429,7 @@ main
 check_prometheus_health() {
     echo ""
     echo "🔍 Checking Prometheus..."
-    if ! curl -s "http://localhost:9090/-/ready" > /dev/null; then
+    if ! curl -s "http://localhost:9090/prometheus/-/ready" > /dev/null; then
         echo ""
         print_status "ERROR" "❌ Health check failed: Prometheus is not healthy ❌"
         exit 1
