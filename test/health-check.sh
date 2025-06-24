@@ -261,6 +261,34 @@ test_service() {
                 return 1
             fi
             ;;
+        "NGINX Proxy Paths")
+            local failed=0
+            local paths=("prometheus" "alertmanager" "karma" "blackbox")
+            local path_names=("Prometheus" "Alertmanager" "Karma" "Blackbox")
+            
+            for i in "${!paths[@]}"; do
+                local path="${paths[$i]}"
+                local name="${path_names[$i]}"
+                
+                # Test that the path returns a proper response (200, 302, etc.)
+                local response_code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:80/$path/")
+                
+                if [[ "$response_code" =~ ^(200|302)$ ]]; then
+                    # Success - 200 OK or 302 redirect are both valid
+                    continue
+                else
+                    print_error "❌ $name proxy returns $response_code"
+                    ((failed++))
+                fi
+            done
+            
+            if [ $failed -eq 0 ]; then
+                print_success "✅ $expected_status"
+                return 0
+            else
+                return 1
+            fi
+            ;;
     esac
 }
 
@@ -373,6 +401,7 @@ main() {
     test_service "Blackbox Exporter" "Probe working"
     test_service "Alertmanager" "Configuration valid"
     test_service "NGINX" "All paths working"
+    test_service "NGINX Proxy Paths" "All proxy redirects working"
     
     # If we got here, all checks passed
     print_final_status true
