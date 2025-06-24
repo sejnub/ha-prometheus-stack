@@ -52,5 +52,4 @@ COPY rootfs/ /
 # Set permissions
 RUN chmod +x /etc/cont-init.d/00-init.sh && \
     chmod +x /etc/s6-overlay/s6-rc.d/*/run && \
-    find /etc/s6-overlay/s6-rc.d -name finish -type f -exec chmod +x {} \; && \
-    mv /etc/nginx/servers/ingress.conf /etc/nginx/http.d/ingress.conf
+    find /etc/s6-overlay/s6-rc.d -name finish -type f -exec chmod +x {} \;
