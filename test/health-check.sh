@@ -355,6 +355,13 @@ main() {
     echo ""
     echo "🔬 Testing service functionality..."
     echo "-------------------------------"
+    
+    # Give Alertmanager API extra time to fully initialize in CI environments
+    if [ -n "$GITHUB_ACTIONS" ]; then
+        echo "⏳ GitHub Actions detected - allowing extra time for Alertmanager API initialization..."
+        sleep 5
+    fi
+    
     test_service "Karma" "Connected to Alertmanager"
     test_service "Prometheus" "Can scrape targets"
     test_service "Blackbox Exporter" "Probe working"
