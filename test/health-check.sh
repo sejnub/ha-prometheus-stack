@@ -217,13 +217,16 @@ test_service() {
             fi
             ;;
         "Prometheus")
-            if curl -s "http://localhost:9090/api/v1/targets" | grep -q '"health":"up"'; then
-                print_success "✅ $expected_status"
-                return 0
-            else
-                print_error "❌ Cannot scrape targets"
-                return 1
-            fi
+            # Give Prometheus a bit of time to perform its first scrape (default interval 15s)
+            for attempt in {1..30}; do
+                if curl -s "http://localhost:9090/api/v1/targets" | grep -q '"health":"up"'; then
+                    print_success "✅ $expected_status"
+                    return 0
+                fi
+                sleep 1
+            done
+            print_error "❌ Cannot scrape targets"
+            return 1
             ;;
         "Blackbox Exporter")
             if curl -s "http://localhost:9115/probe?target=google.com&module=http_2xx" | grep -q "probe_success 1"; then

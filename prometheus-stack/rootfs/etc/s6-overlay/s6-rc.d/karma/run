@@ -1,5 +1,32 @@
 #!/command/with-contenv bashio
 
+# Wait until Alertmanager API is reachable before starting Karma
+for i in {1..60}; do
+    if curl -s "http://localhost:9093/api/v2/status" > /dev/null 2>&1; then
+        echo "Alertmanager API is reachable (attempt $i)"
+        break
+    fi
+    echo "Waiting for Alertmanager API... (attempt $i)"
+    sleep 0.5
+    if [ $i -eq 60 ]; then
+        echo "Alertmanager API not reachable after 30s, proceeding anyway"
+    fi
+done
+
 # Start karma
 exec s6-setuidgid root /usr/local/bin/karma \
     --config.file=/etc/karma/karma.yml 
+
+# Check Prometheus health
+if [ "$service_name" = "Prometheus" ]; then
+    for n in {1..30}; do
+        if curl -s http://localhost:9090/api/v1/targets |
+           grep -q '"health":"up"'; then
+            print_success "✅ Can scrape targets"
+            return 0
+        fi
+        sleep 1
+    done
+    print_error "❌ Cannot scrape targets"
+    return 1
+fi 
