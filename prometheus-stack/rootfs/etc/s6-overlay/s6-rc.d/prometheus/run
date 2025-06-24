@@ -1,9 +1,22 @@
 #!/command/with-contenv bashio
 
+# Check if we're running in Home Assistant addon mode
+if [ -n "$SUPERVISOR_TOKEN" ]; then
+    # Home Assistant addon mode - configure for ingress
+    EXTERNAL_URL="--web.external-url=/prometheus/"
+    ROUTE_PREFIX="--web.route-prefix=/"
+else
+    # Test mode - no special configuration needed
+    EXTERNAL_URL=""
+    ROUTE_PREFIX=""
+fi
+
 # Start Prometheus
 exec s6-setuidgid root /opt/prometheus/prometheus \
     --config.file=/etc/prometheus/prometheus.yml \
     --storage.tsdb.path=/data/prometheus \
     --web.listen-address=:9090 \
     --web.enable-lifecycle \
-    --web.enable-admin-api 
+    --web.enable-admin-api \
+    $EXTERNAL_URL \
+    $ROUTE_PREFIX 

@@ -5,6 +5,14 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.18] - 2025-01-27
+
+### Fixed
+- Added environment-based Prometheus configuration for proper ingress handling
+- Prometheus now configures external-url and route-prefix only in Home Assistant addon mode
+- Uses SUPERVISOR_TOKEN detection to differentiate between test and addon modes
+- Should resolve client-side URL issues causing ingress context breakout
+
 ## [1.11.17] - 2025-01-27
 
 ### Fixed
