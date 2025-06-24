@@ -32,6 +32,7 @@ This directory contains all testing tools and scripts for the Prometheus Stack H
 ```
 test/
 ├── README.md              # This file - testing guide
+├── full-test.sh           # Complete test cycle (cleanup → build → health check)
 ├── build-test.sh          # Build and run add-on for testing
 ├── docker-compose.dev.yml # Docker Compose for development
 ├── health-check.sh        # Verify all services are healthy
@@ -68,6 +69,10 @@ For testing with real Home Assistant instance:
 
 ### 2.3. Basic Testing Workflow
 ```bash
+# Full automated test cycle (recommended)
+./test/full-test.sh
+
+# OR run individual steps:
 # 1. Build and start the add-on
 ./test/build-test.sh
 
@@ -86,7 +91,26 @@ For testing with real Home Assistant instance:
 
 ## 3. Detailed Script Documentation
 
-### 3.1. `build-test.sh` - Build and Test Script
+### 3.1. `full-test.sh` - Complete Test Cycle
+**Purpose**: Run the complete test cycle automatically
+**Usage**: `./test/full-test.sh`
+
+**What it does**:
+- Runs cleanup.sh to clean up any existing containers
+- Runs build-test.sh to build and start the add-on
+- Runs health-check.sh to verify all services are healthy
+- Provides comprehensive status reporting with colored output
+- Stops at the first failure and provides helpful error messages
+
+**Benefits**:
+- One command to run all testing phases
+- Consistent testing workflow
+- Automated error handling and reporting
+- Saves time during development and CI/CD
+
+**Output**: Colored status messages for each phase with final summary
+
+### 3.2. `build-test.sh` - Build and Test Script
 **Purpose**: Build and run the add-on locally for testing
 **Usage**: `./test/build-test.sh`
 
@@ -105,7 +129,7 @@ For testing with real Home Assistant instance:
 - Blackbox Exporter: http://localhost:9115
 - Karma:             http://localhost:8080
 
-### 3.2. `docker-compose.dev.yml` - Development Configuration
+### 3.3. `docker-compose.dev.yml` - Development Configuration
 **Purpose**: Alternative way to run the add-on for development
 **Usage**: `docker-compose -f test/docker-compose.dev.yml up -d`
 
@@ -115,7 +139,7 @@ For testing with real Home Assistant instance:
 - Easier to modify configuration
 - Better for team development
 
-### 3.3. `health-check.sh` - Health Verification
+### 3.4. `health-check.sh` - Health Verification
 **Purpose**: Verify that all services are running and healthy
 **Usage**: `./test/health-check.sh`
 
@@ -129,7 +153,7 @@ For testing with real Home Assistant instance:
 - `0`: All services healthy
 - `1`: One or more services unhealthy
 
-### 3.4. `test-config.sh` - Configuration Testing
+### 3.5. `test-config.sh` - Configuration Testing
 **Purpose**: Test the add-on with different configuration scenarios
 **Usage**: `./test/test-config.sh`
 
@@ -146,7 +170,7 @@ For testing with real Home Assistant instance:
 - Multiple: `{"alertmanager_receiver":"team","alertmanager_to_email":"team@company.com"}`
 - Special chars: `{"alertmanager_receiver":"test-receiver-123","alertmanager_to_email":"test+tag@example.com"}`
 
-### 3.5. `monitor.sh` - Resource Monitoring
+### 3.6. `monitor.sh` - Resource Monitoring
 **Purpose**: Monitor resource usage and performance
 **Usage**: `./test/monitor.sh [continuous]`
 
@@ -161,7 +185,7 @@ For testing with real Home Assistant instance:
 - Single snapshot: `./test/monitor.sh`
 - Continuous monitoring: `./test/monitor.sh continuous`
 
-### 3.6. `cleanup.sh` - Environment Cleanup
+### 3.7. `cleanup.sh` - Environment Cleanup
 **Purpose**: Clean up test containers, images, and data
 **Usage**: `./test/cleanup.sh [--all] [--force]`
 
