@@ -2,5 +2,4 @@
 
 # Start karma
 exec s6-setuidgid root /usr/local/bin/karma \
-    --config.file=/etc/karma/karma.yml \
-    --listen.address=:8080 
+    --config.file=/etc/karma/karma.yml 

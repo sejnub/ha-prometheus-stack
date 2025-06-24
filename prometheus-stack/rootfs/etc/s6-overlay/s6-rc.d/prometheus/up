@@ -1,4 +1,4 @@
-#!/usr/bin/with-contenv bashio
+#!/command/with-contenv bashio
 
 # Wait for Prometheus to be ready
 for _ in $(seq 1 30); do

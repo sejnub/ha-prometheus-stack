@@ -81,6 +81,11 @@ print_error() {
     echo -e "${RED}$1${NC}"
 }
 
+# Function to print colored info message
+print_info() {
+    echo -e "${BLUE}$1${NC}"
+}
+
 # Print status messages in a standardized format
 print_status() {
     local status="$1"
@@ -418,7 +423,4 @@ check_nginx_health() {
         exit 1
     fi
     print_status "OK" "NGINX is healthy"
-}
-
-# Print colored messages
-print_info() { echo -e "${BLUE}ℹ️  $1${NC}"; } 
+} 
