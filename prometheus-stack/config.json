@@ -1,6 +1,6 @@
 {
   "name": "Prometheus Stack",
-  "version": "1.11.24",
+  "version": "1.11.25",
   "slug": "prometheus-stack",
   "description": "Prometheus, Alertmanager and Karma in one add-on",
   "arch": ["aarch64", "amd64", "armv7"],
