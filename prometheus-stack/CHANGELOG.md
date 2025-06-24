@@ -5,6 +5,13 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.16] - 2025-01-27
+
+### Fixed
+- Fixed health check script to accept 301 redirects as valid responses
+- Updated test suite to handle new nginx redirect configuration for Prometheus
+- Resolved GitHub Actions and test mode failures due to unexpected 301 status code
+
 ## [1.11.15] - 2025-01-27
 
 ### Fixed
