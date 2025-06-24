@@ -5,6 +5,13 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.24] - 2025-01-27
+
+### Fixed
+- Fixed `test-config.sh` health check endpoint to remove `/prometheus/` prefix.
+- Resolves timeout issues in GitHub Actions configuration testing phase.
+- Aligns test scripts with the simplified Prometheus configuration from v1.11.23.
+
 ## [1.11.23] - 2025-01-27
 
 ### Fixed
