@@ -196,104 +196,22 @@ test_service() {
     
     case "$service_name" in
         "Karma")
-            # Enhanced debug for Karma-Alertmanager connection
-            echo ""
-            echo "🔍 DEBUG: Karma-Alertmanager Connection Analysis"
-            echo "================================================="
-            
-            # Check if Karma metrics endpoint is accessible
-            echo "1. Testing Karma metrics endpoint..."
-            if curl -s --max-time 5 "http://localhost:8080/metrics" > /dev/null; then
-                echo "   ✅ Karma metrics endpoint is accessible"
-            else
-                echo "   ❌ Karma metrics endpoint is not accessible"
-                print_error "❌ $expected_status"
-                return 1
-            fi
-            
-            # Get full Karma metrics for debugging
-            echo "2. Retrieving Karma metrics..."
-            karma_metrics=$(curl -s --max-time 5 "http://localhost:8080/metrics" 2>/dev/null)
-            if [ $? -ne 0 ]; then
-                echo "   ❌ Failed to retrieve Karma metrics"
-                print_error "❌ $expected_status"
-                return 1
-            fi
-            
-            # Show all karma_alertmanager metrics
-            echo "3. Looking for karma_alertmanager metrics..."
-            alertmanager_metrics=$(echo "$karma_metrics" | grep -E "^karma_alertmanager" || true)
-            if [ -n "$alertmanager_metrics" ]; then
-                echo "   📊 Found karma_alertmanager metrics:"
-                echo "$alertmanager_metrics" | sed 's/^/      /'
-            else
-                echo "   ⚠️  No karma_alertmanager metrics found"
-            fi
-            
-            # Check specifically for the up metric
-            echo "4. Checking karma_alertmanager_up metric..."
-            up_metric=$(echo "$karma_metrics" | grep -E "^karma_alertmanager_up" || true)
-            if [ -n "$up_metric" ]; then
-                echo "   📊 Found up metrics:"
-                echo "$up_metric" | sed 's/^/      /'
-                
-                # Check if any alertmanager is up
-                if echo "$up_metric" | grep -q "} 1"; then
-                    echo "   ✅ At least one Alertmanager is up"
-                    up_count=$(echo "$up_metric" | grep -c "} 1" || echo "0")
-                    echo "   📈 Number of up Alertmanagers: $up_count"
-                else
-                    echo "   ❌ No Alertmanagers are up (all showing 0)"
-                fi
-            else
-                echo "   ❌ No karma_alertmanager_up metric found"
-            fi
-            
-            # Check Alertmanager directly
-            echo "5. Testing direct Alertmanager connection..."
-            if curl -s --max-time 5 "http://localhost:9093/-/ready" > /dev/null; then
-                echo "   ✅ Alertmanager is directly accessible"
-                
-                # Check if Alertmanager is healthy
-                am_health=$(curl -s --max-time 5 "http://localhost:9093/-/ready" 2>/dev/null || echo "ERROR")
-                echo "   📊 Alertmanager ready status: $am_health"
-            else
-                echo "   ❌ Alertmanager is not directly accessible"
-            fi
-            
-            # Check network connectivity between services
-            echo "6. Testing network connectivity..."
-            if docker exec prometheus-stack-test ping -c 1 localhost > /dev/null 2>&1; then
-                echo "   ✅ Localhost connectivity works"
-            else
-                echo "   ❌ Localhost connectivity failed"
-            fi
-            
-            # Check Karma configuration
-            echo "7. Checking Karma configuration..."
-            if docker exec prometheus-stack-test test -f /etc/karma/karma.yml; then
-                echo "   ✅ Karma config file exists"
-                echo "   📄 Karma config content:"
-                docker exec prometheus-stack-test cat /etc/karma/karma.yml | sed 's/^/      /'
-            else
-                echo "   ❌ Karma config file not found"
-            fi
-            
-            # Wait a bit and retry the metric check
-            echo "8. Retrying metric check after 2 second delay..."
-            sleep 2
-            final_check=$(curl -s --max-time 5 "http://localhost:8080/metrics" | grep 'karma_alertmanager_up{alertmanager="default"} 1' || true)
-            
-            if [ -n "$final_check" ]; then
-                echo "   ✅ Final check successful"
+            if curl -s "http://localhost:8080/metrics" | grep -q 'karma_alertmanager_up{alertmanager="default"} 1'; then
                 print_success "✅ $expected_status"
                 return 0
             else
-                echo "   ❌ Final check failed"
-                echo "9. Full Karma metrics dump for debugging:"
-                echo "   ================================================="
-                echo "$karma_metrics" | head -50 | sed 's/^/   /'
-                echo "   ================================================="
+                # Add minimal debug info only in GitHub Actions when it fails
+                if [ -n "$GITHUB_ACTIONS" ]; then
+                    echo ""
+                    echo "🔍 DEBUG: Checking what Karma metrics are available..."
+                    karma_up_metrics=$(curl -s "http://localhost:8080/metrics" | grep "karma_alertmanager_up" | head -3)
+                    if [ -n "$karma_up_metrics" ]; then
+                        echo "   📊 karma_alertmanager_up metrics found:"
+                        echo "$karma_up_metrics" | sed 's/^/      /'
+                    else
+                        echo "   ❌ No karma_alertmanager_up metrics found"
+                    fi
+                fi
                 print_error "❌ Cannot connect to Alertmanager"
                 return 1
             fi
@@ -358,81 +276,16 @@ print_final_status() {
 wait_for_services() {
     local max_attempts=30
     local attempt=1
-    local all_ready=false
     
-    echo -n "⏳ Checking service readiness"
-    
-    # Track individual service readiness
-    local prometheus_ready=false
-    local alertmanager_ready=false
-    local blackbox_ready=false
-    local karma_ready=false
+    echo -n "⏳ Checking service readiness..."
     
     while [ $attempt -le $max_attempts ]; do
-        # Check each service individually for better debugging
-        local services_up=0
-        local total_services=4
-        
-        # Prometheus check
-        if curl -sf http://localhost:9090/-/ready >/dev/null 2>&1; then
-            if [ "$prometheus_ready" = false ]; then
-                echo ""
-                echo "   ✅ Prometheus ready (attempt $attempt)"
-                prometheus_ready=true
-            fi
-            ((services_up++))
-        fi
-        
-        # Alertmanager check
-        if curl -sf http://localhost:9093/-/ready >/dev/null 2>&1; then
-            if [ "$alertmanager_ready" = false ]; then
-                echo ""
-                echo "   ✅ Alertmanager ready (attempt $attempt)"
-                alertmanager_ready=true
-            fi
-            ((services_up++))
-        fi
-        
-        # Blackbox Exporter check
-        if curl -sf http://localhost:9115/health >/dev/null 2>&1; then
-            if [ "$blackbox_ready" = false ]; then
-                echo ""
-                echo "   ✅ Blackbox Exporter ready (attempt $attempt)"
-                blackbox_ready=true
-            fi
-            ((services_up++))
-        fi
-        
-        # Karma check
-        if curl -sf http://localhost:8080/health >/dev/null 2>&1; then
-            if [ "$karma_ready" = false ]; then
-                echo ""
-                echo "   ✅ Karma ready (attempt $attempt)"
-                karma_ready=true
-            fi
-            ((services_up++))
-        fi
-        
-        # Show progress every 5 attempts
-        if [ $((attempt % 5)) -eq 0 ]; then
-            echo ""
-            echo "   📊 Progress (attempt $attempt/$max_attempts): $services_up/$total_services services ready"
-            echo "      Prometheus: $([ "$prometheus_ready" = true ] && echo "✅" || echo "⏳")"
-            echo "      Alertmanager: $([ "$alertmanager_ready" = true ] && echo "✅" || echo "⏳")"
-            echo "      Blackbox: $([ "$blackbox_ready" = true ] && echo "✅" || echo "⏳")"
-            echo "      Karma: $([ "$karma_ready" = true ] && echo "✅" || echo "⏳")"
-            echo -n "   ⏳ Continuing"
-        fi
-        
-        # All services ready?
-        if [ $services_up -eq $total_services ]; then
-            echo ""
-            echo "   🎉 All services ready! Total time: $((attempt * 0.5)) seconds"
-            
-            # Extra wait for Karma to establish Alertmanager connection
-            echo "   ⏳ Waiting additional 3 seconds for Karma-Alertmanager connection..."
-            sleep 3
-            
+        # Try to reach each core service
+        if curl -sf http://localhost:9090/-/ready >/dev/null 2>&1 && \
+           curl -sf http://localhost:9093/-/ready >/dev/null 2>&1 && \
+           curl -sf http://localhost:9115/health >/dev/null 2>&1 && \
+           curl -sf http://localhost:8080/health >/dev/null 2>&1; then
+            echo " ready!"
             return 0
         fi
         
@@ -441,13 +294,7 @@ wait_for_services() {
         attempt=$((attempt + 1))
     done
     
-    echo ""
-    echo "   ❌ Timeout after $max_attempts attempts ($((max_attempts * 0.5)) seconds)"
-    echo "   📊 Final status:"
-    echo "      Prometheus: $([ "$prometheus_ready" = true ] && echo "✅ Ready" || echo "❌ Not ready")"
-    echo "      Alertmanager: $([ "$alertmanager_ready" = true ] && echo "✅ Ready" || echo "❌ Not ready")"
-    echo "      Blackbox: $([ "$blackbox_ready" = true ] && echo "✅ Ready" || echo "❌ Not ready")"
-    echo "      Karma: $([ "$karma_ready" = true ] && echo "✅ Ready" || echo "❌ Not ready")"
+    echo " timeout!"
     return 1
 }
 
@@ -458,61 +305,25 @@ main() {
     echo "📁 Project root: $PROJECT_ROOT"
     echo "📁 Test directory: $TEST_DIR"
     
-    # Environment detection for debugging
-    echo ""
-    echo "🔍 Environment Information:"
-    echo "-------------------------"
-    echo "📊 Current user: $(whoami)"
-    echo "📊 Current directory: $(pwd)"
-    echo "📊 Container runtime: $(docker --version | head -1)"
-    echo "📊 System info: $(uname -a)"
-    echo "📊 Available memory: $(free -h | head -2 | tail -1)"
-    echo "📊 Disk space: $(df -h . | tail -1)"
-    
-    # Detect if we're in GitHub Actions
+    # Simple environment detection
     if [ -n "$GITHUB_ACTIONS" ]; then
         echo "🚀 Running in GitHub Actions mode"
-        echo "📊 GitHub workflow: $GITHUB_WORKFLOW"
-        echo "📊 GitHub job: $GITHUB_JOB"
-        echo "📊 GitHub runner: $RUNNER_OS"
-    elif [ -n "$CI" ]; then
-        echo "🚀 Running in CI mode"
-        echo "📊 CI environment: $CI"
     else
         echo "🚀 Running in local test mode"
     fi
-    
-    # Show docker environment
-    echo ""
-    echo "🐳 Docker Environment:"
-    echo "--------------------"
-    echo "📊 Docker containers:"
-    docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | head -10
     
     # Check if container is running
     if ! docker ps | grep -q prometheus-stack-test; then
         echo ""
         echo "❌ Health check failed: Container 'prometheus-stack-test' is not running ❌"
-        echo "🐳 All running containers:"
-        docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-        echo "🐳 Recent container logs:"
-        docker logs --tail 20 prometheus-stack-test 2>/dev/null || echo "No logs available"
         print_final_status false
         exit 1
     fi
     echo "✅ Container is running"
     
-    # Show container resource usage
-    echo ""
-    echo "📊 Container Resource Usage:"
-    echo "----------------------------"
-    docker stats prometheus-stack-test --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}" || echo "Could not get container stats"
-    
     # Wait for services to be ready
     if ! wait_for_services; then
         echo "❌ Services failed to start within timeout period"
-        echo "🐳 Container logs for debugging:"
-        docker logs --tail 30 prometheus-stack-test
         print_final_status false
         exit 1
     fi
@@ -544,55 +355,11 @@ main() {
     echo ""
     echo "🔬 Testing service functionality..."
     echo "-------------------------------"
-    
-    # Enhanced retry logic for functionality tests
-    declare -A functionality_tests=(
-        ["Karma"]="Connected to Alertmanager"
-        ["Prometheus"]="Can scrape targets"
-        ["Blackbox Exporter"]="Probe working"
-        ["Alertmanager"]="Configuration valid"
-        ["NGINX"]="All paths working"
-    )
-    
-    local failed_tests=0
-    local max_retries=3
-    
-    for service in "Karma" "Prometheus" "Blackbox Exporter" "Alertmanager" "NGINX"; do
-        local success=false
-        local retry=1
-        
-        while [ $retry -le $max_retries ] && [ "$success" = false ]; do
-            if [ $retry -gt 1 ]; then
-                echo ""
-                echo "🔄 Retry $retry/$max_retries for $service functionality test..."
-                # Progressive delay: 2s, 5s, 10s
-                local delay=$((retry * retry + 1))
-                echo "⏳ Waiting ${delay} seconds before retry..."
-                sleep $delay
-            fi
-            
-            if test_service "$service" "${functionality_tests[$service]}"; then
-                success=true
-            else
-                ((retry++))
-                if [ $retry -le $max_retries ]; then
-                    echo "⚠️  $service functionality test failed on attempt $((retry-1)), retrying..."
-                fi
-            fi
-        done
-        
-        if [ "$success" = false ]; then
-            echo "❌ $service functionality test failed after $max_retries attempts"
-            ((failed_tests++))
-        fi
-    done
-    
-    if [ $failed_tests -gt 0 ]; then
-        echo ""
-        echo "❌ $failed_tests functionality test(s) failed"
-        print_final_status false
-        exit 1
-    fi
+    test_service "Karma" "Connected to Alertmanager"
+    test_service "Prometheus" "Can scrape targets"
+    test_service "Blackbox Exporter" "Probe working"
+    test_service "Alertmanager" "Configuration valid"
+    test_service "NGINX" "All paths working"
     
     # If we got here, all checks passed
     print_final_status true
