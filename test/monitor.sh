@@ -199,8 +199,11 @@ continuous_monitoring() {
 
 # Main script logic
 main() {
-    echo "📈 Resource Monitoring for Prometheus Stack Add-on"
-    echo "=================================================="
+    echo ""
+    echo ""
+    echo ""
+    echo "📈  Running Resource Monitoring for Prometheus Stack Add-on"
+    echo "==========================================================="
     
     # Check if continuous mode is requested
     if [ "$1" = "continuous" ]; then

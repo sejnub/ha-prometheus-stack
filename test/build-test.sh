@@ -48,8 +48,11 @@ else
     TEST_DIR="$SCRIPT_DIR/test"
 fi
 
-echo "🐳 Building and Testing Prometheus Stack Add-on"
-echo "================================================"
+echo ""
+echo ""
+echo ""
+echo "🐳  Running Build and Testing Prometheus Stack Add-on"
+echo "====================================================="
 echo " Project root: $PROJECT_ROOT"
 echo "📁 Test directory: $TEST_DIR"
 

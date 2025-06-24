@@ -273,8 +273,11 @@ done
 
 # Main cleanup sequence
 main() {
-    echo "🧹 Cleanup for Prometheus Stack Add-on"
-    echo "======================================"
+    echo ""
+    echo ""
+    echo ""
+    echo "🧹  Running Cleanup for Prometheus Stack Add-on"
+    echo "================================================"
     echo "📁 Project root: $PROJECT_ROOT"
     echo "📁 Test directory: $TEST_DIR"
     

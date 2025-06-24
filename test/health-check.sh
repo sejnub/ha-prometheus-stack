@@ -303,8 +303,11 @@ wait_for_services() {
 
 # Main health check sequence
 main() {
-    echo "🏥 Health Check for Prometheus Stack Add-on"
-    echo "=========================================="
+    echo ""
+    echo ""
+    echo ""
+    echo "🏥  Running Health Check for Prometheus Stack Add-on"
+    echo "==================================================="
     echo "📁 Project root: $PROJECT_ROOT"
     echo "📁 Test directory: $TEST_DIR"
     

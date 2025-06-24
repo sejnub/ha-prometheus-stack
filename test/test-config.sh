@@ -45,8 +45,18 @@ print_status() {
     esac
 }
 
-echo "⚙️  Configuration Testing for Prometheus Stack Add-on"
-echo "====================================================="
+echo ""
+echo ""
+echo ""
+echo "⚙️  Running Configuration Testing for Prometheus Stack Add-on"
+echo "==========================================================="
+
+# Determine project root (one directory above this script) and ensure test-data dir exists
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Make sure test-data directory exists (cleanup script removes contents but keeps dir, yet ensure anyway)
+mkdir -p "$PROJECT_ROOT/test-data"
 
 # Check if container is running
 if ! docker ps | grep -q prometheus-stack; then
