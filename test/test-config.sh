@@ -83,7 +83,7 @@ wait_for_services() {
     
     while [ $attempt -le $max_attempts ]; do
         # Try to reach each core service
-        if curl -sf http://localhost:9090/prometheus/-/ready >/dev/null 2>&1 && \
+        if curl -sf http://localhost:9090/-/ready >/dev/null 2>&1 && \
            curl -sf http://localhost:9093/-/ready >/dev/null 2>&1 && \
            curl -sf http://localhost:9115/metrics >/dev/null 2>&1 && \
            curl -sf http://localhost:8080/ >/dev/null 2>&1; then
