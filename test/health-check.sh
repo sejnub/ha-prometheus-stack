@@ -270,11 +270,11 @@ test_service() {
                 local path="${paths[$i]}"
                 local name="${path_names[$i]}"
                 
-                # Test that the path returns a proper response (200, 301, 302, etc.)
+                # Test that the path returns a proper response (200, 302, etc.)
                 local response_code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:80/$path/")
                 
-                if [[ "$response_code" =~ ^(200|301|302)$ ]]; then
-                    # Success - 200 OK, 301 Moved Permanently, or 302 Found are all valid
+                if [[ "$response_code" =~ ^(200|302)$ ]]; then
+                    # Success - 200 OK or 302 Found are valid
                     continue
                 else
                     print_error "❌ $name proxy returns $response_code"

@@ -5,6 +5,14 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.17] - 2025-01-27
+
+### Fixed
+- Completely eliminated redirects for Prometheus main UI to prevent ingress context breakout
+- Changed from redirect to direct proxy to Prometheus graph endpoint
+- Fixed persistent timeout and URL breakout issue in Home Assistant addon mode
+- Removed 301 redirect that was causing browser URL changes outside ingress context
+
 ## [1.11.16] - 2025-01-27
 
 ### Fixed
