@@ -5,6 +5,14 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.15] - 2025-01-27
+
+### Fixed
+- Fixed Prometheus main UI completely breaking out of Home Assistant ingress context
+- Added nginx-level redirect from `/prometheus/` to `/prometheus/graph` to prevent external redirects
+- Reverted Prometheus configuration to prevent it from issuing redirects that break ingress
+- Fixed timeout issue when accessing Prometheus main dashboard through Home Assistant
+
 ## [1.11.14] - 2025-01-27
 
 ### Fixed
