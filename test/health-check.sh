@@ -218,7 +218,7 @@ test_service() {
             ;;
         "Prometheus")
             for n in {1..30}; do
-                if curl -s http://localhost:9090/prometheus/api/v1/targets |
+                if curl -s http://localhost:9090/api/v1/targets |
                    grep -q '"health":"up"'; then
                     print_success "✅ Can scrape targets"
                     return 0
@@ -312,10 +312,10 @@ wait_for_services() {
     
     while [ $attempt -le $max_attempts ]; do
         # Try to reach each core service
-        if curl -sf http://localhost:9090/prometheus/-/ready >/dev/null 2>&1 && \
+        if curl -sf http://localhost:9090/-/ready >/dev/null 2>&1 && \
            curl -sf http://localhost:9093/-/ready >/dev/null 2>&1 && \
-           curl -sf http://localhost:9115/health >/dev/null 2>&1 && \
-           curl -sf http://localhost:8080/health >/dev/null 2>&1; then
+           curl -sf http://localhost:9115/metrics >/dev/null 2>&1 && \
+           curl -sf http://localhost:8080/ >/dev/null 2>&1; then
             echo " ready!"
             return 0
         fi
@@ -367,9 +367,9 @@ main() {
     echo "-------------------------------"
     
     # Basic health checks
-    check_service "Karma" "http://localhost:8080/health"
-    check_service "Prometheus" "http://localhost:9090/prometheus/-/ready"
-    check_service "Blackbox Exporter" "http://localhost:9115/health"
+    check_service "Karma" "http://localhost:8080/"
+    check_service "Prometheus" "http://localhost:9090/-/ready"
+    check_service "Blackbox Exporter" "http://localhost:9115/metrics"
     check_service "Alertmanager" "http://localhost:9093/-/ready"
     check_service "NGINX" "http://localhost:80/nginx_status"
     
@@ -429,7 +429,7 @@ main
 check_prometheus_health() {
     echo ""
     echo "🔍 Checking Prometheus..."
-    if ! curl -s "http://localhost:9090/prometheus/-/ready" > /dev/null; then
+    if ! curl -s "http://localhost:9090/-/ready" > /dev/null; then
         echo ""
         print_status "ERROR" "❌ Health check failed: Prometheus is not healthy ❌"
         exit 1
@@ -453,7 +453,7 @@ check_alertmanager_health() {
 check_blackbox_health() {
     echo ""
     echo "🔍 Checking Blackbox Exporter..."
-    if ! curl -s "http://localhost:9115/health" > /dev/null; then
+    if ! curl -s "http://localhost:9115/metrics" > /dev/null; then
         echo ""
         print_status "ERROR" "❌ Health check failed: Blackbox Exporter is not healthy ❌"
         exit 1
@@ -465,7 +465,7 @@ check_blackbox_health() {
 check_karma_health() {
     echo ""
     echo "🔍 Checking Karma..."
-    if ! curl -s "http://localhost:8080/health" > /dev/null; then
+    if ! curl -s "http://localhost:8080/" > /dev/null; then
         echo ""
         print_status "ERROR" "❌ Health check failed: Karma is not healthy ❌"
         exit 1
