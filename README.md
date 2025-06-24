@@ -8,9 +8,9 @@ A comprehensive monitoring stack for Home Assistant that includes Prometheus, Al
 
 - The add-on must run equally well in the following modes
 
-  - **Test mode**: When started on the development computer
-  - **Github Mode**: When Run by Github actions
-  - **Add-on Mode**: When run as a home Assistant Add-On
+  - **Test-mode**: When started on the local development computer on which cursor-ai runs
+  - **Github-Mode**: When Run by Github actions
+  - **Addon-Mode**: When run as a home Assistant Add-On
 
 - All waits must be loops that have a minimal fixed time (0.5 seconds) and then check what they are waiting for
 
