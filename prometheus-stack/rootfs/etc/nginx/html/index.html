@@ -91,11 +91,12 @@
                     Time series database and monitoring system. Query metrics, create alerts, and visualize your data.
                 </div>
                 <div class="limitation">
-                    ⚠️ <strong>Ingress Limitation:</strong> The Prometheus web UI does not work properly through Home Assistant ingress due to JavaScript compatibility issues. Use the API endpoints or enable direct port access.
+                    ⚠️ <strong>Ingress Limitation:</strong> The Prometheus web UI does not work properly through Home Assistant ingress due to JavaScript compatibility issues. <strong>Direct port access (9090) is now enabled</strong> for full UI functionality.
                 </div>
                 <div class="links">
                     <a href="prometheus/">🔗 Prometheus UI (Limited in Ingress)</a>
                     <a href="prometheus/api/v1/query?query=up">📡 API Example</a>
+                    <a href="http://[HOST]:9090">🚀 Direct Prometheus UI (Full Access)</a>
                     <a href="prometheus/-/healthy">🏥 Health Status</a>
                     <a href="prometheus/metrics">📈 Metrics</a>
                 </div>
