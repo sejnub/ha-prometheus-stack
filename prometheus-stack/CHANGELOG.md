@@ -5,6 +5,35 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-01-27
+
+### Added
+- **Major Release**: Prometheus Stack 2.0.0 with comprehensive improvements
+- **Cross-Mode Compatibility**: All services now work reliably in test, github, and addon modes
+- **Standardized Service Management**: Complete S6-Overlay service script standardization
+- **Enhanced Documentation**: Comprehensive README standardization across all components
+
+### Changed
+- **BREAKING**: Improved service dependency management for more reliable startup
+- **BREAKING**: Standardized timeout handling across all services (30 attempts, 0.5s sleep, 15s total)
+- **BREAKING**: Replaced bashio::log functions with echo for cross-mode compatibility
+- Enhanced error handling and logging consistency across all services
+- Improved service startup order and dependency declarations
+
+### Fixed
+- **Service Scripts**: Standardized shebang lines across all S6-Overlay services
+- **Dependencies**: Added missing legacy-cont-init dependencies to blackbox-exporter and nginx
+- **Variables**: Fixed undefined variables in karma run script
+- **Logging**: Ensured consistent error handling and logging format
+- **Documentation**: Fixed all markdownlint errors and standardized formatting
+
+### Technical Improvements
+- All S6-Overlay service scripts now use consistent structure
+- Cross-mode compatible logging (test, github, addon modes)
+- Proper service dependency declarations for reliable startup
+- Enhanced error messages with consistent formatting and timeout information
+- Comprehensive documentation with Table of Contents and standardized sections
+
 ## [1.11.29] - 2025-01-27
 
 ### Fixed
