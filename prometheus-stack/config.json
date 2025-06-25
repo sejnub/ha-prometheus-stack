@@ -1,9 +1,13 @@
 {
   "name": "Prometheus Stack",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "slug": "prometheus-stack",
   "description": "Prometheus, Alertmanager, Karma and VS Code in one add-on",
-  "arch": ["aarch64", "amd64", "armv7"],
+  "arch": [
+    "aarch64",
+    "amd64",
+    "armv7"
+  ],
   "startup": "services",
   "init": false,
   "boot": "auto",
