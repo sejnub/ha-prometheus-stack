@@ -27,16 +27,16 @@ After reviewing the codebase, here are the structural inconsistencies that need 
 
 ## 🔄 REMAINING: Test Scripts
 
-- The scripts have different header styles and documentation formats
-- Some scripts use different color definitions and print functions
-- Error handling is inconsistent across scripts
-- Variable naming conventions vary
+  - The scripts have different header styles and documentation formats
+  - Some scripts use different color definitions and print functions
+  - Error handling is inconsistent across scripts
+  - Variable naming conventions vary
 
 ## 🔄 REMAINING: Configuration Files
 
-- Dashboard files use different JSON formatting styles
-- Configuration files are scattered across different directories
-- Some config files might be missing proper validation
+  - Dashboard files use different JSON formatting styles
+  - Configuration files are scattered across different directories
+  - Some config files might be missing proper validation
 
 ---
 

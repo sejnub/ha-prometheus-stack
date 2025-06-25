@@ -5,6 +5,7 @@ ENV PROM_VERSION=2.52.0
 ENV ALERTMANAGER_VERSION=0.27.0
 ENV KARMA_VERSION=v0.116
 ENV BLACKBOX_VERSION=0.25.0
+ENV CODESERVER_VERSION=4.19.1
 
 # Install required packages
 RUN apk add --no-cache \
@@ -13,7 +14,12 @@ RUN apk add --no-cache \
         tar \
         wget \
         jq \
-        nginx && \
+        nginx \
+        nodejs \
+        npm \
+        git \
+        python3 \
+        py3-pip && \
     ARCH="" && \
     ARM_ARCH="" && \
     case `uname -m` in \
@@ -33,6 +39,9 @@ RUN apk add --no-cache \
     wget https://github.com/prometheus/blackbox_exporter/releases/download/v${BLACKBOX_VERSION}/blackbox_exporter-${BLACKBOX_VERSION}.linux-${ARCH}.tar.gz && \
     tar -xzf blackbox_exporter-${BLACKBOX_VERSION}.linux-${ARCH}.tar.gz && \
     mv blackbox_exporter-${BLACKBOX_VERSION}.linux-${ARCH} /opt/blackbox_exporter && \
+    wget https://github.com/coder/code-server/releases/download/v${CODESERVER_VERSION}/code-server-${CODESERVER_VERSION}-linux-${ARCH}.tar.gz && \
+    tar -xzf code-server-${CODESERVER_VERSION}-linux-${ARCH}.tar.gz && \
+    mv code-server-${CODESERVER_VERSION}-linux-${ARCH} /opt/code-server && \
     rm -rf *.tar.gz && \
     apk del wget tar && \
     rm -rf /var/cache/apk/*
@@ -44,6 +53,7 @@ COPY blackbox.yml /etc/blackbox_exporter/
 # Create required directories
 RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /data/prometheus /data/alertmanager && \
     mkdir -p /etc/nginx/http.d && \
+    mkdir -p /opt/code-server/data /opt/code-server/extensions && \
     rm -f /etc/nginx/http.d/default.conf
 
 # Copy root filesystem

@@ -1,0 +1,18 @@
+#!/command/with-contenv bashio
+
+# Read configuration from options.json
+CONFIG_PATH=/data/options.json
+
+if [ -f "$CONFIG_PATH" ]; then
+    # Check if VS Code is enabled
+    ENABLE_VSCODE=$(jq --raw-output '.enable_vscode // false' "$CONFIG_PATH")
+    if [ "$ENABLE_VSCODE" != "true" ]; then
+        echo "VS Code is disabled, skipping startup"
+        exit 0
+    fi
+else
+    echo "No options.json found, VS Code disabled"
+    exit 0
+fi
+
+echo "VS Code is enabled, starting service" 

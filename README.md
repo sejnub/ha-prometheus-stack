@@ -1,6 +1,6 @@
 # Prometheus Stack Add-on for Home Assistant
 
-A comprehensive monitoring stack for Home Assistant that includes Prometheus, Alertmanager, Karma, and Blackbox Exporter in a single add-on.
+A comprehensive monitoring stack for Home Assistant that includes Prometheus, Alertmanager, Karma, Blackbox Exporter, and VS Code in a single add-on.
 
 ## Table of Contents
 
@@ -21,9 +21,10 @@ A comprehensive monitoring stack for Home Assistant that includes Prometheus, Al
 - [7. Alert Configuration](#7-alert-configuration)
   - [7.1. Email Notifications](#71-email-notifications)
   - [7.2. Custom Alerts](#72-custom-alerts)
-- [8. Development and Testing](#8-development-and-testing)
-- [9. Support](#9-support)
-- [10. License](#10-license)
+- [8. VS Code Integration](#8-vs-code-integration)
+- [9. Development and Testing](#9-development-and-testing)
+- [10. Support](#10-support)
+- [11. License](#11-license)
 
 ## Rules to Remember
 
@@ -45,6 +46,7 @@ This add-on provides a complete monitoring solution for your Home Assistant envi
 - **Alertmanager**: Alert routing and notification management
 - **Karma**: Modern web UI for alert management and visualization
 - **Blackbox Exporter**: External service monitoring via HTTP and TCP probes
+- **VS Code**: Full-featured code editor for configuration editing and development
 
 ## 2. Key Features
 
@@ -55,6 +57,7 @@ This add-on provides a complete monitoring solution for your Home Assistant envi
 - **Data Persistence**: Survives add-on updates and restarts
 - **HA Integration**: Automatic Home Assistant metrics collection
 - **Pre-built Dashboards**: Ready-to-use Grafana dashboards
+- **VS Code Integration**: Full-featured code editor with extensions support
 
 ## 3. Installation
 
@@ -83,6 +86,9 @@ home_assistant_token: "your_long_lived_token"
 blackbox_targets:
   - name: "Home Assistant"
     url: "http://supervisor/core"
+enable_vscode: false
+vscode_password: ""
+vscode_workspace: "/config"
 ```
 
 ### 4.2. Option Descriptions
@@ -94,6 +100,9 @@ blackbox_targets:
 - `blackbox_targets`: List of endpoints to monitor
   - `name`: Display name for the target
   - `url`: URL to monitor
+- `enable_vscode`: Enable or disable VS Code editor
+- `vscode_password`: Password for VS Code access (required if enabled)
+- `vscode_workspace`: Workspace directory for VS Code (default: `/config`)
 
 ## 5. Access
 
@@ -103,6 +112,7 @@ All services are accessible through Home Assistant's ingress feature:
 - **Prometheus**: Through `/prometheus/` path
 - **Alertmanager**: Through `/alertmanager/` path
 - **Blackbox Exporter**: Through `/blackbox/` path
+- **VS Code**: Through `/vscode/` path (when enabled)
 
 No additional port configuration is needed - everything works through Home Assistant's ingress system.
 
@@ -160,15 +170,33 @@ Create custom alerts through:
 - Prometheus configuration
 - Prometheus web interface
 
-## 8. Development and Testing
+## 8. VS Code Integration
+
+The add-on includes a full-featured VS Code editor powered by code-server, allowing you to:
+
+- **Edit Configuration Files**: Modify all Prometheus Stack configurations directly
+- **Write Scripts**: Create and test monitoring scripts and automation
+- **Install Extensions**: Use VS Code extensions for enhanced functionality
+- **Multi-language Support**: JavaScript, Python, YAML, JSON, and many more
+
+### Quick Start
+
+1. Enable VS Code in the add-on configuration
+2. Set a secure password
+3. Access VS Code through the main dashboard
+4. Start editing your configuration files
+
+For detailed VS Code usage instructions, see [prometheus-stack/VSCODE_GUIDE.md](prometheus-stack/VSCODE_GUIDE.md).
+
+## 9. Development and Testing
 
 For development and testing instructions, see [test/README.md](test/README.md).
 
-## 9. Support
+## 10. Support
 
 - [Documentation](https://github.com/sejnub/ha-prometheus-stack/wiki)
 - [Issue Tracker](https://github.com/sejnub/ha-prometheus-stack/issues)
 
-## 10. License
+## 11. License
 
 MIT License - see LICENSE file for details

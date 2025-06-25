@@ -5,6 +5,31 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-01-27
+
+### Added
+- **VS Code Integration**: Full-featured code editor with extensions support
+- **Code-Server**: VS Code Server (v4.19.1) for browser-based development
+- **VS Code Configuration**: Enable/disable, password protection, and workspace configuration
+- **VS Code Ingress Support**: Access VS Code through Home Assistant ingress at `/vscode/`
+- **Direct VS Code Access**: Direct port access at 8443 for full functionality
+- **VS Code Health Monitoring**: Integrated health checks for VS Code service
+
+### Changed
+- **BREAKING**: Added new port 8443 for VS Code (disabled by default, use ingress)
+- **BREAKING**: Updated add-on description to include VS Code
+- Enhanced Dockerfile with Node.js, npm, git, and Python3 for VS Code extensions
+- Updated NGINX configuration to include VS Code routing
+- Enhanced main dashboard with VS Code access links
+- Updated test configuration to include VS Code options
+
+### Technical Improvements
+- VS Code service integrated into S6-Overlay service management
+- Cross-mode compatible VS Code configuration (test, github, addon modes)
+- Persistent VS Code data and extensions storage
+- Proper service dependency management for VS Code
+- Comprehensive VS Code documentation and access instructions
+
 ## [2.0.0] - 2025-01-27
 
 ### Added

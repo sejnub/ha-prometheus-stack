@@ -100,7 +100,10 @@ if [ ! -f "$PROJECT_ROOT/test-data/options.json" ]; then
   "home_assistant_port": 8123,
   "home_assistant_long_lived_token": "test-token",
   "smtp_host": "localhost",
-  "smtp_port": 25
+  "smtp_port": 25,
+  "enable_vscode": true,
+  "vscode_password": "test123",
+  "vscode_workspace": "/config"
 }
 EOF
 fi
@@ -113,6 +116,7 @@ docker run -d \
   -p 9093:9093 \
   -p 9115:9115 \
   -p 8080:8080 \
+  -p 8443:8443 \
   -p 80:80 \
   -v "$PROJECT_ROOT/test-data:/data" \
   -e SUPERVISOR_TOKEN="test-supervisor-token" \
@@ -138,6 +142,7 @@ echo "   Prometheus:        http://localhost:9090"
 echo "   Alertmanager:      http://localhost:9093"
 echo "   Blackbox Exporter: http://localhost:9115"
 echo "   Karma UI:          http://localhost:8080"
+echo "   VS Code:           http://localhost:8443"
 echo "   NGINX (Ingress):   http://localhost:80"
 echo ""
 echo "🔍 Health Check URLs:"
@@ -152,6 +157,13 @@ echo "   - Karma:           http://localhost:80/"
 echo "   - Prometheus:      http://localhost:80/prometheus/"
 echo "   - Alertmanager:    http://localhost:80/alertmanager/"
 echo "   - Blackbox:        http://localhost:80/blackbox/"
+echo "   - VS Code:         http://localhost:80/vscode/"
+echo ""
+echo "💻 VS Code Access:"
+echo "   - Direct:          http://localhost:8443"
+echo "   - Ingress:         http://localhost:80/vscode/"
+echo "   - Password:        test123"
+echo "   - Workspace:       /config"
 echo ""
 echo "🔍 Blackbox Exporter Endpoints:"
 echo "   - Metrics:         http://localhost:9115/metrics"

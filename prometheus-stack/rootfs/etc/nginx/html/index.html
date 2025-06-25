@@ -46,6 +46,10 @@
             border-left: 4px solid #f39c12;
             background: #fdf6e3;
         }
+        .service-card.vscode {
+            border-left: 4px solid #007acc;
+            background: #e3f2fd;
+        }
         h2 {
             color: #2c3e50;
             margin-top: 0;
@@ -76,6 +80,15 @@
             margin: 10px 0;
             padding: 8px;
             background: #fcf3cf;
+            border-radius: 4px;
+        }
+        .note {
+            color: #2980b9;
+            font-size: 0.9em;
+            font-style: italic;
+            margin: 10px 0;
+            padding: 8px;
+            background: #e3f2fd;
             border-radius: 4px;
         }
     </style>
@@ -137,6 +150,20 @@
                 </div>
             </div>
 
+            <div class="service-card vscode">
+                <h2>💻 VS Code</h2>
+                <div class="description">
+                    Full-featured code editor with extensions. Edit configuration files, write scripts, and develop directly in your browser.
+                </div>
+                <div class="note">
+                    ℹ️ <strong>Configuration Required:</strong> Enable VS Code in the add-on configuration and set a password to access the editor.
+                </div>
+                <div class="links">
+                    <a href="vscode/">🔗 VS Code Editor</a>
+                    <a href="#" id="vscode-direct-link">🚀 Direct VS Code (Bypasses Ingress)</a>
+                </div>
+            </div>
+
             <div class="service-card">
                 <h2>🌐 NGINX Status</h2>
                 <div class="description">
@@ -154,6 +181,12 @@
             const prometheusLink = document.getElementById('prometheus-direct-link');
             if (prometheusLink) {
                 prometheusLink.href = `http://${window.location.hostname}:9090`;
+            }
+            
+            // Set the direct VS Code link to use the current hostname
+            const vscodeLink = document.getElementById('vscode-direct-link');
+            if (vscodeLink) {
+                vscodeLink.href = `http://${window.location.hostname}:8443`;
             }
         });
     </script>
