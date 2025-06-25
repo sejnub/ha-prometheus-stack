@@ -5,6 +5,15 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.2.9 - 2025-01-27
+
+### Fixed
+
+- Fixed GitHub Actions workflow to remove armv7 from multi-architecture build platforms.
+- Removed `linux/arm/v7` from `.github/workflows/build.yml` platforms list.
+- This resolves the build failure where GitHub Actions was still trying to build for armv7.
+- Multi-architecture builds now only target supported platforms (linux/amd64, linux/arm64).
+
 ## 2.2.8 - 2025-01-27
 
 ### Fixed
