@@ -2,9 +2,6 @@
 
 This directory contains all testing tools and comprehensive guides for the Prometheus Stack Home Assistant add-on.
 
-## Table of Contents
-
-- [Table of Contents](#table-of-contents)
 - [1. Test Directory Structure](#1-test-directory-structure)
 - [2. Quick Start Testing](#2-quick-start-testing)
   - [2.1. Prerequisites](#21-prerequisites)

@@ -2,51 +2,28 @@
 
 echo "Starting VS Code Server..."
 
-# Read configuration from options.json
-CONFIG_PATH=/data/options.json
-
-if [ -f "$CONFIG_PATH" ]; then
-    # Check if VS Code is enabled
-    ENABLE_VSCODE=$(jq --raw-output '.enable_vscode // false' "$CONFIG_PATH")
-    if [ "$ENABLE_VSCODE" != "true" ]; then
-        echo "VS Code is disabled in configuration"
-        exit 0
-    fi
-
-    # Get configuration
-    PASSWORD=$(jq --raw-output '.vscode_password // "admin"' "$CONFIG_PATH")
-    WORKSPACE=$(jq --raw-output '.vscode_workspace // "/config"' "$CONFIG_PATH")
-else
-    echo "No options.json found, VS Code disabled"
-    exit 0
-fi
-
-# Set default password if not provided
-if [ -z "$PASSWORD" ] || [ "$PASSWORD" = "null" ]; then
-    PASSWORD="admin"
-fi
-
-# Set default workspace if not provided
-if [ -z "$WORKSPACE" ] || [ "$WORKSPACE" = "null" ]; then
-    WORKSPACE="/config"
-fi
+# Always use /etc as the workspace
+WORKSPACE="/etc"
 
 # Create workspace directory if it doesn't exist
 mkdir -p "$WORKSPACE"
 
+# Fix Node.js binary issue by patching the code-server script
+echo "Fixing code-server to use system Node.js..."
+sed -i 's|exec "$ROOT/lib/node" "$ROOT" "$@"|exec "/usr/bin/node" "$ROOT" "$@"|g' /opt/code-server/bin/code-server
+
 # Set environment variables for code-server
-export PASSWORD="$PASSWORD"
 export PORT=8443
 export HOST=0.0.0.0
 export USER_DATA_DIR=/opt/code-server/data
 export EXTENSIONS_DIR=/opt/code-server/extensions
 
-# Start code-server
+# Start code-server without authentication
 exec s6-setuidgid root /opt/code-server/bin/code-server \
     --bind-addr 0.0.0.0:8443 \
     --user-data-dir /opt/code-server/data \
     --extensions-dir /opt/code-server/extensions \
-    --auth password \
+    --auth none \
     --disable-telemetry \
     --disable-update-check \
     "$WORKSPACE" 

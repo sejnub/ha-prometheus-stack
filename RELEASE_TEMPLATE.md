@@ -21,15 +21,18 @@ For installation instructions and configuration options, see the [main documenta
 ## 🔍 Changes in this Version
 
 ### Configuration Changes
+
 - [List any changes to configuration options]
 - [List any new configuration options]
 - [List any deprecated options]
 
 ### Breaking Changes
+
 - [List any breaking changes]
 - [Migration instructions if needed]
 
 ### Dependency Updates
+
 - [List updated dependencies]
 - [List new dependencies]
 - [List removed dependencies]
@@ -47,6 +50,7 @@ For installation instructions and configuration options, see the [main documenta
 ## 🔗 Access URLs
 
 Once installed and started:
+
 - **Prometheus**: `http://your-ha-ip:9090`
 - **Alertmanager**: `http://your-ha-ip:9093`
 - **Blackbox Exporter**: `http://your-ha-ip:9115`
@@ -55,6 +59,7 @@ Once installed and started:
 ## 📝 Changelog
 
 ### v{VERSION}
+
 - Initial release
 - [List of changes]
 
@@ -66,6 +71,7 @@ Once installed and started:
 ## 🔧 Upgrade Instructions
 
 If upgrading from a previous version:
+
 1. [Special step 1 if needed]
 2. [Special step 2 if needed]
 3. [Special step 3 if needed]

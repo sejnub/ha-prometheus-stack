@@ -2,9 +2,6 @@
 
 A comprehensive monitoring stack for Home Assistant that includes Prometheus, Alertmanager, Karma, Blackbox Exporter, and VS Code in a single add-on.
 
-## Table of Contents
-
-- [Table of Contents](#table-of-contents)
 - [Rules to Remember](#rules-to-remember)
 - [1. What is this?](#1-what-is-this)
 - [2. Key Features](#2-key-features)
@@ -22,6 +19,7 @@ A comprehensive monitoring stack for Home Assistant that includes Prometheus, Al
   - [7.1. Email Notifications](#71-email-notifications)
   - [7.2. Custom Alerts](#72-custom-alerts)
 - [8. VS Code Integration](#8-vs-code-integration)
+  - [Quick Start](#quick-start)
 - [9. Development and Testing](#9-development-and-testing)
 - [10. Support](#10-support)
 - [11. License](#11-license)
