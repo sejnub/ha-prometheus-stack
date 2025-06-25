@@ -1,19 +1,20 @@
 #!/command/with-contenv bashio
 
 # Wait until Alertmanager API is reachable before starting Karma
-for i in {1..60}; do
+for i in $(seq 1 30); do
     if curl -s "http://localhost:9093/api/v2/status" > /dev/null 2>&1; then
         echo "Alertmanager API is reachable (attempt $i)"
         break
     fi
-    echo "Waiting for Alertmanager API... (attempt $i)"
+    echo "Waiting for Alertmanager API... (attempt $i/30)"
     sleep 0.5
-    if [ $i -eq 60 ]; then
-        echo "Alertmanager API not reachable after 30s, proceeding anyway"
+    if [ $i -eq 30 ]; then
+        echo "Alertmanager API not reachable after 15s, proceeding anyway"
     fi
 done
 
 # Start karma
+echo "Starting Karma..."
 exec s6-setuidgid root /usr/local/bin/karma \
     --config.file=/etc/karma/karma.yml 
 

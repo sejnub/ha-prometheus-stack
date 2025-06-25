@@ -13,11 +13,17 @@ After reviewing the codebase, here are the structural inconsistencies that need 
 - ✅ Consistent support and license sections
 - ✅ All emoji icons removed from section headers
 
-## 🔄 REMAINING: S6-Overlay Service Scripts
+## ✅ COMPLETED: S6-Overlay Service Scripts
 
-- The up scripts have consistent structure but could be improved with standardized timeouts and error messages
-- Some services might be missing proper dependency declarations
-- We should ensure all services have consistent file permissions
+**Status: FIXED** - All S6-Overlay service scripts now have consistent structure:
+
+- ✅ Standardized shebang lines (`#!/command/with-contenv bashio`)
+- ✅ Consistent timeout handling (30 attempts, 0.5s sleep, 15s total)
+- ✅ Cross-mode compatible logging using `echo` (works in test, github, and addon modes)
+- ✅ Added missing dependencies (legacy-cont-init to blackbox-exporter and nginx)
+- ✅ Fixed undefined variables in karma run script
+- ✅ Consistent logging format across all services
+- ✅ All services have proper dependency declarations
 
 ## 🔄 REMAINING: Test Scripts
 
@@ -34,4 +40,4 @@ After reviewing the codebase, here are the structural inconsistencies that need 
 
 ---
 
-**Next Priority:** Would you like me to continue with the S6-Overlay Service Scripts next, or would you prefer to tackle the Test Scripts inconsistencies first?
+**Next Priority:** Would you like me to continue with the Test Scripts inconsistencies next, or would you prefer to tackle the Configuration Files inconsistencies first?

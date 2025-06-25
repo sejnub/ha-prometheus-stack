@@ -1,4 +1,4 @@
-#!/usr/bin/with-contenv bashio
+#!/command/with-contenv bashio
 
 echo "Starting Alertmanager..."
 exec s6-setuidgid root /opt/alertmanager/alertmanager \

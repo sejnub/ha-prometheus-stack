@@ -13,8 +13,9 @@ for i in $(seq 1 30); do
             echo "Alertmanager health ready but API not ready yet (attempt $i/30)"
         fi
     fi
+    echo "Waiting for Alertmanager... (attempt $i/30)"
     sleep 0.5
 done
 
-echo "Alertmanager failed to become ready"
+echo "Alertmanager failed to become ready after 15 seconds"
 exit 1 

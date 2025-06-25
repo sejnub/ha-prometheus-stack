@@ -1,6 +1,6 @@
 #!/command/with-contenv bashio
 
-# Start Prometheus
+echo "Starting Prometheus..."
 exec s6-setuidgid root /opt/prometheus/prometheus \
     --config.file=/etc/prometheus/prometheus.yml \
     --storage.tsdb.path=/data/prometheus \

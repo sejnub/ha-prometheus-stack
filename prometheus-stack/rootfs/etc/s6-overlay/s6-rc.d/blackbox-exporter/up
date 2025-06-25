@@ -1,13 +1,14 @@
 #!/command/with-contenv bashio
 
 # Wait for Blackbox Exporter to be ready
-for _ in $(seq 1 30); do
+for i in $(seq 1 30); do
     if curl -s "http://localhost:9115/health" > /dev/null; then
         echo "Blackbox Exporter is ready"
         exit 0
     fi
+    echo "Waiting for Blackbox Exporter... (attempt $i/30)"
     sleep 0.5
 done
 
-echo "Blackbox Exporter failed to become ready"
+echo "Blackbox Exporter failed to become ready after 15 seconds"
 exit 1 

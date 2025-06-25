@@ -1,13 +1,14 @@
 #!/command/with-contenv bashio
 
 # Wait for Prometheus to be ready
-for _ in $(seq 1 30); do
+for i in $(seq 1 30); do
     if curl -s "http://localhost:9090/-/ready" > /dev/null; then
         echo "Prometheus is ready"
         exit 0
     fi
+    echo "Waiting for Prometheus... (attempt $i/30)"
     sleep 0.5
 done
 
-echo "Prometheus failed to become ready"
+echo "Prometheus failed to become ready after 15 seconds"
 exit 1 

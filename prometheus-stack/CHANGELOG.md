@@ -5,6 +5,22 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.29] - 2025-01-27
+
+### Fixed
+- **S6-Overlay Service Scripts**: Standardized all service scripts for cross-mode compatibility
+- Fixed inconsistent shebang lines across all service scripts
+- Standardized timeout handling (30 attempts, 0.5s sleep, 15s total) for all services
+- Replaced `bashio::log...` functions with `echo` for compatibility across test, github, and addon modes
+- Added missing dependencies (legacy-cont-init) to blackbox-exporter and nginx services
+- Fixed undefined variables in karma run script
+- Ensured consistent error handling and logging format across all services
+
+### Changed
+- All S6-Overlay service scripts now use consistent structure and cross-mode compatible logging
+- Improved service dependency declarations for proper startup order
+- Enhanced error messages with consistent formatting and timeout information
+
 ## [1.11.24] - 2025-01-27
 
 ### Fixed

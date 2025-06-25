@@ -1,3 +1,3 @@
 #!/command/with-contenv bashio
-bashio::log.info "Starting NGINX for ingress routing..."
+echo "Starting NGINX for ingress routing..."
 exec nginx 
