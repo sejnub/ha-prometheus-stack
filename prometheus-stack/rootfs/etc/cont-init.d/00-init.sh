@@ -25,8 +25,8 @@ else
     SMTP_PORT="25"
 fi
 
-# Create alertmanager.yml
-cat > /etc/alertmanager/alertmanager.yml <<EOF
+# Create alertmanager.yml in persistent location
+cat > /config/alertmanager/alertmanager.yml <<EOF
 global:
   resolve_timeout: 5m
   smtp_smarthost: '${SMTP_HOST:-localhost}:${SMTP_PORT:-25}'
@@ -41,8 +41,8 @@ receivers:
       - to: '${ALERTMANAGER_TO_EMAIL}'
 EOF
 
-# Create karma.yml configuration
-cat > /etc/karma/karma.yml <<EOF
+# Create karma.yml configuration in persistent location
+cat > /config/karma/karma.yml <<EOF
 alertmanager:
   servers:
     - name: "default"
@@ -65,4 +65,10 @@ labels:
       - "@alertmanager=default"
 EOF
 
-echo "Configuration initialized successfully" 
+# Create nginx.conf in persistent location if it doesn't exist
+if [ ! -f /config/nginx/nginx.conf ]; then
+    cp /etc/nginx/nginx.conf /config/nginx/nginx.conf
+fi
+
+echo "Configuration initialized successfully in persistent locations"
+echo "All configuration files are now editable in the config directory" 

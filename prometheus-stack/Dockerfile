@@ -37,14 +37,22 @@ RUN apk add --no-cache \
     apk del wget tar && \
     rm -rf /var/cache/apk/*
 
-# Copy configuration files
-COPY prometheus.yml /etc/prometheus/
-COPY blackbox.yml /etc/blackbox_exporter/
-
-# Create required directories
-RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /data/prometheus /data/alertmanager && \
+# Create required directories for persistent configs
+RUN mkdir -p /config/prometheus /config/alertmanager /config/blackbox_exporter /config/karma /config/nginx && \
+    mkdir -p /data/prometheus /data/alertmanager && \
     mkdir -p /etc/nginx/http.d && \
     rm -f /etc/nginx/http.d/default.conf
+
+# Copy default configuration files to persistent locations
+COPY prometheus.yml /config/prometheus/prometheus.yml
+COPY blackbox.yml /config/blackbox_exporter/blackbox.yml
+
+# Create symbolic links to persistent configs
+RUN ln -sf /config/prometheus/prometheus.yml /etc/prometheus/prometheus.yml && \
+    ln -sf /config/blackbox_exporter/blackbox.yml /etc/blackbox_exporter/blackbox.yml && \
+    ln -sf /config/alertmanager/alertmanager.yml /etc/alertmanager/alertmanager.yml && \
+    ln -sf /config/karma/karma.yml /etc/karma/karma.yml && \
+    ln -sf /config/nginx/nginx.conf /etc/nginx/nginx.conf
 
 # Copy root filesystem
 COPY rootfs/ /

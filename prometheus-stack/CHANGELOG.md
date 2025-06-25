@@ -5,6 +5,28 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-01-27
+
+### Added
+- **Configuration Editing Support**: All configuration files are now persistent and editable after startup
+- **VS Code Integration**: Full support for editing configs through VS Code add-on
+- **Persistent Config Directories**: All configs stored in `/config/` for easy access
+- **Configuration Guide**: Comprehensive documentation for editing configurations
+
+### Changed
+- **BREAKING**: Configuration files now stored in persistent locations (`/config/`)
+- **BREAKING**: All services now use symbolic links to persistent config locations
+- Enhanced init script to generate configs in editable locations
+- Added volume mappings for config, share, and ssl directories
+
+### Technical Improvements
+- Prometheus config: `/config/prometheus/prometheus.yml`
+- Alertmanager config: `/config/alertmanager/alertmanager.yml`
+- Blackbox config: `/config/blackbox_exporter/blackbox.yml`
+- Karma config: `/config/karma/karma.yml`
+- NGINX config: `/config/nginx/nginx.conf`
+- All configs persist across add-on updates and restarts
+
 ## [2.0.0] - 2025-01-27
 
 ### Added
