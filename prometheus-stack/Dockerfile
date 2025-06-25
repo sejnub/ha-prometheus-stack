@@ -54,12 +54,15 @@ COPY blackbox.yml /etc/blackbox_exporter/
 RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /data/prometheus /data/alertmanager && \
     mkdir -p /etc/nginx/http.d && \
     mkdir -p /opt/code-server/data /opt/code-server/extensions && \
+    mkdir -p /etc/.vscode && \
     rm -f /etc/nginx/http.d/default.conf
 
 # Copy root filesystem
 COPY rootfs/ /
+COPY rootfs/etc/.vscode /etc/.vscode
 
 # Set permissions
 RUN chmod +x /etc/cont-init.d/00-init.sh && \
     chmod +x /etc/s6-overlay/s6-rc.d/*/run && \
-    find /etc/s6-overlay/s6-rc.d -name finish -type f -exec chmod +x {} \;
+    find /etc/s6-overlay/s6-rc.d -name finish -type f -exec chmod +x {} \; && \
+    chmod -R 755 /etc/.vscode
