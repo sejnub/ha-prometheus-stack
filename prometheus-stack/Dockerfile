@@ -24,6 +24,7 @@ RUN apk add --no-cache \
     case `uname -m` in \
         x86_64) ARCH="amd64" ;; \
         aarch64) ARCH="arm64" ;; \
+        *) echo "Unsupported architecture: $(uname -m)" && exit 1 ;; \
     esac && \
     wget https://github.com/prometheus/prometheus/releases/download/v${PROM_VERSION}/prometheus-${PROM_VERSION}.linux-${ARCH}.tar.gz && \
     tar -xzf prometheus-${PROM_VERSION}.linux-${ARCH}.tar.gz && \
