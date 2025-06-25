@@ -9,62 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- (Describe new features here)
+- Sectioned and improved markdownlint compliance for all documentation and template files.
+- Added `.vscode/settings.json` to control VS Code explorer folder visibility for a focused config editing experience.
 
 ### Changed
 
-- (Describe changes here)
+- Updated VS Code explorer to only show relevant configuration folders by default.
+- Improved and standardized markdown formatting in `CHANGELOG.md`, `VSCODE_GUIDE.md`, `RELEASE_TEMPLATE.md`, `ADDON_CHECKLIST.md`, and `temp.md`.
+- Updated `config.json` version to 2.2.0.
 
 ### Fixed
 
-- (Describe fixes here)
-
-- [2.1.0 - 2025-01-27](#210---2025-01-27)
-  - [Added](#added)
-  - [Changed](#changed)
-  - [Technical Improvements](#technical-improvements)
-- [2.0.0 - 2025-01-27](#200---2025-01-27)
-  - [Added](#added-1)
-  - [Changed](#changed-1)
-  - [Fixed](#fixed)
-  - [Technical Improvements](#technical-improvements-1)
-- [1.11.29 - 2025-01-27](#11129---2025-01-27)
-  - [Fixed](#fixed-1)
-  - [Changed](#changed-2)
-- [1.11.24 - 2025-01-27](#11124---2025-01-27)
-  - [Fixed](#fixed-2)
-- [1.11.23 - 2025-01-27](#11123---2025-01-27)
-  - [Fixed](#fixed-3)
-- [1.11.22 - 2025-01-27](#11122---2025-01-27)
-  - [Changed](#changed-3)
-- [1.11.21 - 2025-01-27](#11121---2025-01-27)
-  - [Fixed](#fixed-4)
-- [1.11.20 - 2025-01-27](#11120---2025-01-27)
-  - [Fixed](#fixed-5)
-- [1.11.19 - 2025-01-27](#11119---2025-01-27)
-  - [Fixed](#fixed-6)
-- [1.11.18 - 2025-01-27](#11118---2025-01-27)
-  - [Fixed](#fixed-7)
-- [1.11.17 - 2025-01-27](#11117---2025-01-27)
-  - [Fixed](#fixed-8)
-- [1.11.16 - 2025-01-27](#11116---2025-01-27)
-  - [Fixed](#fixed-9)
-- [1.11.15 - 2025-01-27](#11115---2025-01-27)
-  - [Fixed](#fixed-10)
-- [1.11.14 - 2025-01-27](#11114---2025-01-27)
-  - [Fixed](#fixed-11)
-- [1.11.13 - 2025-01-27](#11113---2025-01-27)
-  - [Fixed](#fixed-12)
-  - [Added](#added-2)
-  - [Changed](#changed-4)
-- [1.11.12 - 2025-01-27](#11112---2025-01-27)
-  - [Changed](#changed-5)
-- [1.11.11 - Previous Release](#11111---previous-release)
-  - [Features](#features)
-  - [Components](#components)
-  - [Configuration Options](#configuration-options)
-  - [Access](#access)
-  - [Technical Details](#technical-details)
+- Removed invalid `files.exclude` block from `config.json` (now only in `.vscode/settings.json`).
+- Fixed markdownlint issues and formatting errors across all documentation files.
+- Ensured changelog and documentation are markdownlint-compliant and easy to maintain.
 
 ## 2.1.0 - 2025-01-27
 
