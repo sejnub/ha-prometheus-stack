@@ -19,10 +19,7 @@ RUN apk add --no-cache \
         npm \
         git \
         python3 \
-        py3-pip \
-        gcompat \
-        libgcc \
-        libstdc++ && \
+        py3-pip && \
     ARCH="" && \
     ARM_ARCH="" && \
     case `uname -m` in \
