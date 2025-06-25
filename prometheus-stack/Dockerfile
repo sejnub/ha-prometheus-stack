@@ -58,6 +58,7 @@ RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /data/prometheu
 
 # Copy root filesystem
 COPY rootfs/ /
+COPY rootfs/etc/.vscode /etc/.vscode
 
 # Set permissions
 RUN chmod +x /etc/cont-init.d/00-init.sh && \
