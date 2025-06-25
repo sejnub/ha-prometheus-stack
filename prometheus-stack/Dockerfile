@@ -19,7 +19,10 @@ RUN apk add --no-cache \
         npm \
         git \
         python3 \
-        py3-pip && \
+        py3-pip \
+        gcompat \
+        libgcc \
+        libstdc++ && \
     ARCH="" && \
     ARM_ARCH="" && \
     case `uname -m` in \
@@ -53,7 +56,7 @@ COPY blackbox.yml /etc/blackbox_exporter/
 # Create required directories
 RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /data/prometheus /data/alertmanager && \
     mkdir -p /etc/nginx/http.d && \
-    mkdir -p /opt/code-server/data /opt/code-server/extensions && \
+    mkdir -p /opt/code-server/data /opt/code-server/extensions /opt/code-server/data/logs && \
     mkdir -p /etc/.vscode && \
     rm -f /etc/nginx/http.d/default.conf
 

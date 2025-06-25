@@ -2,14 +2,16 @@
 
 echo "Starting VS Code Server..."
 
-# Always use /etc as the workspace
+# Use /etc as the workspace (for configuration editing)
 WORKSPACE="/etc"
 
 # Ensure .vscode/settings.json is present in the workspace
 if [ ! -d "$WORKSPACE/.vscode" ]; then
   mkdir -p "$WORKSPACE/.vscode"
 fi
-if [ -f /etc/.vscode/settings.json ]; then
+
+# Copy settings file if it doesn't exist in workspace or if workspace is different from source
+if [ -f /etc/.vscode/settings.json ] && [ ! -f "$WORKSPACE/.vscode/settings.json" ]; then
   cp -f /etc/.vscode/settings.json "$WORKSPACE/.vscode/settings.json"
 fi
 
