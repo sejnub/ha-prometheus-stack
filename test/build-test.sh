@@ -84,6 +84,11 @@ docker build -t prometheus-stack-test .
 echo "📁 Setting up test environment..."
 mkdir -p "$PROJECT_ROOT/test-data/prometheus"
 mkdir -p "$PROJECT_ROOT/test-data/alertmanager"
+mkdir -p "$PROJECT_ROOT/test-data/config/prometheus"
+mkdir -p "$PROJECT_ROOT/test-data/config/alertmanager"
+mkdir -p "$PROJECT_ROOT/test-data/config/blackbox_exporter"
+mkdir -p "$PROJECT_ROOT/test-data/config/karma"
+mkdir -p "$PROJECT_ROOT/test-data/config/nginx"
 
 # Create test options.json only if it doesn't exist
 if [ ! -f "$PROJECT_ROOT/test-data/options.json" ]; then
@@ -115,6 +120,7 @@ docker run -d \
   -p 8080:8080 \
   -p 80:80 \
   -v "$PROJECT_ROOT/test-data:/data" \
+  -v "$PROJECT_ROOT/test-data/config:/config" \
   -e SUPERVISOR_TOKEN="test-supervisor-token" \
   -e HASSIO_TOKEN="test-hassio-token" \
   --entrypoint "/init" \

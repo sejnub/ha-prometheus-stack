@@ -31,11 +31,6 @@
   "host_network": false,
   "hassio_api": true,
   "hassio_role": "admin",
-  "map": [
-    "config:rw",
-    "share:rw",
-    "ssl:rw"
-  ],
   "options": {
     "alertmanager_receiver": "default",
     "alertmanager_to_email": "example@example.com",
