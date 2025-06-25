@@ -5,6 +5,15 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.2.8 - 2025-01-27
+
+### Fixed
+
+- Added explicit error handling for unsupported architectures in Dockerfile.
+- Build now fails fast with clear error message for unsupported platforms.
+- Resolved multi-architecture build issues - GitHub Actions now builds successfully.
+- Confirmed working build for supported architectures (amd64, aarch64).
+
 ## 2.2.7 - 2025-01-27
 
 ### Fixed
