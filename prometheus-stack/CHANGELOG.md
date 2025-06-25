@@ -5,6 +5,15 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.2.7 - 2025-01-27
+
+### Fixed
+
+- Fixed multi-architecture build by removing armv7 references from Dockerfile.
+- Removed armv7l case from architecture detection and ARM_ARCH variable.
+- Simplified karma download to use ARCH only, aligning with supported architectures.
+- Ensures build only targets supported platforms (amd64, aarch64).
+
 ## 2.2.6 - 2025-01-27
 
 ### Fixed
