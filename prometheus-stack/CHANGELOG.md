@@ -5,6 +5,14 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.2.4 - 2025-01-27
+
+### Fixed
+
+- Fixed Docker build failure by ensuring VS Code settings directory is properly created and copied.
+- Enhanced .vscode directory creation with proper permissions during build process.
+- Maintained runtime copying logic in code-server to ensure settings work in addon mode.
+
 ## 2.2.3 - 2025-01-27
 
 ### Fixed
