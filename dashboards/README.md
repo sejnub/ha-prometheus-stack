@@ -2,9 +2,34 @@
 
 This directory contains pre-configured Grafana dashboards for monitoring your Prometheus Stack add-on.
 
-## Available Dashboards
+## Table of Contents
 
-### 1. Prometheus Stack Overview (`01-overview.json`)
+- [Table of Contents](#table-of-contents)
+- [1. Available Dashboards](#1-available-dashboards)
+  - [1.1. Prometheus Stack Overview (`01-overview.json`)](#11-prometheus-stack-overview-01-overviewjson)
+  - [1.2. Home Assistant Monitoring (`02-home-assistant.json`)](#12-home-assistant-monitoring-02-home-assistantjson)
+  - [1.3. Blackbox Exporter Monitoring (`03-blackbox-exporter.json`)](#13-blackbox-exporter-monitoring-03-blackbox-exporterjson)
+  - [1.4. Alertmanager Monitoring (`04-alertmanager.json`)](#14-alertmanager-monitoring-04-alertmanagerjson)
+  - [1.5. Prometheus Server Monitoring (`05-prometheus.json`)](#15-prometheus-server-monitoring-05-prometheusjson)
+- [2. Installation](#2-installation)
+  - [2.1. Option 1: Manual Import](#21-option-1-manual-import)
+  - [2.2. Option 2: Automatic Provisioning (Recommended)](#22-option-2-automatic-provisioning-recommended)
+  - [2.3. Option 3: Home Assistant Add-on](#23-option-3-home-assistant-add-on)
+- [3. Configuration](#3-configuration)
+  - [3.1. Data Source](#31-data-source)
+  - [3.2. Customization](#32-customization)
+- [4. Troubleshooting](#4-troubleshooting)
+  - [4.1. No Data Showing](#41-no-data-showing)
+  - [4.2. Missing Metrics](#42-missing-metrics)
+  - [4.3. Performance Issues](#43-performance-issues)
+- [5. Metric Sources](#5-metric-sources)
+- [6. Support](#6-support)
+- [7. License](#7-license)
+
+## 1. Available Dashboards
+
+### 1.1. Prometheus Stack Overview (`01-overview.json`)
+
 - **Purpose**: High-level overview of all monitored services
 - **Features**:
   - Services status summary
@@ -13,7 +38,8 @@ This directory contains pre-configured Grafana dashboards for monitoring your Pr
   - Services grouped by monitoring category
   - Complete status table
 
-### 2. Home Assistant Monitoring (`02-home-assistant.json`)
+### 1.2. Home Assistant Monitoring (`02-home-assistant.json`)
+
 - **Purpose**: Detailed monitoring of Home Assistant instance
 - **Features**:
   - Home Assistant service status
@@ -22,7 +48,8 @@ This directory contains pre-configured Grafana dashboards for monitoring your Pr
   - Entity states by domain
   - Detailed entity states table
 
-### 3. Blackbox Exporter Monitoring (`03-blackbox-exporter.json`)
+### 1.3. Blackbox Exporter Monitoring (`03-blackbox-exporter.json`)
+
 - **Purpose**: Monitor all HTTP/TCP probes and their performance
 - **Features**:
   - Probe success rates
@@ -31,7 +58,8 @@ This directory contains pre-configured Grafana dashboards for monitoring your Pr
   - SSL certificate expiry monitoring
   - Complete probe status table
 
-### 4. Alertmanager Monitoring (`04-alertmanager.json`)
+### 1.4. Alertmanager Monitoring (`04-alertmanager.json`)
+
 - **Purpose**: Monitor alert management and notification system
 - **Features**:
   - Currently firing alerts count
@@ -40,7 +68,8 @@ This directory contains pre-configured Grafana dashboards for monitoring your Pr
   - Alert trends over time
   - Notification rate monitoring
 
-### 5. Prometheus Server Monitoring (`05-prometheus.json`)
+### 1.5. Prometheus Server Monitoring (`05-prometheus.json`)
+
 - **Purpose**: Monitor Prometheus server performance and health
 - **Features**:
   - Scrape errors and limits
@@ -49,72 +78,94 @@ This directory contains pre-configured Grafana dashboards for monitoring your Pr
   - Storage performance
   - Data ingestion rates
 
-## Installation
+## 2. Installation
 
-### Option 1: Manual Import
+### 2.1. Option 1: Manual Import
+
 1. Open Grafana in your browser
-2. Go to Dashboards → Import
+2. Go to **Dashboards** → **Import**
 3. Upload each JSON file individually
 4. Select your Prometheus data source
 5. Import the dashboard
 
-### Option 2: Automatic Provisioning (Recommended)
+### 2.2. Option 2: Automatic Provisioning (Recommended)
+
 1. Copy the `dashboard-provider.yml` to your Grafana provisioning directory
 2. Copy all JSON files to the same directory
 3. Restart Grafana
 4. Dashboards will appear automatically in a "Prometheus Stack" folder
 
-### Option 3: Home Assistant Add-on
+### 2.3. Option 3: Home Assistant Add-on
+
 If using this as a Home Assistant add-on:
+
 1. The dashboards will be automatically provisioned
 2. Access Grafana through the add-on interface
 3. All dashboards will be available in the "Prometheus Stack" folder
 
-## Configuration
+## 3. Configuration
 
-### Data Source
+### 3.1. Data Source
+
 All dashboards expect a Prometheus data source with UID `prometheus`. If your data source has a different UID:
+
 1. Edit each dashboard JSON file
 2. Replace `"uid": "prometheus"` with your actual data source UID
 3. Save and re-import
 
-### Customization
+### 3.2. Customization
+
 - **Time Range**: Default is last 1 hour, adjustable via dashboard controls
 - **Refresh Rate**: Default is 30 seconds, can be changed per dashboard
 - **Thresholds**: Color-coded thresholds are set for critical values
 - **Units**: Appropriate units are set for each metric type
 
-## Troubleshooting
+## 4. Troubleshooting
 
-### No Data Showing
+### 4.1. No Data Showing
+
 1. Verify Prometheus data source is configured correctly
 2. Check that metrics are being collected (visit Prometheus targets page)
 3. Ensure time range includes data collection period
 4. Verify metric names match your actual Prometheus metrics
 
-### Missing Metrics
+### 4.2. Missing Metrics
+
 Some metrics may not be available depending on your configuration:
+
 - Home Assistant metrics require Prometheus integration to be enabled
 - SSL metrics require HTTPS endpoints
 - Alertmanager metrics require alerts to be configured
 
-### Performance Issues
+### 4.3. Performance Issues
+
 - Reduce refresh rate for better performance
 - Limit time range for large datasets
 - Consider using recording rules for complex queries
 
-## Metric Sources
+## 5. Metric Sources
 
 The dashboards use metrics from:
+
 - **Prometheus**: `up`, `prometheus_*` metrics
 - **Blackbox Exporter**: `probe_*` metrics
 - **Alertmanager**: `alertmanager_*` metrics
 - **Home Assistant**: `hass_*` metrics (when Prometheus integration is enabled)
 
-## Support
+## 6. Support
 
 For issues with the dashboards:
+
 1. Check Grafana logs for errors
 2. Verify Prometheus targets are healthy
 3. Test queries directly in Prometheus UI
-4. Ensure all required exporters are running 
+4. Ensure all required exporters are running
+
+For general support:
+
+- [Documentation](https://github.com/sejnub/ha-prometheus-stack/wiki)
+- [Issue Tracker](https://github.com/sejnub/ha-prometheus-stack/issues)
+
+## 7. License
+
+MIT License - see [LICENSE](../LICENSE) file for details

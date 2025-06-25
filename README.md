@@ -1,8 +1,29 @@
-# 🔍 Prometheus Stack Add-on for Home Assistant
+# Prometheus Stack Add-on for Home Assistant
 
 A comprehensive monitoring stack for Home Assistant that includes Prometheus, Alertmanager, Karma, and Blackbox Exporter in a single add-on.
 
+## Table of Contents
 
+- [Table of Contents](#table-of-contents)
+- [Rules to Remember](#rules-to-remember)
+- [1. What is this?](#1-what-is-this)
+- [2. Key Features](#2-key-features)
+- [3. Installation](#3-installation)
+  - [3.1. Prerequisites](#31-prerequisites)
+  - [3.2. Steps](#32-steps)
+- [4. Configuration](#4-configuration)
+  - [4.1. Add-on Configuration](#41-add-on-configuration)
+  - [4.2. Option Descriptions](#42-option-descriptions)
+- [5. Access](#5-access)
+- [6. Monitoring](#6-monitoring)
+  - [6.1. Home Assistant Metrics](#61-home-assistant-metrics)
+  - [6.2. External Service Monitoring](#62-external-service-monitoring)
+- [7. Alert Configuration](#7-alert-configuration)
+  - [7.1. Email Notifications](#71-email-notifications)
+  - [7.2. Custom Alerts](#72-custom-alerts)
+- [8. Development and Testing](#8-development-and-testing)
+- [9. Support](#9-support)
+- [10. License](#10-license)
 
 ## Rules to Remember
 
@@ -16,9 +37,7 @@ A comprehensive monitoring stack for Home Assistant that includes Prometheus, Al
 
 - Question: Is it enough that the "build"-script relies on the folders "dependencies.d" or must each service wait for the previous one really answering
 
-
-
-## 1. 📦 What is this?
+## 1. What is this?
 
 This add-on provides a complete monitoring solution for your Home Assistant environment:
 
@@ -27,8 +46,7 @@ This add-on provides a complete monitoring solution for your Home Assistant envi
 - **Karma**: Modern web UI for alert management and visualization
 - **Blackbox Exporter**: External service monitoring via HTTP and TCP probes
 
-
-## 2. ⭐ Key Features
+## 2. Key Features
 
 - **Multi-architecture**: Works on `amd64`, `arm64`, and `armv7`
 - **Email Alerts**: Configurable alert notifications via email
@@ -38,20 +56,22 @@ This add-on provides a complete monitoring solution for your Home Assistant envi
 - **HA Integration**: Automatic Home Assistant metrics collection
 - **Pre-built Dashboards**: Ready-to-use Grafana dashboards
 
-## 3. 🚀 Installation
+## 3. Installation
 
 ### 3.1. Prerequisites
+
 - Home Assistant (Supervisor or Core)
 - Add-on store access
 
 ### 3.2. Steps
+
 1. In Home Assistant, go to **Settings** → **Add-ons** → **Add-on Store**
 2. Click the three dots in the top right and select **Repositories**
 3. Add this repository URL: `https://github.com/sejnub/ha-prometheus-stack`
 4. Find "Prometheus Stack" in the add-on store
 5. Click **Install**
 
-## 4. ⚙️ Configuration
+## 4. Configuration
 
 ### 4.1. Add-on Configuration
 
@@ -75,7 +95,7 @@ blackbox_targets:
   - `name`: Display name for the target
   - `url`: URL to monitor
 
-## 5. 🌐 Access
+## 5. Access
 
 All services are accessible through Home Assistant's ingress feature:
 
@@ -88,10 +108,12 @@ No additional port configuration is needed - everything works through Home Assis
 
 For technical implementation details, see [prometheus-stack/README.md](prometheus-stack/README.md).
 
-## 6. 📊 Monitoring
+## 6. Monitoring
 
 ### 6.1. Home Assistant Metrics
+
 The add-on automatically collects:
+
 - System performance metrics
 - Entity state information
 - Automation execution data
@@ -99,7 +121,9 @@ The add-on automatically collects:
 - And more...
 
 ### 6.2. External Service Monitoring
+
 Built-in monitoring for:
+
 - Home Assistant services
 - Media servers and clients
 - Network tools and services
@@ -109,9 +133,10 @@ Built-in monitoring for:
 
 For detailed monitoring capabilities and dashboard setup, see [dashboards/README.md](dashboards/README.md).
 
-## 7. ⚡ Alert Configuration
+## 7. Alert Configuration
 
 ### 7.1. Email Notifications
+
 The add-on automatically configures email notifications:
 
 ```yaml
@@ -129,19 +154,21 @@ receivers:
 ```
 
 ### 7.2. Custom Alerts
+
 Create custom alerts through:
+
 - Prometheus configuration
 - Prometheus web interface
 
-## 8. 🛠️ Development and Testing
+## 8. Development and Testing
 
 For development and testing instructions, see [test/README.md](test/README.md).
 
-## 9. 💬 Support
+## 9. Support
 
 - [Documentation](https://github.com/sejnub/ha-prometheus-stack/wiki)
 - [Issue Tracker](https://github.com/sejnub/ha-prometheus-stack/issues)
 
-## 10. 📄 License
+## 10. License
 
-MIT License - see LICENSE file for details 
+MIT License - see LICENSE file for details
