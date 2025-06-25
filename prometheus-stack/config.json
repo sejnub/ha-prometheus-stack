@@ -5,8 +5,7 @@
   "description": "Prometheus, Alertmanager, Karma and VS Code in one add-on",
   "arch": [
     "aarch64",
-    "amd64",
-    "armv7"
+    "amd64"
   ],
   "startup": "services",
   "init": false,
