@@ -1,0 +1,4 @@
+#!/command/with-contenv bashio
+
+echo "Starting VS Code API server..."
+exec s6-setuidgid root /usr/local/bin/vscode-api-server 

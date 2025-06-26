@@ -91,6 +91,57 @@
             background: #e3f2fd;
             border-radius: 4px;
         }
+        .status-controls {
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        .status-indicator {
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .status-running {
+            color: #28a745;
+        }
+        .status-stopped {
+            color: #dc3545;
+        }
+        .status-loading {
+            color: #ffc107;
+        }
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .control-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .start-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        .start-btn:hover {
+            background-color: #218838;
+        }
+        .stop-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+        .stop-btn:hover {
+            background-color: #c82333;
+        }
+        .control-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -158,6 +209,15 @@
                 <div class="note">
                     ℹ️ <strong>Configuration Required:</strong> Enable VS Code in the add-on configuration and set a password to access the editor.
                 </div>
+                <div class="status-controls">
+                    <div class="status-indicator">
+                        <span id="vscode-status">⏳ Checking status...</span>
+                    </div>
+                    <div class="control-buttons">
+                        <button id="start-vscode" class="control-btn start-btn" onclick="startVSCode()">🚀 Start VS Code</button>
+                        <button id="stop-vscode" class="control-btn stop-btn" onclick="stopVSCode()">⏹️ Stop VS Code</button>
+                    </div>
+                </div>
                 <div class="links">
                     <a href="vscode/">🔗 VS Code Editor</a>
                     <a href="#" id="vscode-direct-link">🚀 Direct VS Code (Bypasses Ingress)</a>
@@ -176,18 +236,115 @@
         </div>
     </div>
     <script>
-        // Set the direct Prometheus link to use the current hostname
+        // VS Code control functions
+        async function checkVSCodeStatus() {
+            try {
+                const response = await fetch('/api/vscode/status');
+                const data = await response.json();
+                updateVSCodeStatus(data.vscode_status, '');
+                return data.vscode_status;
+            } catch (error) {
+                console.error('Error checking VS Code status:', error);
+                updateVSCodeStatus('error', 'Error checking status');
+                return 'error';
+            }
+        }
+
+        async function startVSCode() {
+            updateVSCodeStatus('loading', 'Starting VS Code...');
+            setButtonsEnabled(false);
+            try {
+                const response = await fetch('/api/vscode/start', { method: 'POST' });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    updateVSCodeStatus('running', data.message);
+                } else {
+                    updateVSCodeStatus('error', data.message || 'Failed to start VS Code');
+                }
+            } catch (error) {
+                console.error('Error starting VS Code:', error);
+                updateVSCodeStatus('error', 'Error starting VS Code');
+            } finally {
+                setButtonsEnabled(true);
+            }
+        }
+
+        async function stopVSCode() {
+            updateVSCodeStatus('loading', 'Stopping VS Code...');
+            setButtonsEnabled(false);
+            try {
+                const response = await fetch('/api/vscode/stop', { method: 'POST' });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    updateVSCodeStatus('stopped', data.message);
+                } else {
+                    updateVSCodeStatus('error', data.message || 'Failed to stop VS Code');
+                }
+            } catch (error) {
+                console.error('Error stopping VS Code:', error);
+                updateVSCodeStatus('error', 'Error stopping VS Code');
+            } finally {
+                setButtonsEnabled(true);
+            }
+        }
+
+        function updateVSCodeStatus(status, message) {
+            const statusElement = document.getElementById('vscode-status');
+            const startBtn = document.getElementById('start-vscode');
+            const stopBtn = document.getElementById('stop-vscode');
+            
+            // Remove all status classes
+            statusElement.className = '';
+            
+            switch (status) {
+                case 'running':
+                    statusElement.className = 'status-running';
+                    statusElement.textContent = '✅ VS Code is running';
+                    startBtn.disabled = true;
+                    stopBtn.disabled = false;
+                    break;
+                case 'stopped':
+                    statusElement.className = 'status-stopped';
+                    statusElement.textContent = '⏸️ VS Code is stopped';
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    break;
+                case 'loading':
+                    statusElement.className = 'status-loading';
+                    statusElement.textContent = `⏳ ${message}`;
+                    break;
+                case 'error':
+                    statusElement.className = 'status-stopped';
+                    statusElement.textContent = `❌ ${message}`;
+                    startBtn.disabled = false;
+                    stopBtn.disabled = false;
+                    break;
+            }
+        }
+
+        function setButtonsEnabled(enabled) {
+            document.getElementById('start-vscode').disabled = !enabled;
+            document.getElementById('stop-vscode').disabled = !enabled;
+        }
+
+        // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
+            // Set direct links
             const prometheusLink = document.getElementById('prometheus-direct-link');
             if (prometheusLink) {
                 prometheusLink.href = `http://${window.location.hostname}:9090`;
             }
             
-            // Set the direct VS Code link to use the current hostname
             const vscodeLink = document.getElementById('vscode-direct-link');
             if (vscodeLink) {
                 vscodeLink.href = `http://${window.location.hostname}:8443`;
             }
+            
+            // Check VS Code status on page load
+            checkVSCodeStatus();
+            
+            // Auto-refresh status every 30 seconds
+            setInterval(checkVSCodeStatus, 30000);
         });
     </script>
 </body>

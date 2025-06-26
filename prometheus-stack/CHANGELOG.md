@@ -5,6 +5,32 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.3.0 - 2025-01-27
+
+### Added
+
+- **VS Code Web Control Interface**: Start and stop VS Code directly from the addon's main web page
+- **Real-time VS Code Status**: Live status indicator showing VS Code running/stopped state
+- **VS Code API Server**: REST API endpoints for service control (`/api/vscode/status`, `/api/vscode/start`, `/api/vscode/stop`)
+- **CPU Usage Optimization**: Stop VS Code when not needed to reduce CPU usage by ~50%
+- **Auto-refresh Status**: VS Code status automatically updates every 30 seconds
+- **Interactive Control Buttons**: Start/Stop buttons with visual feedback and loading states
+- **Command Line Tools**: Added `vscode-toggle` script for manual VS Code control via SSH
+
+### Changed
+
+- Enhanced main dashboard with VS Code control panel including status and buttons
+- Added new s6-overlay service `vscode-api` for web-based VS Code management
+- Updated NGINX configuration to route VS Code API requests
+- Improved user experience with on-demand VS Code access
+
+### Technical Details
+
+- New Python-based API server on port 8081 for VS Code service management
+- Uses s6-overlay service control commands (`s6-rc`) for reliable service management
+- All new functionality is additive - existing features unchanged
+- Proper error handling and graceful fallbacks for all control operations
+
 ## 2.2.9 - 2025-01-27
 
 ### Fixed

@@ -1,0 +1,37 @@
+#!/bin/bash
+# VS Code Service Toggle Script
+
+case "$1" in
+    start)
+        echo "Starting VS Code..."
+        s6-rc -u change code-server
+        echo "VS Code started"
+        ;;
+    stop)
+        echo "Stopping VS Code..."
+        s6-rc -d change code-server
+        echo "VS Code stopped"
+        ;;
+    status)
+        s6-svstat /run/service/code-server
+        ;;
+    toggle)
+        if s6-svstat /run/service/code-server | grep -q "up"; then
+            echo "VS Code is running, stopping it..."
+            s6-rc -d change code-server
+            echo "VS Code stopped"
+        else
+            echo "VS Code is stopped, starting it..."
+            s6-rc -u change code-server
+            echo "VS Code started"
+        fi
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|status|toggle}"
+        echo "  start  - Start VS Code service"
+        echo "  stop   - Stop VS Code service"
+        echo "  status - Show VS Code service status"
+        echo "  toggle - Toggle VS Code service on/off"
+        exit 1
+        ;;
+esac 
