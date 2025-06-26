@@ -1,4 +1,33 @@
 #!/command/with-contenv bashio
 
 echo "Starting VS Code API server..."
+
+# Wait for container initialization to complete
+echo "Waiting for container initialization..."
+while [ ! -f /tmp/.init-complete ]; do
+    sleep 0.5
+done
+echo "Container initialization complete"
+
+# Additional startup delay to ensure s6-overlay is fully ready
+echo "Waiting for s6-overlay to be ready..."
+sleep 3
+
+# Check if Python is available
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "ERROR: Python3 not found"
+    exit 1
+fi
+
+# Check if script exists and is executable
+if [ ! -x /usr/local/bin/vscode-api-server ]; then
+    echo "ERROR: vscode-api-server script not found or not executable"
+    exit 1
+fi
+
+# Add some environment info for debugging
+echo "Python version: $(python3 --version)"
+echo "Current user: $(whoami)"
+echo "Available commands: s6-svstat=$(command -v s6-svstat || echo 'NOT FOUND'), s6-rc=$(command -v s6-rc || echo 'NOT FOUND')"
+
 exec s6-setuidgid root /usr/local/bin/vscode-api-server 

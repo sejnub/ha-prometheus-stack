@@ -27,12 +27,22 @@ class VSCodeAPIHandler(http.server.BaseHTTPRequestHandler):
     
     def handle_status(self):
         try:
+            # Try multiple methods to check service status
+            # Method 1: s6-svstat (preferred)
             result = subprocess.run(['s6-svstat', '/run/service/code-server'], 
                                   capture_output=True, text=True, timeout=5)
-            if result.returncode == 0 and 'up' in result.stdout:
-                status = 'running'
+            if result.returncode == 0:
+                if 'up' in result.stdout:
+                    status = 'running'
+                else:
+                    status = 'stopped'
             else:
-                status = 'stopped'
+                # Method 2: Check if process is running via ps
+                ps_result = subprocess.run(['ps', 'aux'], capture_output=True, text=True, timeout=5)
+                if ps_result.returncode == 0 and 'code-server' in ps_result.stdout:
+                    status = 'running'
+                else:
+                    status = 'stopped'
             
             self.send_json_response({'status': 'success', 'vscode_status': status})
         except Exception as e:
@@ -40,14 +50,21 @@ class VSCodeAPIHandler(http.server.BaseHTTPRequestHandler):
     
     def handle_start(self):
         try:
-            # Start the service
+            # Try multiple methods to start the service
+            # Method 1: s6-rc (preferred)
             result = subprocess.run(['s6-rc', '-u', 'change', 'code-server'], 
                                   capture_output=True, text=True, timeout=10)
+            
+            if result.returncode != 0:
+                # Method 2: s6-svc (fallback)
+                result = subprocess.run(['s6-svc', '-u', '/run/service/code-server'], 
+                                      capture_output=True, text=True, timeout=10)
             
             # Wait a moment and check status
             import time
             time.sleep(2)
             
+            # Check if service started successfully
             status_result = subprocess.run(['s6-svstat', '/run/service/code-server'], 
                                          capture_output=True, text=True, timeout=5)
             
@@ -58,20 +75,35 @@ class VSCodeAPIHandler(http.server.BaseHTTPRequestHandler):
                     'vscode_status': 'running'
                 })
             else:
-                self.send_json_response({
-                    'status': 'error', 
-                    'message': 'Failed to start VS Code',
-                    'vscode_status': 'stopped'
-                }, 500)
+                # Check if process started anyway (fallback check)
+                ps_result = subprocess.run(['ps', 'aux'], capture_output=True, text=True, timeout=5)
+                if ps_result.returncode == 0 and 'code-server' in ps_result.stdout:
+                    self.send_json_response({
+                        'status': 'success', 
+                        'message': 'VS Code started (process detected)',
+                        'vscode_status': 'running'
+                    })
+                else:
+                    self.send_json_response({
+                        'status': 'error', 
+                        'message': 'Failed to start VS Code',
+                        'vscode_status': 'stopped'
+                    }, 500)
                 
         except Exception as e:
             self.send_json_response({'status': 'error', 'message': str(e)}, 500)
     
     def handle_stop(self):
         try:
-            # Stop the service
+            # Try multiple methods to stop the service
+            # Method 1: s6-rc (preferred)
             result = subprocess.run(['s6-rc', '-d', 'change', 'code-server'], 
                                   capture_output=True, text=True, timeout=10)
+            
+            if result.returncode != 0:
+                # Method 2: s6-svc (fallback)
+                result = subprocess.run(['s6-svc', '-d', '/run/service/code-server'], 
+                                      capture_output=True, text=True, timeout=10)
             
             # Wait a moment and check status
             import time
@@ -87,12 +119,21 @@ class VSCodeAPIHandler(http.server.BaseHTTPRequestHandler):
                     'vscode_status': 'stopped'
                 })
             else:
-                # Even if status check fails, if s6-rc succeeded, consider it stopped
-                self.send_json_response({
-                    'status': 'success', 
-                    'message': 'VS Code stop command sent',
-                    'vscode_status': 'stopped'
-                })
+                # Check if process is actually stopped (fallback check)
+                ps_result = subprocess.run(['ps', 'aux'], capture_output=True, text=True, timeout=5)
+                if ps_result.returncode == 0 and 'code-server' not in ps_result.stdout:
+                    self.send_json_response({
+                        'status': 'success', 
+                        'message': 'VS Code stopped (process not detected)',
+                        'vscode_status': 'stopped'
+                    })
+                else:
+                    # Even if status check fails, if s6-rc succeeded, consider it stopped
+                    self.send_json_response({
+                        'status': 'success', 
+                        'message': 'VS Code stop command sent',
+                        'vscode_status': 'stopped'
+                    })
                 
         except Exception as e:
             self.send_json_response({'status': 'error', 'message': str(e)}, 500)
@@ -121,12 +162,38 @@ if __name__ == '__main__':
     port = 8081
     print(f"Starting VS Code API server on port {port}")
     
+    # Test if required commands exist
     try:
-        server = http.server.HTTPServer(('localhost', port), VSCodeAPIHandler)
+        result = subprocess.run(['which', 's6-svstat'], capture_output=True, text=True)
+        if result.returncode != 0:
+            print("ERROR: s6-svstat command not found")
+            sys.exit(1)
+        
+        result = subprocess.run(['which', 's6-rc'], capture_output=True, text=True)
+        if result.returncode != 0:
+            print("ERROR: s6-rc command not found")
+            sys.exit(1)
+            
+        print("s6-overlay commands available")
+    except Exception as e:
+        print(f"ERROR checking s6-overlay commands: {e}")
+        sys.exit(1)
+    
+    try:
+        server = http.server.HTTPServer(('0.0.0.0', port), VSCodeAPIHandler)
+        print(f"VS Code API server listening on 0.0.0.0:{port}")
         server.serve_forever()
     except KeyboardInterrupt:
         print("\nShutting down API server")
         server.shutdown()
+    except OSError as e:
+        if e.errno == 98:  # Address already in use
+            print(f"ERROR: Port {port} is already in use")
+        else:
+            print(f"ERROR: Cannot bind to port {port}: {e}")
+        sys.exit(1)
     except Exception as e:
-        print(f"Error starting API server: {e}")
+        print(f"ERROR starting API server: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1) 

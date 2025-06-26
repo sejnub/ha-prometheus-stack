@@ -207,7 +207,7 @@
                     Full-featured code editor with extensions. Edit configuration files, write scripts, and develop directly in your browser.
                 </div>
                 <div class="note">
-                    ℹ️ <strong>Configuration Required:</strong> Enable VS Code in the add-on configuration and set a password to access the editor.
+                    💡 <strong>Tip:</strong> Use the controls below to start/stop VS Code on-demand to save CPU resources. If status shows errors, check that VS Code is enabled in the add-on configuration.
                 </div>
                 <div class="status-controls">
                     <div class="status-indicator">
@@ -240,12 +240,19 @@
         async function checkVSCodeStatus() {
             try {
                 const response = await fetch('/api/vscode/status');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
                 const data = await response.json();
                 updateVSCodeStatus(data.vscode_status, '');
                 return data.vscode_status;
             } catch (error) {
                 console.error('Error checking VS Code status:', error);
-                updateVSCodeStatus('error', 'Error checking status');
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    updateVSCodeStatus('error', 'API server not responding');
+                } else {
+                    updateVSCodeStatus('error', `Connection error: ${error.message}`);
+                }
                 return 'error';
             }
         }
@@ -327,6 +334,27 @@
             document.getElementById('stop-vscode').disabled = !enabled;
         }
 
+        // Retry function for initial status check
+        async function checkVSCodeStatusWithRetry() {
+            const maxRetries = 6;
+            const retryDelay = 5000; // 5 seconds
+            
+            for (let i = 0; i < maxRetries; i++) {
+                const status = await checkVSCodeStatus();
+                if (status !== 'error') {
+                    return status;
+                }
+                
+                if (i < maxRetries - 1) {
+                    updateVSCodeStatus('loading', `Waiting for API server... (${i + 1}/${maxRetries})`);
+                    await new Promise(resolve => setTimeout(resolve, retryDelay));
+                }
+            }
+            
+            updateVSCodeStatus('error', 'API server not available');
+            return 'error';
+        }
+
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
             // Set direct links
@@ -340,8 +368,8 @@
                 vscodeLink.href = `http://${window.location.hostname}:8443`;
             }
             
-            // Check VS Code status on page load
-            checkVSCodeStatus();
+            // Check VS Code status on page load with retry logic
+            checkVSCodeStatusWithRetry();
             
             // Auto-refresh status every 30 seconds
             setInterval(checkVSCodeStatus, 30000);
