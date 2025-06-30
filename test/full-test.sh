@@ -125,6 +125,8 @@ main() {
     print_status "INFO" "  - Alertmanager: http://localhost:9093"
     print_status "INFO" "  - Blackbox: http://localhost:9115"
     print_status "INFO" "  - Karma: http://localhost:8080"
+    print_status "INFO" "  - Grafana: http://localhost:3000"
+    print_status "INFO" "  - VS Code: http://localhost:8443"
     echo
     print_status "INFO" "To stop the test container, run: ./test/cleanup.sh"
     echo "=============================================================================="
