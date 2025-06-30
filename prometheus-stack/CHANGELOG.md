@@ -5,6 +5,43 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.6.5 - 2025-06-30
+
+### 🔓 Security: Disabled Grafana Authentication for Consistency
+
+### Changed
+
+- **Grafana Authentication**: Disabled login requirement to match other services (Prometheus, Alertmanager, Blackbox, Karma, VS Code, NGINX)
+- **Anonymous Access**: Enabled anonymous access with Admin role for full functionality
+- **Login Form**: Disabled login form since authentication is no longer required
+- **UI Documentation**: Removed login credential notes from main interface
+
+### Technical Details
+
+**Grafana Configuration Changes (`grafana.ini`):**
+```ini
+[auth.anonymous]
+enabled = true
+org_name = Main Org.
+org_role = Admin
+
+[auth]
+disable_login_form = true
+```
+
+**Consistency Achieved:**
+- **No Authentication Required**: Grafana now matches the authentication model of all other services
+- **Direct Access**: Users can access Grafana dashboards immediately without login prompts
+- **Simplified UX**: Removes the need to remember or configure login credentials
+
+**Security Consideration:**
+This change is appropriate for home/internal network usage where all services in the stack operate without authentication. The addon is designed for local Home Assistant environments where network-level security is typically handled at the router/firewall level.
+
+**Interface Updates:**
+- Removed "Default Login: admin/admin" note from Grafana service card
+- Updated limitation text to be more generic about ingress redirect issues
+- Cleaner, more consistent user experience across all services
+
 ## 2.6.4 - 2025-06-30
 
 ### 🔧 Fixed: Removed Inconsistent VS Code Direct Link

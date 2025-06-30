@@ -203,13 +203,10 @@
                     Beautiful dashboards and advanced visualization. Create stunning charts and monitor your metrics with the world's most popular observability platform.
                 </div>
                 <div class="note">
-                    🔐 <strong>Default Login:</strong> admin/admin (change password in addon configuration). Pre-configured with Prometheus data source.
-                </div>
-                <div class="note">
                     💡 <strong>Tip:</strong> Use the controls below to start/stop Grafana on-demand to save CPU resources. If status shows errors, check that Grafana is enabled in the add-on configuration.
                 </div>
                 <div class="limitation">
-                    ⚠️ <strong>Ingress Limitation:</strong> Does not work through ingress in any mode due to absolute redirects (redirects to <code>/login</code> instead of <code>/grafana/login</code>). Unlike Prometheus, Grafana breaks out of the ingress path context. <strong>Must use direct port access (3000)</strong> for full functionality.
+                    ⚠️ <strong>Ingress Limitation:</strong> Does not work through ingress in any mode due to absolute redirects that break out of the ingress path context. Unlike Prometheus, Grafana cannot properly handle the complex Home Assistant ingress URL structure. <strong>Must use direct port access (3000)</strong> for full functionality.
                 </div>
                 <div class="status-controls">
                     <div class="status-indicator">
