@@ -5,6 +5,22 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.3.6 - 2025-01-27
+
+### Fixed
+
+- **VS Code API URLs in Addon-Mode**: Improved URL resolution for Home Assistant ingress context
+- **Ingress Detection**: Added smart detection of ingress vs test mode for proper API URLs
+- **URL Construction**: Uses `new URL()` constructor for proper relative URL resolution
+- **Cross-Mode Compatibility**: Enhanced support for both addon-mode and test-mode API calls
+
+### Technical Details
+
+- Added `getApiUrl()` function that detects ingress context by checking pathname
+- In ingress mode: uses `new URL(endpoint, currentUrl)` for proper resolution
+- In test mode: uses simple relative paths as before
+- Should resolve API calls to correct ingress URLs instead of Home Assistant root
+
 ## 2.3.5 - 2025-01-27
 
 ### Fixed
