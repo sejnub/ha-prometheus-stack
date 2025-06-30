@@ -5,6 +5,42 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.6.1 - 2025-06-30
+
+### 🎨 UI/UX: Consistent Service Card Layout
+
+### Changed
+
+- **Service Card Organization**: Reorganized services into logical groups (Core Monitoring → Visualization → Development → Infrastructure)
+- **Consistent Structure**: Standardized all service cards to follow the same layout pattern (description → notes → limitations → controls → links)
+- **Link Organization**: Consistent link ordering across all services (UI → Direct → Health → Metrics → Special)
+- **Visual Consistency**: Unified styling with consistent colors, spacing, and typography
+- **CSS Classes**: Introduced semantic classes (`controllable`, `limited`) with visual indicators
+- **Terminology**: Updated naming to use official convention (Test-mode, Addon-mode)
+
+### Technical Details
+
+**Card Structure Standardization:**
+- Description section (all services)
+- Notes section (where applicable) 
+- Limitations section (where applicable)
+- Status controls (controllable services)
+- Links section (consistent ordering)
+
+**Visual Improvements:**
+- Color-coded service types with left border indicators
+- Consistent note and limitation styling with proper backgrounds
+- Improved button and link styling
+- Better spacing and typography hierarchy
+
+**Logical Grouping:**
+1. **Core Monitoring**: Prometheus, Alertmanager, Blackbox Exporter
+2. **Visualization**: Grafana, Karma  
+3. **Development**: VS Code
+4. **Infrastructure**: NGINX Status
+
+This creates a more professional, organized interface while preserving all accurate technical information and functionality.
+
 ## 2.6.0 - 2025-06-30
 
 ### 🎮 MAJOR FEATURE: Grafana Start/Stop Controls

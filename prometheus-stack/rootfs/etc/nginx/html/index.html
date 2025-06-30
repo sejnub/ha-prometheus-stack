@@ -43,53 +43,68 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .service-card.limited {
-            border-left: 4px solid #f39c12;
-            background: #fdf6e3;
+            border-left: 4px solid #ffc107;
         }
         .service-card.vscode {
             border-left: 4px solid #007acc;
             background: #e3f2fd;
         }
+        .service-card.controllable {
+            border-left: 4px solid #17a2b8;
+        }
+        .service-card.limited.controllable {
+            border-left: 4px solid #fd7e14;
+        }
+        .service-grid::before {
+            content: '';
+            grid-column: 1 / -1;
+            height: 1px;
+            background: #e0e0e0;
+            margin: 20px 0;
+        }
         h2 {
             color: #2c3e50;
-            margin-top: 0;
-            font-size: 1.4em;
+            margin: 0 0 15px 0;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 8px;
+        }
+        .description {
+            color: #34495e;
+            margin-bottom: 15px;
+            line-height: 1.6;
         }
         .links {
             margin-top: 15px;
         }
-        a {
-            color: #3498db;
+        .links a {
+            display: inline-block;
+            margin: 5px 10px 5px 0;
+            padding: 8px 12px;
+            background: #3498db;
+            color: white;
             text-decoration: none;
-            display: block;
-            margin: 5px 0;
-        }
-        a:hover {
-            color: #2980b9;
-            text-decoration: underline;
-        }
-        .description {
-            color: #666;
-            margin: 10px 0;
-            font-size: 0.95em;
-        }
-        .limitation {
-            color: #d68910;
-            font-size: 0.9em;
-            font-style: italic;
-            margin: 10px 0;
-            padding: 8px;
-            background: #fcf3cf;
             border-radius: 4px;
+            font-size: 0.9em;
+            transition: background-color 0.2s;
+        }
+        .links a:hover {
+            background: #2980b9;
         }
         .note {
-            color: #2980b9;
-            font-size: 0.9em;
-            font-style: italic;
-            margin: 10px 0;
-            padding: 8px;
-            background: #e3f2fd;
+            background-color: #e8f4fd;
+            border: 1px solid #bee5eb;
             border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+        .limitation {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 0.9em;
         }
         .status-controls {
             margin: 15px 0;
@@ -160,20 +175,21 @@
         </div>
         
         <div class="service-grid">
+            <!-- CORE MONITORING STACK -->
             <div class="service-card limited">
                 <h2>📊 Prometheus</h2>
                 <div class="description">
                     Time series database and monitoring system. Query metrics, create alerts, and visualize your data.
                 </div>
                 <div class="limitation">
-                    ⚠️ <strong>Ingress Limitation:</strong> Works in test mode due to relative redirects, but fails in Home Assistant addon mode due to complex ingress URL structure. <strong>Direct port access (9090) is enabled</strong> for guaranteed full functionality.
+                    ⚠️ <strong>Ingress Limitation:</strong> Works in Test-mode due to relative redirects, but fails in Addon-mode due to complex ingress URL structure. <strong>Direct port access (9090) is enabled</strong> for guaranteed full functionality.
                 </div>
                 <div class="links">
-                    <a href="prometheus/">🔗 Prometheus UI (Works in Test Mode)</a>
+                    <a href="prometheus/">🔗 Prometheus UI (Works in Test-mode)</a>
                     <a href="#" id="prometheus-direct-link" class="disabled-link">🚀 Direct Prometheus (Port 9090 - Checking...)</a>
-                    <a href="prometheus/api/v1/query?query=up">📡 API Example: up</a>
                     <a href="prometheus/-/healthy">🏥 Health Status</a>
                     <a href="prometheus/metrics">📈 Metrics</a>
+                    <a href="prometheus/api/v1/query?query=up">📡 API Example: up</a>
                 </div>
             </div>
 
@@ -190,17 +206,6 @@
             </div>
 
             <div class="service-card">
-                <h2>🎯 Karma</h2>
-                <div class="description">
-                    Alert dashboard for Alertmanager. View and manage your alerts in a modern interface.
-                </div>
-                <div class="links">
-                    <a href="karma/">🔗 Karma UI</a>
-                    <a href="karma/metrics">📈 Metrics</a>
-                </div>
-            </div>
-
-            <div class="service-card">
                 <h2>🔎 Blackbox Exporter</h2>
                 <div class="description">
                     Probe endpoints over HTTP, HTTPS, DNS, TCP, and ICMP. Monitor external services.
@@ -212,7 +217,8 @@
                 </div>
             </div>
 
-            <div class="service-card limited">
+            <!-- VISUALIZATION & DASHBOARDS -->
+            <div class="service-card limited controllable">
                 <h2>📊 Grafana</h2>
                 <div class="description">
                     Beautiful dashboards and advanced visualization. Create stunning charts and monitor your metrics with the world's most popular observability platform.
@@ -221,7 +227,7 @@
                     🔐 <strong>Default Login:</strong> admin/admin (change password in addon configuration). Pre-configured with Prometheus data source.
                 </div>
                 <div class="note">
-                    💡 <strong>Tip:</strong> Use the controls below to start/stop Grafana on-demand to save CPU resources. If status shows errors, check that Grafana is enabled in the add-on configuration.
+                    💡 <strong>Resource Control:</strong> Use the controls below to start/stop Grafana on-demand to save CPU resources. If status shows errors, check that Grafana is enabled in the add-on configuration.
                 </div>
                 <div class="limitation">
                     ⚠️ <strong>Ingress Limitation:</strong> Does not work through ingress in any mode due to absolute redirects (redirects to <code>/login</code> instead of <code>/grafana/login</code>). Unlike Prometheus, Grafana breaks out of the ingress path context. <strong>Must use direct port access (3000)</strong> for full functionality.
@@ -242,13 +248,25 @@
                 </div>
             </div>
 
-            <div class="service-card vscode">
+            <div class="service-card">
+                <h2>🎯 Karma</h2>
+                <div class="description">
+                    Alert dashboard for Alertmanager. View and manage your alerts in a modern interface.
+                </div>
+                <div class="links">
+                    <a href="karma/">🔗 Karma UI</a>
+                    <a href="karma/metrics">📈 Metrics</a>
+                </div>
+            </div>
+
+            <!-- DEVELOPMENT TOOLS -->
+            <div class="service-card controllable">
                 <h2>💻 VS Code</h2>
                 <div class="description">
                     Full-featured code editor with extensions. Edit configuration files, write scripts, and develop directly in your browser.
                 </div>
                 <div class="note">
-                    💡 <strong>Tip:</strong> Use the controls below to start/stop VS Code on-demand to save CPU resources. If status shows errors, check that VS Code is enabled in the add-on configuration.
+                    💡 <strong>Resource Control:</strong> Use the controls below to start/stop VS Code on-demand to save CPU resources. If status shows errors, check that VS Code is enabled in the add-on configuration.
                 </div>
                 <div class="status-controls">
                     <div class="status-indicator">
@@ -265,6 +283,7 @@
                 </div>
             </div>
 
+            <!-- INFRASTRUCTURE -->
             <div class="service-card">
                 <h2>🌐 NGINX Status</h2>
                 <div class="description">
