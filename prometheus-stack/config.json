@@ -1,8 +1,8 @@
 {
   "name": "Prometheus Stack",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "slug": "prometheus-stack",
-  "description": "Prometheus, Alertmanager, Karma and VS Code in one add-on",
+  "description": "Complete monitoring stack: Prometheus, Grafana, Alertmanager, Karma and VS Code in one add-on",
   "arch": [
     "aarch64",
     "amd64"
@@ -24,13 +24,15 @@
     "9093/tcp": null,
     "9115/tcp": null,
     "8080/tcp": null,
-    "8443/tcp": null
+    "8443/tcp": null,
+    "3000/tcp": null
   },
   "ports_description": {
     "9090/tcp": "Prometheus (enabled for direct UI access)",
     "9093/tcp": "Alertmanager (disabled by default, use ingress)",
     "9115/tcp": "Blackbox Exporter (disabled by default, use ingress)",
-    "8443/tcp": "VS Code (disabled by default, use ingress)"
+    "8443/tcp": "VS Code (disabled by default, use ingress)",
+    "3000/tcp": "Grafana (disabled by default, use ingress)"
   },
   "webui": "http://[HOST]:[PORT:80]/",
   "host_network": false,
@@ -49,7 +51,8 @@
     ],
     "enable_vscode": false,
     "vscode_password": "",
-    "vscode_workspace": "/config"
+    "vscode_workspace": "/config",
+    "grafana_admin_password": "admin"
   },
   "schema": {
     "alertmanager_receiver": "str",
@@ -64,6 +67,7 @@
     ],
     "enable_vscode": "bool",
     "vscode_password": "str",
-    "vscode_workspace": "str"
+    "vscode_workspace": "str",
+    "grafana_admin_password": "str"
   }
 }

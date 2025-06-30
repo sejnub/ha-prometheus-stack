@@ -1,0 +1,7 @@
+#!/command/with-contenv bashio
+
+echo "Starting Grafana..."
+exec s6-setuidgid root /opt/grafana/bin/grafana server \
+    --config=/etc/grafana/grafana.ini \
+    --homepath=/opt/grafana \
+    --pidfile=/data/grafana/grafana.pid 

@@ -6,6 +6,7 @@ ENV ALERTMANAGER_VERSION=0.27.0
 ENV KARMA_VERSION=v0.116
 ENV BLACKBOX_VERSION=0.25.0
 ENV CODESERVER_VERSION=4.19.1
+ENV GRAFANA_VERSION=11.3.1
 
 # Install required packages
 RUN apk add --no-cache \
@@ -41,6 +42,9 @@ RUN apk add --no-cache \
     wget https://github.com/coder/code-server/releases/download/v${CODESERVER_VERSION}/code-server-${CODESERVER_VERSION}-linux-${ARCH}.tar.gz && \
     tar -xzf code-server-${CODESERVER_VERSION}-linux-${ARCH}.tar.gz && \
     mv code-server-${CODESERVER_VERSION}-linux-${ARCH} /opt/code-server && \
+    wget https://dl.grafana.com/oss/release/grafana-${GRAFANA_VERSION}.linux-${ARCH}.tar.gz && \
+    tar -xzf grafana-${GRAFANA_VERSION}.linux-${ARCH}.tar.gz && \
+    mv grafana-v${GRAFANA_VERSION} /opt/grafana && \
     rm -rf *.tar.gz && \
     apk del wget tar && \
     rm -rf /var/cache/apk/*
@@ -48,9 +52,10 @@ RUN apk add --no-cache \
 # Copy configuration files
 COPY prometheus.yml /etc/prometheus/
 COPY blackbox.yml /etc/blackbox_exporter/
+COPY grafana.ini /etc/grafana/
 
 # Create required directories
-RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /data/prometheus /data/alertmanager && \
+RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /etc/grafana /etc/grafana/provisioning/datasources /data/prometheus /data/alertmanager /data/grafana && \
     mkdir -p /etc/nginx/http.d && \
     mkdir -p /opt/code-server/data /opt/code-server/extensions /opt/code-server/data/logs && \
     mkdir -p /etc/.vscode && \

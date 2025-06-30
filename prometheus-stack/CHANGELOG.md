@@ -5,6 +5,33 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.5.0 - 2025-01-27
+
+### 🎉 Major Feature: Grafana Added to the Stack
+
+### Added
+
+- **📊 Grafana Integration**: Complete Grafana installation and configuration
+- **Dashboard Visualization**: World-class dashboard and monitoring capabilities
+- **Prometheus Data Source**: Pre-configured connection to Prometheus metrics
+- **Home Assistant Integration**: Full ingress support with nginx proxy
+- **Admin Configuration**: Configurable admin password via addon options
+
+### Technical Implementation
+
+- **Grafana v11.3.1**: Latest stable version with modern features
+- **SQLite Database**: Lightweight embedded database for addon use
+- **Service Integration**: Full s6-overlay service with health checks
+- **Port Configuration**: Port 3000 available for direct access (disabled by default)
+- **Security**: Secure default configuration with configurable authentication
+
+### Web Interface
+
+- **New Grafana Card**: Added to main dashboard with direct links
+- **Health Monitoring**: Built-in health check endpoints
+- **Cross-Mode Access**: Works via ingress and direct port access
+- **Visual Integration**: Consistent styling with other service cards
+
 ## 2.4.0 - 2025-01-27
 
 ### 🎉 Major Milestone: VS Code Ingress Integration Complete
