@@ -5,6 +5,22 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.3.5 - 2025-01-27
+
+### Fixed
+
+- **Circular Dependency**: Removed circular dependency between vscode-api and user services
+- **Test-Mode Compatibility**: Fixed s6-rc-compile error that prevented test-mode startup
+- **Service Architecture**: vscode-api no longer depends on user service to avoid dependency loop
+- **Startup Reliability**: Timeout mechanism handles initialization without requiring dependency
+
+### Technical Details
+
+- Removed `/etc/s6-overlay/s6-rc.d/vscode-api/dependencies.d/user` dependency file
+- user bundle includes vscode-api, so vscode-api cannot depend on user (circular)
+- Timeout mechanism in vscode-api/run script handles `/tmp/.init-complete` gracefully
+- Both test-mode and addon-mode now start services correctly
+
 ## 2.3.4 - 2025-01-27
 
 ### Improved
