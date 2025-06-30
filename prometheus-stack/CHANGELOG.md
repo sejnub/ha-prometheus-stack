@@ -5,6 +5,42 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.5.11 - 2025-06-30
+
+### 🔧 CRITICAL FIX: s6-overlay Service Dependencies
+
+### Fixed
+
+- **s6-overlay Service Dependencies**: Corrected ALL service dependency files to be properly empty as per official s6-overlay documentation
+- **Service Startup Issues**: Fixed potential service startup problems across the entire stack
+- **Documentation Compliance**: Aligned with official s6-overlay documentation requirement for empty dependency files
+
+### Root Cause
+
+All s6-overlay service dependency files incorrectly contained service names when they should be empty files. According to the official s6-overlay documentation, dependency files in `dependencies.d/` should be empty files where the **filename** (not content) indicates the dependency.
+
+### Technical Details
+
+**Affected Files:**
+- `/etc/s6-overlay/s6-rc.d/vscode-api/dependencies.d/legacy-cont-init`
+- `/etc/s6-overlay/s6-rc.d/prometheus/dependencies.d/blackbox-exporter`
+- `/etc/s6-overlay/s6-rc.d/prometheus/dependencies.d/legacy-cont-init`
+- `/etc/s6-overlay/s6-rc.d/user/dependencies.d/legacy-cont-init`
+- `/etc/s6-overlay/s6-rc.d/karma/dependencies.d/prometheus`
+- `/etc/s6-overlay/s6-rc.d/karma/dependencies.d/alertmanager`
+- `/etc/s6-overlay/s6-rc.d/grafana/dependencies.d/prometheus`
+- `/etc/s6-overlay/s6-rc.d/alertmanager/dependencies.d/legacy-cont-init`
+
+**Before**: Files contained service names (e.g., "prometheus ", "legacy-cont-init")
+**After**: All files are empty (0 bytes) with correct filename-based dependency resolution
+
+### Impact
+
+- **Service Reliability**: Ensures proper s6-overlay service dependency resolution
+- **Startup Consistency**: Eliminates potential service startup race conditions
+- **Documentation Compliance**: Follows official s6-overlay best practices
+- **All Environments**: Improves reliability across test mode, addon mode, and CI/CD environments
+
 ## 2.5.10 - 2025-06-30
 
 ### 🔧 Critical Fix: Grafana Service Startup in Addon Mode
