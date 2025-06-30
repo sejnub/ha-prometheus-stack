@@ -2,16 +2,25 @@
 
 echo "Starting VS Code API server..."
 
-# Wait for container initialization to complete
+# Wait for container initialization to complete (with timeout)
 echo "Waiting for container initialization..."
-while [ ! -f /tmp/.init-complete ]; do
+init_timeout=10
+init_counter=0
+while [ ! -f /tmp/.init-complete ] && [ $init_counter -lt $init_timeout ]; do
     sleep 0.5
+    init_counter=$((init_counter + 1))
 done
-echo "Container initialization complete"
 
-# Additional startup delay to ensure s6-overlay is fully ready
-echo "Waiting for s6-overlay to be ready..."
-sleep 3
+if [ -f /tmp/.init-complete ]; then
+    echo "Container initialization complete"
+    # Additional startup delay to ensure s6-overlay is fully ready in addon mode
+    echo "Waiting for s6-overlay to be ready..."
+    sleep 3
+else
+    echo "Container initialization timeout - proceeding anyway (likely test mode)"
+    # Shorter delay for test mode
+    sleep 1
+fi
 
 # Check if Python is available
 if ! command -v python3 >/dev/null 2>&1; then
