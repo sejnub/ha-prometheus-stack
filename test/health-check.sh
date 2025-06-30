@@ -264,8 +264,8 @@ test_service() {
             ;;
         "NGINX Proxy Paths")
             local failed=0
-            local paths=("prometheus" "alertmanager" "karma" "blackbox")
-            local path_names=("Prometheus" "Alertmanager" "Karma" "Blackbox")
+            local paths=("prometheus" "alertmanager" "karma" "blackbox" "grafana" "vscode")
+            local path_names=("Prometheus" "Alertmanager" "Karma" "Blackbox" "Grafana" "VS Code")
             
             for i in "${!paths[@]}"; do
                 local path="${paths[$i]}"
@@ -287,6 +287,26 @@ test_service() {
                 print_success "✅ $expected_status"
                 return 0
             else
+                return 1
+            fi
+            ;;
+        "Grafana")
+            if curl -s "http://localhost:3000/api/health" | grep -q '"database": "ok"'; then
+                print_success "✅ $expected_status"
+                return 0
+            else
+                print_error "❌ Database connection failed"
+                return 1
+            fi
+            ;;
+        "VS Code")
+            # Check VS Code web interface - expect 302 redirect to workspace
+            local response_code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8443/")
+            if [[ "$response_code" =~ ^(200|302)$ ]]; then
+                print_success "✅ $expected_status"
+                return 0
+            else
+                print_error "❌ VS Code server not responding (HTTP $response_code)"
                 return 1
             fi
             ;;
@@ -316,7 +336,9 @@ wait_for_services() {
         if curl -sf http://localhost:9090/-/ready >/dev/null 2>&1 && \
            curl -sf http://localhost:9093/-/ready >/dev/null 2>&1 && \
            curl -sf http://localhost:9115/metrics >/dev/null 2>&1 && \
-           curl -sf http://localhost:8080/ >/dev/null 2>&1; then
+           curl -sf http://localhost:8080/ >/dev/null 2>&1 && \
+           curl -sf http://localhost:3000/api/health >/dev/null 2>&1 && \
+           curl -sf http://localhost:8443/ >/dev/null 2>&1; then
             echo " ready!"
             return 0
         fi
@@ -372,6 +394,8 @@ main() {
     check_service "Prometheus" "http://localhost:9090/-/ready"
     check_service "Blackbox Exporter" "http://localhost:9115/metrics"
     check_service "Alertmanager" "http://localhost:9093/-/ready"
+    check_service "Grafana" "http://localhost:3000/api/health"
+    check_service "VS Code" "http://localhost:8443/"
     check_service "NGINX" "http://localhost:80/nginx_status"
     
     echo ""
@@ -380,12 +404,14 @@ main() {
     check_config_file "alertmanager.yml" "/etc/alertmanager/alertmanager.yml"
     check_config_file "blackbox.yml" "/etc/blackbox_exporter/blackbox.yml"
     check_config_file "karma.yml" "/etc/karma/karma.yml"
+    check_config_file "grafana.ini" "/etc/grafana/grafana.ini"
     check_config_file "ingress.conf" "/etc/nginx/servers/ingress.conf"
     
     echo ""
     echo "📁 Checking data directories..."
     check_directory "/data/prometheus"
     check_directory "/data/alertmanager"
+    check_directory "/data/grafana"
     
     echo ""
     echo "🔬 Testing service functionality..."
@@ -401,6 +427,8 @@ main() {
     test_service "Prometheus" "Can scrape targets"
     test_service "Blackbox Exporter" "Probe working"
     test_service "Alertmanager" "Configuration valid"
+    test_service "Grafana" "Database connection working"
+    test_service "VS Code" "Server responding"
     test_service "NGINX" "All paths working"
     test_service "NGINX Proxy Paths" "All proxy redirects working"
     

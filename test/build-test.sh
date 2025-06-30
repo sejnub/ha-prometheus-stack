@@ -117,6 +117,7 @@ docker run -d \
   -p 9115:9115 \
   -p 8080:8080 \
   -p 8443:8443 \
+  -p 3000:3000 \
   -p 80:80 \
   -v "$PROJECT_ROOT/test-data:/data" \
   -e SUPERVISOR_TOKEN="test-supervisor-token" \
@@ -142,6 +143,7 @@ echo "   Prometheus:        http://localhost:9090"
 echo "   Alertmanager:      http://localhost:9093"
 echo "   Blackbox Exporter: http://localhost:9115"
 echo "   Karma UI:          http://localhost:8080"
+echo "   Grafana:           http://localhost:3000"
 echo "   VS Code:           http://localhost:8443"
 echo "   NGINX (Ingress):   http://localhost:80"
 echo ""
@@ -150,6 +152,8 @@ echo "   Prometheus:        http://localhost:9090/-/healthy"
 echo "   Alertmanager:      http://localhost:9093/-/healthy"
 echo "   Blackbox Exporter: http://localhost:9115/metrics"
 echo "   Karma:             http://localhost:8080/"
+echo "   Grafana:           http://localhost:3000/api/health"
+echo "   VS Code:           http://localhost:8443/"
 echo "   NGINX:             http://localhost:80/nginx_status"
 echo ""
 echo "🌐 Ingress Paths:"
@@ -157,6 +161,7 @@ echo "   - Karma:           http://localhost:80/"
 echo "   - Prometheus:      http://localhost:80/prometheus/"
 echo "   - Alertmanager:    http://localhost:80/alertmanager/"
 echo "   - Blackbox:        http://localhost:80/blackbox/"
+echo "   - Grafana:         http://localhost:80/grafana/"
 echo "   - VS Code:         http://localhost:80/vscode/"
 echo ""
 echo "💻 VS Code Access:"
