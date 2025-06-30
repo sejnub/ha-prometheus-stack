@@ -201,7 +201,7 @@ test_service() {
                 print_success "✅ $expected_status"
                 return 0
             else
-                # Add minimal debug info only in GitHub Actions when it fails
+                # Add minimal debug info only in Github-mode when it fails
                 if [ -n "$GITHUB_ACTIONS" ]; then
                     echo ""
                     echo "🔍 DEBUG: Checking what Karma metrics are available..."
@@ -362,9 +362,9 @@ main() {
     
     # Simple environment detection
     if [ -n "$GITHUB_ACTIONS" ]; then
-        echo "🚀 Running in GitHub Actions mode"
+        echo "🚀 Running in Github-mode"
     else
-        echo "🚀 Running in local test mode"
+        echo "🚀 Running in Test-mode"
     fi
     
     # Check if container is running
@@ -417,7 +417,7 @@ main() {
     
     # Give Alertmanager API extra time to fully initialize in CI environments
     if [ -n "$GITHUB_ACTIONS" ]; then
-        echo "⏳ GitHub Actions detected - allowing extra time for Alertmanager API initialization..."
+        echo "⏳ Github-mode detected - allowing extra time for Alertmanager API initialization..."
         sleep 5
     fi
     

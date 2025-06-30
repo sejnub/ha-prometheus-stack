@@ -5,6 +5,33 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.5.14 - 2025-06-30
+
+### 🔗 UI/UX: Intelligent Direct Access Links
+
+### Fixed
+
+- **Broken VS Code Direct Link**: Fixed broken link to `http://homeassistant.internal:8443/` when port is disabled
+- **Misleading Link Behavior**: All direct links now show actual accessibility status instead of blindly linking
+- **User Experience**: No more broken links - disabled ports show helpful alerts with configuration instructions
+
+### Added
+
+- **Smart Link Detection**: All direct access links (Prometheus, Grafana, VS Code) now check port accessibility
+- **Dynamic Status Updates**: Links show "Checking..." → "Available" or "Disabled" based on actual port status
+- **Helpful Error Messages**: Disabled ports provide clear instructions on which port to enable in addon config
+- **Visual Feedback**: Disabled links are styled differently to indicate unavailable features
+
+### Technical Details
+
+**Before**: Static links regardless of port configuration → broken links for disabled ports
+**After**: Dynamic port accessibility checking with user-friendly feedback
+
+**Implementation**: 
+- Single `setupDirectLink()` function handles all three services (DRY principle)
+- Non-blocking `fetch()` checks with graceful fallback
+- Consistent UX across Prometheus (9090), Grafana (3000), and VS Code (8443)
+
 ## 2.5.12 - 2025-06-30
 
 ### ⚡ Performance: Optimized Timeout Handling

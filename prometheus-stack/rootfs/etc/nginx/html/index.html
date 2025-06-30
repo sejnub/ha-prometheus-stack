@@ -142,6 +142,14 @@
             opacity: 0.6;
             cursor: not-allowed;
         }
+        .disabled-link {
+            color: #6c757d !important;
+            opacity: 0.7;
+            cursor: help;
+        }
+        .disabled-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -162,7 +170,7 @@
                 </div>
                 <div class="links">
                     <a href="prometheus/">🔗 Prometheus UI (Works in Test Mode)</a>
-                    <a href="#" id="prometheus-direct-link">🚀 Direct Prometheus UI (Recommended)</a>
+                    <a href="#" id="prometheus-direct-link" class="disabled-link">🚀 Direct Prometheus (Port 9090 - Checking...)</a>
                     <a href="prometheus/api/v1/query?query=up">📡 API Example: up</a>
                     <a href="prometheus/-/healthy">🏥 Health Status</a>
                     <a href="prometheus/metrics">📈 Metrics</a>
@@ -217,7 +225,7 @@
                 </div>
                 <div class="links">
                     <a href="grafana/">🔗 Grafana Dashboards (Broken - Absolute Redirects)</a>
-                    <a href="#" id="grafana-direct-link">🚀 Direct Grafana (Required)</a>
+                    <a href="#" id="grafana-direct-link" class="disabled-link">🚀 Direct Grafana (Port 3000 - Checking...)</a>
                     <a href="grafana/api/health">🏥 Health Status</a>
                 </div>
             </div>
@@ -241,7 +249,7 @@
                 </div>
                 <div class="links">
                     <a href="vscode/">🔗 VS Code Editor</a>
-                    <a href="#" id="vscode-direct-link">🚀 Direct VS Code (Bypasses Ingress)</a>
+                    <a href="#" id="vscode-direct-link" class="disabled-link">🚀 Direct VS Code (Port 8443 - Enable in Addon Config)</a>
                 </div>
             </div>
 
@@ -389,23 +397,36 @@
             return 'error';
         }
 
+        // Function to check port accessibility and set up direct links
+        function setupDirectLink(linkId, port, serviceName) {
+            const link = document.getElementById(linkId);
+            if (!link) return;
+            
+            const url = `http://${window.location.hostname}:${port}`;
+            
+            // Try to check if port is accessible
+            fetch(url, { method: 'HEAD', mode: 'no-cors' })
+                .then(() => {
+                    link.href = url;
+                    link.textContent = `🚀 Direct ${serviceName} (Available)`;
+                    link.className = '';
+                })
+                .catch(() => {
+                    link.href = '#';
+                    link.textContent = `🚀 Direct ${serviceName} (Port ${port} - Disabled)`;
+                    link.onclick = function(e) {
+                        e.preventDefault();
+                        alert(`${serviceName} direct access is disabled. Enable port ${port} in addon configuration to use this feature.`);
+                    };
+                });
+        }
+
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
-            // Set direct links
-            const prometheusLink = document.getElementById('prometheus-direct-link');
-            if (prometheusLink) {
-                prometheusLink.href = `http://${window.location.hostname}:9090`;
-            }
-            
-            const grafanaLink = document.getElementById('grafana-direct-link');
-            if (grafanaLink) {
-                grafanaLink.href = `http://${window.location.hostname}:3000`;
-            }
-            
-            const vscodeLink = document.getElementById('vscode-direct-link');
-            if (vscodeLink) {
-                vscodeLink.href = `http://${window.location.hostname}:8443`;
-            }
+            // Set up all direct links with port checking
+            setupDirectLink('prometheus-direct-link', 9090, 'Prometheus');
+            setupDirectLink('grafana-direct-link', 3000, 'Grafana');
+            setupDirectLink('vscode-direct-link', 8443, 'VS Code');
             
             // Check VS Code status on page load with retry logic
             checkVSCodeStatusWithRetry();

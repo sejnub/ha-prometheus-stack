@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # =============================================================================
-# PROMETHEUS STACK ADD-ON - LOCAL TESTING SCRIPT (ADDON MODE)
+# PROMETHEUS STACK ADD-ON - LOCAL TESTING SCRIPT (TEST-MODE)
 # =============================================================================
-# PURPOSE: Build and run the Home Assistant add-on locally in addon mode
+# PURPOSE: Build and run the Home Assistant add-on locally in Test-mode
 # USAGE:   ./test/build-test.sh (from project root) OR ./build-test.sh (from test folder)
 # 
 # This script:
@@ -108,8 +108,8 @@ if [ ! -f "$PROJECT_ROOT/test-data/options.json" ]; then
 EOF
 fi
 
-# Run the container with test configuration (addon mode simulation)
-echo "🚀 Starting test container in addon mode..."
+# Run the container with test configuration (Test-mode simulation)
+echo "🚀 Starting test container in Test-mode..."
 docker run -d \
   --name prometheus-stack-test \
   -p 9090:9090 \
