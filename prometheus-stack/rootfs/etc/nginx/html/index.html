@@ -158,11 +158,11 @@
                     Time series database and monitoring system. Query metrics, create alerts, and visualize your data.
                 </div>
                 <div class="limitation">
-                    ⚠️ <strong>Ingress Limitation:</strong> The Prometheus web UI does not work properly through Home Assistant ingress due to JavaScript compatibility issues. <strong>Direct port access (9090) is now enabled</strong> for full UI functionality.
+                    ⚠️ <strong>Ingress Limitation:</strong> Works in test mode due to relative redirects, but fails in Home Assistant addon mode due to complex ingress URL structure. <strong>Direct port access (9090) is enabled</strong> for guaranteed full functionality.
                 </div>
                 <div class="links">
-                    <a href="prometheus/">🔗 Prometheus UI (Broken in Ingress)</a>
-                    <a href="#" id="prometheus-direct-link">🚀 Direct Prometheus UI (Bypasses Ingress)</a>
+                    <a href="prometheus/">🔗 Prometheus UI (Works in Test Mode)</a>
+                    <a href="#" id="prometheus-direct-link">🚀 Direct Prometheus UI (Recommended)</a>
                     <a href="prometheus/api/v1/query?query=up">📡 API Example: up</a>
                     <a href="prometheus/-/healthy">🏥 Health Status</a>
                     <a href="prometheus/metrics">📈 Metrics</a>
@@ -204,7 +204,7 @@
                 </div>
             </div>
 
-            <div class="service-card">
+            <div class="service-card limited">
                 <h2>📊 Grafana</h2>
                 <div class="description">
                     Beautiful dashboards and advanced visualization. Create stunning charts and monitor your metrics with the world's most popular observability platform.
@@ -212,9 +212,12 @@
                 <div class="note">
                     🔐 <strong>Default Login:</strong> admin/admin (change password in addon configuration). Pre-configured with Prometheus data source.
                 </div>
+                <div class="limitation">
+                    ⚠️ <strong>Ingress Limitation:</strong> Does not work through ingress in any mode due to absolute redirects (redirects to <code>/login</code> instead of <code>/grafana/login</code>). Unlike Prometheus, Grafana breaks out of the ingress path context. <strong>Must use direct port access (3000)</strong> for full functionality.
+                </div>
                 <div class="links">
-                    <a href="grafana/">🔗 Grafana Dashboards</a>
-                    <a href="#" id="grafana-direct-link">🚀 Direct Grafana (Bypasses Ingress)</a>
+                    <a href="grafana/">🔗 Grafana Dashboards (Broken - Absolute Redirects)</a>
+                    <a href="#" id="grafana-direct-link">🚀 Direct Grafana (Required)</a>
                     <a href="grafana/api/health">🏥 Health Status</a>
                 </div>
             </div>

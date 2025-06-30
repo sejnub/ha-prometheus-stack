@@ -5,6 +5,159 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.5.7 - 2025-06-30
+
+### 🔧 Documentation Fix: Corrected Ingress Behavior Descriptions
+
+### Fixed
+
+- **Prometheus Documentation**: Corrected to accurately reflect that Prometheus ingress works in test mode due to relative redirects
+- **Grafana Documentation**: Fixed to clearly explain absolute redirect issue (`/login` vs `/grafana/login`) that breaks all ingress access
+- **Redirect Behavior Analysis**: Documented the crucial difference between relative redirects (Prometheus) and absolute redirects (Grafana)
+- **Mode-Specific Behavior**: Clarified test mode vs addon mode differences for both services
+
+### Technical Clarification
+
+**Prometheus (✅ Test Mode, ❌ Addon Mode):**
+- Uses relative redirects that resolve within ingress context in test mode
+- Still fails in addon mode due to Home Assistant's complex ingress URL structure
+
+**Grafana (❌ All Modes):**
+- Uses absolute redirects (`/login`) that break out of ingress context in any mode
+- Requires direct port access (3000) for functionality
+
+### User Interface Updates
+
+- **Prometheus Link**: Changed from "Broken in Ingress" → "Works in Test Mode"
+- **Grafana Link**: Changed from "Limited in Ingress" → "Broken - Absolute Redirects"  
+- **Recommendation Updates**: Prometheus "Recommended" vs Grafana "Required" for direct access
+
+## 2.5.6 - 2025-06-30
+
+### 🔧 Critical Correction: Addon Mode vs Test Mode Analysis
+
+### Fixed
+
+- **Addon Mode Behavior**: Corrected analysis to properly account for Home Assistant ingress context
+- **Both Services Limited**: Both Prometheus and Grafana have ingress limitations in addon mode
+- **Root Cause**: Absolute redirects (`/graph`, `/login`) break out of ingress context in addon mode
+- **Documentation**: Updated nginx comments to reflect the correct behavior in addon mode
+
+### Key Discovery: Test Mode ≠ Addon Mode
+
+**Test Mode Behavior:**
+- Prometheus: `/prometheus/` → redirects to `/graph` → works (shorter path context)
+- Grafana: `/grafana/` → redirects to `/login` → limited by `<base href="/">`
+
+**Addon Mode Behavior (Home Assistant Ingress):**
+- Prometheus: `/addon_slug/ingress/prometheus/` → redirects to `/graph` → breaks out of ingress context ❌
+- Grafana: `/addon_slug/ingress/grafana/` → redirects to `/login` → breaks out of ingress context ❌
+
+### Technical Analysis
+
+Both services fail in addon mode due to **absolute path redirects** that break out of the `/addon_slug/ingress/` context:
+- Prometheus redirects to `/graph` instead of relative path
+- Grafana redirects to `/login` instead of relative path  
+- Both redirects escape the Home Assistant ingress URL structure
+
+### Impact
+
+This explains why both Grafana links appear broken in the user's addon mode testing, despite appearing to work differently in test mode.
+
+## 2.5.5 - 2025-06-30
+
+### 🔧 Major Correction: Prometheus Ingress Actually Works
+
+### Fixed
+
+- **Prometheus Documentation**: Corrected major error - Prometheus does NOT have ingress limitations
+- **Root Cause Analysis**: Prometheus uses relative paths (`./static/js/...`) which work perfectly with subpath routing
+- **Technical Accuracy**: Updated nginx comments to reflect that Prometheus ingress routing works correctly
+- **Grafana vs Prometheus**: Clarified the actual difference - only Grafana has the `<base href="/">` limitation
+
+### Key Discovery
+
+The fundamental difference between Prometheus and Grafana:
+
+**Prometheus (✅ Works with Ingress):**
+- Uses relative paths: `src="./static/js/main.js"`
+- Path resolution: `/prometheus/` + `./static/js/main.js` = `/prometheus/static/js/main.js` ✅
+
+**Grafana (❌ Limited with Ingress):**  
+- Uses `<base href="/">` + relative paths: `href="public/img/icon.png"`
+- Path resolution: `/grafana/` + `public/img/icon.png` + `<base href="/">` = `/public/img/icon.png` ❌
+
+### Impact
+
+This correction means users can confidently use Prometheus through both ingress and direct access methods.
+
+## 2.5.4 - 2025-06-30
+
+### 🔧 Fixed: Grafana Direct Access
+
+### Fixed
+
+- **Grafana Port 3000**: Enabled by default to make "Direct Grafana (Recommended)" link actually work
+- **User Experience**: Fixed confusing situation where both Grafana links appeared broken
+- **Port Configuration**: Updated port description to explain why port 3000 is now enabled
+- **Consistent Functionality**: Direct Grafana link now works as intended and recommended
+
+### Background
+
+After documenting the Grafana ingress limitation in v2.5.3, both Grafana links appeared broken to users:
+- Ingress link (`/grafana/`) had the documented `<base href="/">` limitation
+- Direct link (port 3000) didn't work because the port wasn't exposed
+
+This fix ensures the recommended "Direct Grafana" approach actually works by enabling port 3000 by default.
+
+## 2.5.3 - 2025-06-30
+
+### 🔍 Important Discovery: Grafana Ingress Limitation Documented
+
+### Fixed
+
+- **Grafana Ingress Documentation**: Properly documented that Grafana has the same ingress limitation as Prometheus
+- **Subpath Routing Issue**: Confirmed Grafana uses `<base href="/">` which breaks subpath routing in Home Assistant ingress
+- **User Interface**: Updated Grafana service card to show limitation warning and recommend direct port access
+- **Nginx Configuration**: Added explanatory comments matching Prometheus limitation documentation
+- **Consistency**: Both Prometheus and Grafana now properly documented as having the same fundamental limitation
+
+### Root Cause Analysis
+
+Modern web applications like Prometheus and Grafana use `<base href="/">` in their HTML, causing all relative URLs to resolve to the root path instead of the intended subpath (e.g., `/grafana/`). This breaks asset loading and navigation when deployed behind a reverse proxy with subpath routing.
+
+### Technical Details
+
+- **Base Href Issue**: `<base href="/">` in HTML causes `href="public/img/icon.png"` to resolve to `/public/img/icon.png` instead of `/grafana/public/img/icon.png`
+- **Asset Loading Failure**: JavaScript, CSS, and images fail to load through ingress, causing "failed to load application files" errors
+- **Redirect Problems**: Internal redirects go to root paths (`/login`) instead of subpaths (`/grafana/login`)
+- **Same as Prometheus**: Both applications have identical architectural limitations for subpath deployment
+
+### Recommendation
+
+Use direct port access (port 3000 for Grafana, port 9090 for Prometheus) instead of ingress routing for full functionality.
+
+## 2.5.2 - 2025-06-30
+
+### 🔧 Critical Bug Fix
+
+### Fixed
+
+- **Grafana Service Not Starting**: Fixed critical issue where Grafana service was not being started by s6-overlay
+- **Missing Service Bundle**: Added missing `/etc/s6-overlay/s6-rc.d/user/contents.d/grafana` file
+- **Service Integration**: Grafana now properly included in the user service bundle and starts automatically
+- **Web Interface Access**: Grafana dashboard now accessible via `/grafana/` endpoint with proper nginx proxy
+- **Health Check**: Grafana health endpoint now returns proper status (`{"database": "ok", "version": "11.3.1"}`)
+
+### Root Cause
+
+The Grafana service directory and configuration existed but was not included in the s6-overlay service bundle, causing the service to never start. This was due to the missing service bundle file that links Grafana to the user service tree.
+
+### Impact
+
+- **Before**: Grafana completely inaccessible, nginx returning 502 errors
+- **After**: Full Grafana functionality restored with dashboard access and proper health checks
+
 ## 2.5.1 - 2025-01-27
 
 ### Fixed
