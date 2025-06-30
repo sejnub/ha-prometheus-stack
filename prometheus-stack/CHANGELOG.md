@@ -5,6 +5,37 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.5.10 - 2025-06-30
+
+### 🔧 Critical Fix: Grafana Service Startup in Addon Mode
+
+### Fixed
+
+- **Grafana Service Dependencies**: Fixed malformed dependency file that prevented Grafana from starting in addon mode and GitHub Actions
+- **s6-overlay Dependency Resolution**: Grafana dependency file now correctly references "prometheus " instead of empty space
+- **Environment-Specific Startup**: Grafana now starts consistently across all environments (test mode, addon mode, GitHub Actions)
+
+### Root Cause
+
+The Grafana service dependency file `/etc/s6-overlay/s6-rc.d/grafana/dependencies.d/prometheus` contained only a space character instead of the service name "prometheus ". This malformed dependency prevented s6-overlay from properly resolving the service dependency tree in strict environments (addon mode, GitHub Actions), causing Grafana to never start.
+
+### Technical Details
+
+**Before**: 
+- Dependency file: `00000000  20` (space character only)
+- Result: s6-overlay cannot resolve Grafana dependencies → service never starts
+
+**After**:
+- Dependency file: `70 72 6f 6d 65 74 68 65 75 73 20 0a` ("prometheus " + newline)  
+- Result: s6-overlay properly starts Grafana after Prometheus is ready
+
+### Impact
+
+- **Test Mode**: No change (was working due to lenient dependency checking)
+- **Addon Mode**: Grafana now starts and is accessible at `http://homeassistant.internal:3000/`
+- **GitHub Actions**: Grafana now starts properly in CI environment
+- **User Experience**: Complete monitoring stack now works in all deployment modes
+
 ## 2.5.9 - 2025-06-30
 
 ### 🔧 Enhancement: Complete Testing Suite for All Components

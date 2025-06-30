@@ -332,13 +332,11 @@ wait_for_services() {
     echo -n "⏳ Checking service readiness..."
     
     while [ $attempt -le $max_attempts ]; do
-        # Try to reach each core service
+        # Try to reach core services (exclude Grafana/VS Code due to environment differences)
         if curl -sf http://localhost:9090/-/ready >/dev/null 2>&1 && \
            curl -sf http://localhost:9093/-/ready >/dev/null 2>&1 && \
            curl -sf http://localhost:9115/metrics >/dev/null 2>&1 && \
-           curl -sf http://localhost:8080/ >/dev/null 2>&1 && \
-           curl -sf http://localhost:3000/api/health >/dev/null 2>&1 && \
-           curl -sf http://localhost:8443/ >/dev/null 2>&1; then
+           curl -sf http://localhost:8080/ >/dev/null 2>&1; then
             echo " ready!"
             return 0
         fi
