@@ -258,7 +258,6 @@
                 </div>
                 <div class="links">
                     <a href="vscode/">🔗 VS Code Editor</a>
-                    <a href="#" id="vscode-direct-link" class="disabled-link">🚀 Direct VS Code (Port 8443 - Checking...)</a>
                 </div>
             </div>
 
@@ -534,7 +533,6 @@
             // Set up all direct links with port checking
             setupDirectLink('prometheus-direct-link', 9090, 'Prometheus');
             setupDirectLink('grafana-direct-link', 3000, 'Grafana');
-            setupDirectLink('vscode-direct-link', 8443, 'VS Code');
             
             // Check VS Code status on page load with retry logic
             checkVSCodeStatusWithRetry();

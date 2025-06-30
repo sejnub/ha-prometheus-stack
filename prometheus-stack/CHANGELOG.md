@@ -5,6 +5,38 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.6.4 - 2025-06-30
+
+### 🔧 Fixed: Removed Inconsistent VS Code Direct Link
+
+### Removed
+
+- **VS Code Direct Link**: Removed `🚀 Direct VS Code (Port 8443)` link as it was inconsistent with the logical pattern
+
+### Technical Details
+
+**Consistent Logic Applied:**
+- **Direct links provided**: Only for services with **ingress limitations** that need port access as backup
+- **No direct links**: For services that work fine through Home Assistant's ingress system
+
+**Current Status:**
+- **✅ Prometheus**: Direct link (Port 9090) - Has ingress limitations (fails in Addon-mode)
+- **✅ Grafana**: Direct link (Port 3000) - Has ingress limitations (doesn't work through ingress)
+- **❌ VS Code**: No direct link - Works perfectly through ingress in all modes
+- **❌ Alertmanager**: No direct link - Works perfectly through ingress  
+- **❌ Blackbox**: No direct link - Works perfectly through ingress
+- **❌ Karma**: No direct link - Works perfectly through ingress
+- **❌ NGINX**: No direct link - Works perfectly through ingress
+
+**Clarification:**
+VS Code's previous start/stop button issues were **frontend API problems**, not ingress problems. The VS Code web interface itself works fine through Home Assistant's ingress system and doesn't require direct port access.
+
+**JavaScript Changes:**
+- Removed `setupDirectLink('vscode-direct-link', 8443, 'VS Code');` call
+- Simplified direct link management to only handle Prometheus and Grafana
+
+This creates a clear, logical pattern where direct links are only provided for services that actually need them.
+
 ## 2.6.3 - 2025-06-30
 
 ### 🎨 Simplified: Removed Colored Service Card Borders
