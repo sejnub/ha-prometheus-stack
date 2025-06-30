@@ -5,6 +5,33 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.5.8 - 2025-06-30
+
+### 🔧 Critical Fix: Grafana Network Binding in Addon Mode
+
+### Fixed
+
+- **Grafana Network Accessibility**: Fixed timeout issue when accessing Grafana on port 3000 in addon mode
+- **Network Binding**: Added `http_addr = 0.0.0.0` to grafana.ini to bind to all interfaces
+- **Container Networking**: Grafana now accessible from outside the addon container via `http://homeassistant.internal:3000/`
+
+### Root Cause
+
+Grafana was defaulting to bind only to localhost (127.0.0.1) inside the addon container, making it inaccessible from the Home Assistant host. Other services (Prometheus, Alertmanager, Blackbox Exporter) already used proper network binding (`:PORT` format = `0.0.0.0:PORT`).
+
+### Technical Details
+
+**Before**: Grafana bound to `127.0.0.1:3000` (localhost only)
+**After**: Grafana binds to `0.0.0.0:3000` (all interfaces)
+
+This matches the network configuration pattern used by other services in the stack.
+
+### Impact
+
+- **Test Mode**: No change (already worked)
+- **Addon Mode**: Grafana now accessible via direct port access as intended
+- **User Experience**: Direct Grafana link now works in both modes
+
 ## 2.5.7 - 2025-06-30
 
 ### 🔧 Documentation Fix: Corrected Ingress Behavior Descriptions
