@@ -5,6 +5,27 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.7.6 - 2025-06-30
+
+### Fixed
+- **Dashboard Consistency**: Fixed missing 📊 emoji icon for Prometheus panel title to maintain visual consistency across all component status panels
+
+## 2.7.5 - 2025-06-30
+
+### Fixed
+- **Services UP Panel**: Completely removed problematic "Services UP" panel from all dashboard copies (source and runtime directories)
+- **Hardcoded Values**: Fixed hardcoded `vector(1)` query that always returned "1" regardless of actual service status
+- **Dashboard Architecture**: Clarified file structure - `dashboards/` (development source) vs `prometheus-stack/rootfs/` (runtime files used by Docker)
+
+### Changed
+- **Dashboard Display**: Dashboard now shows only individual component status panels without confusing aggregated count
+- **User Experience**: Eliminated misleading "Services UP: 1" display that didn't reflect actual service states
+
+## 2.7.4 - 2025-06-30
+
+### Removed
+- **Services UP Panel**: Initial removal of "Services UP" panel from main dashboard source directory
+
 ## 2.7.3 - 2025-06-30
 
 ### Fixed
