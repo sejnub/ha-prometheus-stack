@@ -60,6 +60,12 @@ RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /data/prometheu
 COPY rootfs/ /
 COPY rootfs/etc/.vscode /etc/.vscode
 
+# Inject version from config.json into HTML
+COPY config.json /tmp/config.json
+RUN VERSION=$(jq -r '.version' /tmp/config.json) && \
+    sed -i "s/__VERSION__/$VERSION/g" /etc/nginx/html/index.html && \
+    rm /tmp/config.json
+
 # Set permissions
 RUN chmod +x /etc/cont-init.d/00-init.sh && \
     chmod +x /etc/s6-overlay/s6-rc.d/*/run && \

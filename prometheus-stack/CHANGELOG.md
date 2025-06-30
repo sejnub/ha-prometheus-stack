@@ -5,6 +5,34 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.3.9 - 2025-01-27
+
+### Added
+
+- **Version Display**: Added version display in web interface header
+- **Build-Time Version Injection**: Version is automatically extracted from config.json and injected into HTML during Docker build
+- **Debug Logging**: Added extensive console logging to getApiUrl() function for diagnosing ingress URL issues
+
+### Improved
+
+- **DRY Principle**: Eliminated version redundancy by using single source of truth (config.json)
+
+## 2.3.8 - 2025-01-27
+
+### Fixed
+
+- **VS Code API URL Construction**: Fixed absolute URL construction for Home Assistant ingress context
+- **Ingress Path Resolution**: Uses `window.location.pathname` to build proper ingress URLs  
+- **API Call Routing**: Ensures API calls stay within addon's ingress context (`/addon_slug/ingress/api/vscode/status`)
+- **Frontend Fix**: Addresses issue where relative URLs weren't resolving correctly in ingress mode
+
+### Technical Details
+
+- Changed getApiUrl() to build absolute URLs using current window location
+- Constructs URLs like: `origin + pathname + '/' + endpoint`
+- Should resolve to proper ingress URLs instead of breaking out to HA root
+- Maintains compatibility with test-mode using relative paths
+
 ## 2.3.6 - 2025-01-27
 
 ### Fixed

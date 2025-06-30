@@ -147,6 +147,9 @@
 <body>
     <div class="container">
         <h1>🔍 Prometheus Stack Overview</h1>
+        <div style="text-align: center; color: #666; font-size: 0.9em; margin: -10px 0 20px 0;">
+            Version __VERSION__
+        </div>
         
         <div class="service-grid">
             <div class="service-card limited">
@@ -238,16 +241,31 @@
     <script>
         // VS Code control functions
         function getApiUrl(endpoint) {
-            // In Home Assistant ingress mode, we need to use the current page URL
-            // to ensure API calls stay within the ingress context
-            const currentUrl = new URL(window.location.href);
+            // Debug logging
+            console.log('=== getApiUrl DEBUG ===');
+            console.log('endpoint:', endpoint);
+            console.log('window.location.href:', window.location.href);
+            console.log('window.location.pathname:', window.location.pathname);
+            console.log('window.location.origin:', window.location.origin);
+            console.log('pathname includes ingress:', window.location.pathname.includes('ingress'));
             
-            // If we're in an ingress context, construct the proper URL
-            if (currentUrl.pathname.includes('ingress')) {
-                // Use current origin and path to build the API URL
-                return new URL(endpoint, currentUrl).href;
+            // Check if we're in Home Assistant ingress mode
+            if (window.location.pathname.includes('ingress')) {
+                // Build absolute URL using current location
+                const currentPath = window.location.pathname;
+                const baseUrl = window.location.origin + currentPath;
+                const finalUrl = baseUrl.endsWith('/') ? baseUrl + endpoint : baseUrl + '/' + endpoint;
+                
+                console.log('currentPath:', currentPath);
+                console.log('baseUrl:', baseUrl);
+                console.log('finalUrl:', finalUrl);
+                console.log('=== END DEBUG ===');
+                
+                return finalUrl;
             } else {
                 // Test mode - use relative path
+                console.log('Test mode - returning relative path:', endpoint);
+                console.log('=== END DEBUG ===');
                 return endpoint;
             }
         }

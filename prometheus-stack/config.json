@@ -1,6 +1,6 @@
 {
   "name": "Prometheus Stack",
-  "version": "2.3.6",
+  "version": "2.3.9",
   "slug": "prometheus-stack",
   "description": "Prometheus, Alertmanager, Karma and VS Code in one add-on",
   "arch": [
