@@ -5,6 +5,36 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.6.2 - 2025-06-30
+
+### 🔧 Fixed: Link Consistency & Restored Missing Service
+
+### Fixed
+
+- **Restored Karma Service**: Added back the missing Karma alert dashboard service card that was accidentally removed
+- **Link Icon Consistency**: Fixed NGINX status link to use consistent 🔗 icon instead of 📈
+- **Direct Link Messages**: Standardized VS Code direct link message format to match Prometheus/Grafana pattern `(Port XXXX - Checking...)`
+- **CSS Classes**: Added proper `controllable` class to VS Code and Grafana service cards for visual consistency
+- **Service Organization**: Restored proper section comments for better code organization
+
+### Technical Details
+
+**Link Pattern Standardization:**
+- **Ingress Links**: All use 🔗 icon with consistent formatting
+- **Direct Links**: All use 🚀 icon with consistent `(Port XXXX - Checking...)` format
+- **Health/Status**: All use 🏥 icon for health endpoints
+- **Metrics**: All use 📈 icon for metrics endpoints
+
+**Service Classification:**
+- `limited`: Services with ingress limitations (Prometheus, Grafana)
+- `controllable`: Services with start/stop controls (VS Code, Grafana) 
+- `limited controllable`: Services with both characteristics (Grafana)
+
+**Current Link Status:**
+- **Services with Ingress + Direct**: Prometheus, Grafana, VS Code
+- **Services with Ingress Only**: Alertmanager, Blackbox, Karma, NGINX
+- **Consistent Explanatory Text**: Applied where relevant for user clarity
+
 ## 2.6.1 - 2025-06-30
 
 ### 🎨 UI/UX: Consistent Service Card Layout
