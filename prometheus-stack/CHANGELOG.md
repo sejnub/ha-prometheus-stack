@@ -5,6 +5,27 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.6.6 - 2025-06-30
+
+### 🐛 Fixed: Service Card Visibility Issue
+
+### Fixed
+
+- **Service Card Background**: Changed from white to light grey (`#f8f9fa`) to improve visibility against white page background
+- **Visual Contrast**: Service cards are now clearly distinguishable from the page background
+
+### Technical Details
+
+**CSS Change:**
+```css
+.service-card {
+    background: #f8f9fa;  /* Changed from: white */
+}
+```
+
+**Issue Resolved:**
+The previous white service cards on white background created poor visibility, making it difficult to distinguish service card boundaries. The light grey background provides proper contrast while maintaining a clean, professional appearance.
+
 ## 2.6.5 - 2025-06-30
 
 ### 🔓 Security: Disabled Grafana Authentication for Consistency
