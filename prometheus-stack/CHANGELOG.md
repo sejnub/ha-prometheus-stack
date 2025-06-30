@@ -5,6 +5,22 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.3.3 - 2025-01-27
+
+### Fixed
+
+- **Service Dependencies**: Added missing user service dependency for vscode-api service
+- **Startup Sequence**: Ensures `/tmp/.init-complete` is created before vscode-api starts waiting for it
+- **Fresh Installations**: Prevents vscode-api from hanging indefinitely on first startup
+- **Service Reliability**: Improves overall service startup reliability and order
+
+### Technical Details
+
+- Created `/etc/s6-overlay/s6-rc.d/vscode-api/dependencies.d/user` dependency file
+- Ensures user service (which creates `/tmp/.init-complete`) runs before vscode-api service
+- Prevents the initialization deadlock that required manual intervention
+- All fresh installations should now start VS Code API service correctly
+
 ## 2.3.2 - 2025-01-27
 
 ### Fixed
