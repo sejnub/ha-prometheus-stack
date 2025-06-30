@@ -5,6 +5,22 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.3.2 - 2025-01-27
+
+### Fixed
+
+- **VS Code API URL Resolution**: Improved fix for VS Code control buttons in addon-mode
+- **Ingress Context**: Changed from `./api/vscode/*` to `api/vscode/*` for better ingress compatibility  
+- **Service Dependencies**: Fixed user service not starting automatically, which caused vscode-api to wait indefinitely
+- **Cross-Mode Compatibility**: Ensures VS Code buttons work correctly in both test-mode and addon-mode
+
+### Technical Details
+
+- Root cause was user service not running → `/tmp/.init-complete` never created → vscode-api stuck waiting
+- Fixed service dependency chain to ensure proper startup sequence
+- Improved API URL construction for Home Assistant ingress context
+- Backend VS Code API server functionality confirmed working correctly
+
 ## 2.3.1 - 2025-01-27
 
 ### Fixed
