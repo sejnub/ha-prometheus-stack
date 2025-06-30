@@ -5,6 +5,25 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.7.8 - 2025-06-30
+
+### Added
+- **Addon Configuration Sync Tools**: Complete toolset for syncing configuration changes from addon-mode back to git repository
+- **SSH-based Extraction**: Tools to extract ALL configuration files from running container via SSH
+- **Comprehensive Config Support**: Support for Prometheus, Grafana, Blackbox, Alertmanager, and dashboard configurations
+- **Configuration Comparison**: Automated comparison between extracted files and git repository
+- **Sync Documentation**: Complete workflow documentation for maintaining configurations across development and deployment modes
+
+### Technical Details
+- **`addon-sync-tools/`**: New directory with specialized sync tools
+- **`extract-configs.sh`**: Extract all configuration files from running addon container
+- **`compare-configs.sh`**: Compare extracted configurations with git repository files
+- **`quick-ssh-test.sh`**: Test SSH access and verify configuration file accessibility
+- **Container-based Extraction**: Handles addons that store configurations in containers (not `/addon_configs/`)
+
+### Use Case
+Enables users to make configuration changes in Home Assistant addon-mode (Grafana dashboards, Prometheus targets, alert rules, etc.) and sync those changes back to their git repository for version control and future deployments.
+
 ## 2.7.6 - 2025-06-30
 
 ### Fixed
