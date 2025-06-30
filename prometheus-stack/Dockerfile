@@ -55,7 +55,7 @@ COPY blackbox.yml /etc/blackbox_exporter/
 COPY grafana.ini /etc/grafana/
 
 # Create required directories
-RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /etc/grafana /etc/grafana/provisioning/datasources /data/prometheus /data/alertmanager /data/grafana && \
+RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /etc/grafana /etc/grafana/provisioning/datasources /etc/grafana/provisioning/dashboards /data/prometheus /data/alertmanager /data/grafana && \
     mkdir -p /etc/nginx/http.d && \
     mkdir -p /opt/code-server/data /opt/code-server/extensions /opt/code-server/data/logs && \
     mkdir -p /etc/.vscode && \

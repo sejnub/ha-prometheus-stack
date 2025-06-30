@@ -5,6 +5,58 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.7.3 - 2025-06-30
+
+### Fixed
+- **Dashboard Data Source Issue**: Fixed "No data" problem in Grafana dashboards caused by data source UID mismatch
+- **Dashboard Layout**: Enhanced "Addon Components Monitoring" dashboard with 8 components in top row instead of 4
+- **Grafana Status Display**: Fixed Grafana service status to show "UP" correctly
+- **Data Source Configuration**: Added consistent UID "prometheus" to data source provisioning
+- **Cross-Mode Compatibility**: Improved dashboard queries to work in both test-mode and addon-mode
+
+### Added
+- **Enhanced Monitoring**: Added Supervisor and Home Assistant status panels with fallback support
+- **Better Error Handling**: Added "N/A" display for unavailable metrics instead of blank panels
+- **Flexible Queries**: Added fallback queries using `or on() vector(0)` for missing services
+
+### Changed
+- **Dashboard Grid Layout**: Adjusted panel widths to accommodate 8 components (width 3 instead of 4)
+- **Service Coverage**: Expanded monitoring to include more addon-specific components
+
+## 2.7.2 - 2025-06-30
+
+### 🏠 Home Dashboard
+
+- **Grafana Home Dashboard**: Set "Addon Components Monitoring" as the default home dashboard
+- **Dashboard Navigation**: Users now land directly on addon monitoring when opening Grafana
+- **User Experience**: Eliminates the "You haven't created any dashboards yet" empty state
+
+### 🔧 Technical Improvements
+
+- **Home Dashboard Configuration**: Added `/etc/grafana/provisioning/dashboards/home.json`
+- **Dashboard Provisioning**: Fixed missing home dashboard configuration
+- **Error Resolution**: Resolved "Failed to load home dashboard" log errors
+
+## 2.7.1 - 2024-12-30
+
+### 🐛 Bug Fixes
+
+- **Grafana Dashboard Provisioning**: Fixed missing dashboards in Grafana by properly setting up dashboard provisioning
+- **Container Build**: Added `/etc/grafana/provisioning/dashboards/` directory creation to Dockerfile
+- **Dashboard Collection**: All existing dashboards now properly provisioned and visible in Grafana UI
+
+### 📊 New Dashboards
+
+- **Addon Components Dashboard**: New dashboard specifically for monitoring internal addon services
+- **Service Status Monitoring**: Real-time status indicators for Prometheus, Alertmanager, and Blackbox Exporter
+- **Internal Metrics**: Focus on addon-specific performance metrics rather than external services
+
+### 🔧 Technical Improvements
+
+- **Provisioning Structure**: Proper Grafana dashboard and datasource provisioning setup
+- **File Organization**: Centralized dashboard management in `/dashboards/` directory
+- **Build Process**: Automated copying of dashboard files during container build
+
 ## 2.7.0 - 2025-06-30
 
 ### 🎉 Major Release: Complete UI/UX Overhaul & Service Consistency
