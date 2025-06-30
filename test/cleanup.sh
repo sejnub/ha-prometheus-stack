@@ -84,12 +84,12 @@ check_docker() {
 # Function to wait for container to stop
 wait_for_container_stop() {
     local container="$1"
-    local max_attempts=30  # Maximum number of attempts (30 * 2 seconds = 60 seconds timeout)
+    local max_attempts=120  # Maximum number of attempts (120 * 0.5 seconds = 60 seconds timeout)
     local attempts=0
     
     while docker ps -q --filter "name=$container" | grep -q . && [ $attempts -lt $max_attempts ]; do
-        print_status "INFO" "Waiting for container $container to stop... ($(( max_attempts - attempts )) seconds remaining)"
-        sleep 2
+        print_status "INFO" "Waiting for container $container to stop... ($(( (max_attempts - attempts) / 2 )) seconds remaining)"
+        sleep 0.5
         attempts=$((attempts + 1))
     done
     

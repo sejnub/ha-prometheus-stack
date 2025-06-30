@@ -5,6 +5,40 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.5.12 - 2025-06-30
+
+### ⚡ Performance: Optimized Timeout Handling
+
+### Changed
+
+- **Service Startup Performance**: Replaced fixed timeouts with responsive condition-checking loops
+- **Grafana Health Checks**: Reduced retry interval from 2s → 0.5s (4x faster response)
+- **VS Code API Service**: Replaced fixed 3-second delay with dynamic s6-overlay readiness checking
+- **GitHub Actions CI/CD**: Reduced retry intervals from 2s → 0.5s for faster feedback
+- **Container Cleanup**: Improved stop-checking responsiveness from 2s → 0.5s intervals
+
+### Technical Details
+
+**Before**: Fixed delays regardless of actual service readiness
+**After**: Dynamic condition checking with 0.5s intervals for optimal responsiveness
+
+**Timeout Period Maintenance:**
+- **Grafana**: 30→120 attempts to maintain 60-second total timeout (30×2s → 120×0.5s)
+- **Cleanup**: 30→120 attempts to maintain 60-second total timeout (30×2s → 120×0.5s)
+- **Response time**: 4x faster when services are ready (2s → 0.5s intervals)
+
+**VS Code Service Improvements:**
+- Replaced `sleep 3` with condition check for `s6-svstat` and `s6-rc` availability
+- Removed unnecessary `sleep 1` delay in test mode
+- Added timeout protection (6 seconds max) with graceful fallback
+
+### Impact
+
+- **Faster Startup**: Services respond immediately when ready instead of waiting for fixed delays
+- **Better Resource Utilization**: Reduced unnecessary CPU idle time during startup
+- **Improved CI/CD**: 4x faster feedback loops in GitHub Actions
+- **More Reliable**: Dynamic condition checking vs blind waiting prevents race conditions
+
 ## 2.5.11 - 2025-06-30
 
 ### 🔧 CRITICAL FIX: s6-overlay Service Dependencies

@@ -56,7 +56,7 @@ jobs:
           
           # Short wait between attempts
           echo "⏳ Waiting for next attempt..."
-          sleep 2
+          sleep 0.5
         done
         
         echo "🧪 Running configuration tests..."

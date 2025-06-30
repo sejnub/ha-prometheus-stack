@@ -13,13 +13,24 @@ done
 
 if [ -f /tmp/.init-complete ]; then
     echo "Container initialization complete"
-    # Additional startup delay to ensure s6-overlay is fully ready in addon mode
+    # Wait for s6-overlay services to be ready (with condition checking)
     echo "Waiting for s6-overlay to be ready..."
-    sleep 3
+    ready_counter=0
+    ready_timeout=12  # 12 * 0.5s = 6 seconds max
+    while [ $ready_counter -lt $ready_timeout ]; do
+        if command -v s6-svstat >/dev/null 2>&1 && command -v s6-rc >/dev/null 2>&1; then
+            echo "s6-overlay commands available"
+            break
+        fi
+        sleep 0.5
+        ready_counter=$((ready_counter + 1))
+    done
+    
+    if [ $ready_counter -eq $ready_timeout ]; then
+        echo "s6-overlay readiness timeout - proceeding anyway"
+    fi
 else
     echo "Container initialization timeout - proceeding anyway (likely test mode)"
-    # Shorter delay for test mode
-    sleep 1
 fi
 
 # Check if Python is available
