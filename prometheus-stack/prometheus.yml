@@ -184,3 +184,31 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9115']
     scrape_interval: 15s
+
+  # Grafana metrics
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['localhost:3000']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Internal addon services HTTP health checks
+  - job_name: 'addon_services'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+        - 'http://localhost:8080/'  # Karma UI
+        - 'http://localhost:8443/'  # VS Code
+        - 'http://localhost:80/nginx_status'  # NGINX status
+        labels:
+          group: 'addon_internal'
+          service: 'http'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: localhost:9115

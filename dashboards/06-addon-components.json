@@ -177,7 +177,7 @@
           "refId": "A"
         }
       ],
-      "title": "Alertmanager",
+      "title": "🚨 Alertmanager",
       "type": "stat"
     },
     {
@@ -256,7 +256,7 @@
           "refId": "A"
         }
       ],
-      "title": "Blackbox Exporter",
+      "title": "🔎 Blackbox Exporter",
       "type": "stat"
     },
     {
@@ -331,11 +331,11 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "1",
+          "expr": "up{job=\"grafana\"}",
           "refId": "A"
         }
       ],
-      "title": "Grafana",
+      "title": "📊 Grafana",
       "type": "stat"
     },
     {
@@ -410,11 +410,11 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "up{job=\"supervisor\"} or on() vector(0)",
+          "expr": "probe_success{job=\"addon_services\",instance=\"http://localhost:8080/\"}",
           "refId": "A"
         }
       ],
-      "title": "Supervisor",
+      "title": "🎯 Karma",
       "type": "stat"
     },
     {
@@ -489,11 +489,11 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "up{job=\"home_assistant\"} or on() vector(0)",
+          "expr": "probe_success{job=\"addon_services\",instance=\"http://localhost:8443/\"}",
           "refId": "A"
         }
       ],
-      "title": "Home Assistant",
+      "title": "💻 VS Code",
       "type": "stat"
     },
     {
@@ -506,21 +506,37 @@
           "color": {
             "mode": "thresholds"
           },
-          "mappings": [],
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "red",
+                  "index": 0,
+                  "text": "DOWN"
+                },
+                "1": {
+                  "color": "green",
+                  "index": 1,
+                  "text": "UP"
+                }
+              },
+              "type": "value"
+            }
+          ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "green",
+                "value": 1
               }
             ]
           },
-          "unit": "short"
+          "noValue": "N/A"
         },
         "overrides": []
       },
@@ -552,74 +568,11 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "count(up{job=~\"blackbox.*\"})",
+          "expr": "probe_success{job=\"addon_services\",instance=\"http://localhost:80/nginx_status\"}",
           "refId": "A"
         }
       ],
-      "title": "Monitored Services",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 3,
-        "x": 21,
-        "y": 0
-      },
-      "id": 8,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "count(up{job=~\"blackbox.*\"} == 1)",
-          "refId": "A"
-        }
-      ],
-      "title": "Services UP",
+      "title": "🌐 NGINX",
       "type": "stat"
     },
     {
