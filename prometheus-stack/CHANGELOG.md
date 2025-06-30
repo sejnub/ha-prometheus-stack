@@ -5,6 +5,22 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.3.4 - 2025-01-27
+
+### Improved
+
+- **VS Code Service Reliability**: Added timeout mechanism to vscode-api service startup
+- **Cross-Mode Compatibility**: Better handling of test-mode vs addon-mode differences  
+- **Error Prevention**: Prevents infinite waiting if user service fails to start
+- **Startup Robustness**: 5-second timeout with fallback for edge cases
+
+### Technical Details
+
+- Added timeout loop (10 attempts × 0.5s = 5 seconds max) for `/tmp/.init-complete`
+- Different behavior for addon-mode (longer wait) vs test-mode (shorter wait)
+- Enhanced logging for better debugging of startup issues
+- Prevents the service from hanging indefinitely in edge cases
+
 ## 2.3.3 - 2025-01-27
 
 ### Fixed
