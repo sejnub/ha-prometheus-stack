@@ -5,6 +5,59 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.7.0 - 2025-06-30
+
+### 🎉 Major Release: Complete UI/UX Overhaul & Service Consistency
+
+This release represents a major milestone in the Prometheus Stack addon's evolution, delivering a completely refined user experience and consistent service architecture.
+
+### 🎨 UI/UX Improvements
+
+- **Service Card Redesign**: Clean, uniform service cards with improved visibility (light grey backgrounds)
+- **Consistent Link Patterns**: Standardized ingress and direct link formatting across all services
+- **Logical Service Organization**: Services grouped by function (Core Monitoring, Visualization, Development, Infrastructure)
+- **Simplified Visual Design**: Removed confusing colored borders for cleaner, more professional appearance
+
+### 🔧 Service Consistency Achievements
+
+- **Authentication Uniformity**: All services now operate without authentication requirements
+- **Direct Link Logic**: Only services with actual ingress limitations provide direct port access
+- **Resource Management**: Consistent start/stop controls for resource-intensive services (Grafana, VS Code)
+- **Terminology Standardization**: Official naming convention (Test-mode, Addon-mode, Github-mode)
+
+### 🔓 Security & Access
+
+- **Grafana Authentication Disabled**: Removed login requirement to match other services
+- **Simplified Access**: Direct dashboard access without credential management
+- **Consistent Security Model**: All services follow the same authentication approach
+
+### 📊 Service Status
+
+**Core Monitoring Stack:**
+- ✅ **Prometheus**: Working with ingress limitation notes and direct port access
+- ✅ **Alertmanager**: Full ingress compatibility  
+- ✅ **Blackbox Exporter**: Full ingress compatibility
+
+**Visualization & Dashboards:**
+- ✅ **Grafana**: No-login access with start/stop controls and direct port access
+- ✅ **Karma**: Full ingress compatibility
+
+**Development Tools:**
+- ✅ **VS Code**: Full ingress compatibility with start/stop controls
+
+**Infrastructure:**
+- ✅ **NGINX Status**: Full monitoring capability
+
+### 🏗️ Technical Foundation
+
+This release establishes a solid foundation for future development with:
+- Clean, maintainable codebase
+- Consistent service patterns
+- Professional user interface
+- Logical architectural decisions
+
+All 7 services are fully functional with comprehensive health checks, proper service management, and user-friendly interfaces.
+
 ## 2.6.6 - 2025-06-30
 
 ### 🐛 Fixed: Service Card Visibility Issue
