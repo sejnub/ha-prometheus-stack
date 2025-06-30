@@ -1,0 +1,53 @@
+#!/command/with-contenv bashio
+
+echo "Starting Grafana API server..."
+
+# Wait for container initialization to complete (with timeout)
+echo "Waiting for container initialization..."
+init_timeout=10
+init_counter=0
+while [ ! -f /tmp/.init-complete ] && [ $init_counter -lt $init_timeout ]; do
+    sleep 0.5
+    init_counter=$((init_counter + 1))
+done
+
+if [ -f /tmp/.init-complete ]; then
+    echo "Container initialization complete"
+    # Wait for s6-overlay services to be ready (with condition checking)
+    echo "Waiting for s6-overlay to be ready..."
+    ready_counter=0
+    ready_timeout=12  # 12 * 0.5s = 6 seconds max
+    while [ $ready_counter -lt $ready_timeout ]; do
+        if command -v s6-svstat >/dev/null 2>&1 && command -v s6-rc >/dev/null 2>&1; then
+            echo "s6-overlay commands available"
+            break
+        fi
+        sleep 0.5
+        ready_counter=$((ready_counter + 1))
+    done
+    
+    if [ $ready_counter -eq $ready_timeout ]; then
+        echo "s6-overlay readiness timeout - proceeding anyway"
+    fi
+else
+    echo "Container initialization timeout - proceeding anyway (likely Test-mode)"
+fi
+
+# Check if Python is available
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "ERROR: Python3 not found"
+    exit 1
+fi
+
+# Check if script exists and is executable
+if [ ! -x /usr/local/bin/grafana-api-server ]; then
+    echo "ERROR: grafana-api-server script not found or not executable"
+    exit 1
+fi
+
+# Add some environment info for debugging
+echo "Python version: $(python3 --version)"
+echo "Current user: $(whoami)"
+echo "Available commands: s6-svstat=$(command -v s6-svstat || echo 'NOT FOUND'), s6-rc=$(command -v s6-rc || echo 'NOT FOUND')"
+
+exec s6-setuidgid root /usr/local/bin/grafana-api-server 

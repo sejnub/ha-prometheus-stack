@@ -220,8 +220,20 @@
                 <div class="note">
                     🔐 <strong>Default Login:</strong> admin/admin (change password in addon configuration). Pre-configured with Prometheus data source.
                 </div>
+                <div class="note">
+                    💡 <strong>Tip:</strong> Use the controls below to start/stop Grafana on-demand to save CPU resources. If status shows errors, check that Grafana is enabled in the add-on configuration.
+                </div>
                 <div class="limitation">
                     ⚠️ <strong>Ingress Limitation:</strong> Does not work through ingress in any mode due to absolute redirects (redirects to <code>/login</code> instead of <code>/grafana/login</code>). Unlike Prometheus, Grafana breaks out of the ingress path context. <strong>Must use direct port access (3000)</strong> for full functionality.
+                </div>
+                <div class="status-controls">
+                    <div class="status-indicator">
+                        <span id="grafana-status">⏳ Checking status...</span>
+                    </div>
+                    <div class="control-buttons">
+                        <button id="start-grafana" class="control-btn start-btn" onclick="startGrafana()">🚀 Start Grafana</button>
+                        <button id="stop-grafana" class="control-btn stop-btn" onclick="stopGrafana()">⏹️ Stop Grafana</button>
+                    </div>
                 </div>
                 <div class="links">
                     <a href="grafana/">🔗 Grafana Dashboards (Broken - Absolute Redirects)</a>
@@ -376,6 +388,104 @@
             document.getElementById('stop-vscode').disabled = !enabled;
         }
 
+        // Grafana control functions
+        async function checkGrafanaStatus() {
+            try {
+                const response = await fetch(getApiUrl('api/grafana/status'));
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                const data = await response.json();
+                updateGrafanaStatus(data.grafana_status, '');
+                return data.grafana_status;
+            } catch (error) {
+                console.error('Error checking Grafana status:', error);
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    updateGrafanaStatus('error', 'API server not responding');
+                } else {
+                    updateGrafanaStatus('error', `Connection error: ${error.message}`);
+                }
+                return 'error';
+            }
+        }
+
+        async function startGrafana() {
+            updateGrafanaStatus('loading', 'Starting Grafana...');
+            setGrafanaButtonsEnabled(false);
+            try {
+                const response = await fetch(getApiUrl('api/grafana/start'), { method: 'POST' });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    updateGrafanaStatus('running', data.message);
+                } else {
+                    updateGrafanaStatus('error', data.message || 'Failed to start Grafana');
+                }
+            } catch (error) {
+                console.error('Error starting Grafana:', error);
+                updateGrafanaStatus('error', 'Error starting Grafana');
+            } finally {
+                setGrafanaButtonsEnabled(true);
+            }
+        }
+
+        async function stopGrafana() {
+            updateGrafanaStatus('loading', 'Stopping Grafana...');
+            setGrafanaButtonsEnabled(false);
+            try {
+                const response = await fetch(getApiUrl('api/grafana/stop'), { method: 'POST' });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    updateGrafanaStatus('stopped', data.message);
+                } else {
+                    updateGrafanaStatus('error', data.message || 'Failed to stop Grafana');
+                }
+            } catch (error) {
+                console.error('Error stopping Grafana:', error);
+                updateGrafanaStatus('error', 'Error stopping Grafana');
+            } finally {
+                setGrafanaButtonsEnabled(true);
+            }
+        }
+
+        function updateGrafanaStatus(status, message) {
+            const statusElement = document.getElementById('grafana-status');
+            const startBtn = document.getElementById('start-grafana');
+            const stopBtn = document.getElementById('stop-grafana');
+            
+            // Remove all status classes
+            statusElement.className = '';
+            
+            switch (status) {
+                case 'running':
+                    statusElement.className = 'status-running';
+                    statusElement.textContent = '✅ Grafana is running';
+                    startBtn.disabled = true;
+                    stopBtn.disabled = false;
+                    break;
+                case 'stopped':
+                    statusElement.className = 'status-stopped';
+                    statusElement.textContent = '⏸️ Grafana is stopped';
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    break;
+                case 'loading':
+                    statusElement.className = 'status-loading';
+                    statusElement.textContent = `⏳ ${message}`;
+                    break;
+                case 'error':
+                    statusElement.className = 'status-stopped';
+                    statusElement.textContent = `❌ ${message}`;
+                    startBtn.disabled = false;
+                    stopBtn.disabled = false;
+                    break;
+            }
+        }
+
+        function setGrafanaButtonsEnabled(enabled) {
+            document.getElementById('start-grafana').disabled = !enabled;
+            document.getElementById('stop-grafana').disabled = !enabled;
+        }
+
         // Retry function for initial status check
         async function checkVSCodeStatusWithRetry() {
             const maxRetries = 6;
@@ -431,8 +541,12 @@
             // Check VS Code status on page load with retry logic
             checkVSCodeStatusWithRetry();
             
+            // Check Grafana status on page load
+            checkGrafanaStatus();
+            
             // Auto-refresh status every 30 seconds
             setInterval(checkVSCodeStatus, 30000);
+            setInterval(checkGrafanaStatus, 30000);
         });
     </script>
 </body>

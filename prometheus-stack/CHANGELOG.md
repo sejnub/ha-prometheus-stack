@@ -5,6 +5,74 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.6.0 - 2025-06-30
+
+### 🎮 MAJOR FEATURE: Grafana Start/Stop Controls
+
+### Added
+
+- **Grafana Control Interface**: Complete start/stop controls identical to VS Code implementation
+- **Grafana API Server**: New dedicated API server on port 8082 for Grafana service management
+- **Interactive Dashboard**: Real-time status monitoring and control buttons in web interface
+- **Resource Management**: Start/stop Grafana on-demand to save CPU resources
+- **Status Monitoring**: Live status indicator with automatic 30-second refresh intervals
+- **Error Handling**: Comprehensive error reporting and graceful fallback mechanisms
+
+### Technical Implementation
+
+- **`grafana-api-server`**: New Python API server handling `/api/grafana/status`, `/api/grafana/start`, `/api/grafana/stop`
+- **s6-overlay Integration**: New `grafana-api` service with proper dependencies and startup sequence
+- **NGINX Proxy**: Added `/api/grafana/` endpoint routing to port 8082
+- **Frontend Controls**: Status indicator, start/stop buttons, and real-time feedback
+- **Service Management**: Uses `s6-rc` and `s6-svc` for reliable service control
+- **Multi-method Status**: Combines `s6-svstat` and `ps` checks for robust status detection
+
+### UI/UX Enhancements
+
+- **Consistent Interface**: Matches VS Code control design and behavior
+- **Visual Feedback**: Color-coded status (running/stopped/loading/error)
+- **User Guidance**: Helpful tips and error messages
+- **Responsive Design**: Disabled states and loading indicators
+- **Auto-refresh**: Status updates every 30 seconds automatically
+
+### Benefits
+
+- **Resource Optimization**: Stop Grafana when not needed to save CPU/memory
+- **Operational Control**: Start services on-demand for maintenance or troubleshooting  
+- **Monitoring**: Real-time visibility into service states
+- **Consistency**: Unified control interface matching VS Code implementation
+
+This brings Grafana service management to parity with VS Code, providing users complete control over resource-intensive services.
+
+## 2.5.15 - 2025-06-30
+
+### 🏷️ Standardization: Official Naming Convention
+
+### Fixed
+
+- **Naming Convention Alignment**: Standardized all test scripts to use official mode naming convention
+- **Consistent Terminology**: Replaced inconsistent mode references throughout test infrastructure
+
+### Changed
+
+- **Test Scripts Naming**: Updated all references to use official three-mode convention:
+  - **Test-mode**: Local development environment (Cursor AI)
+  - **Github-mode**: CI/CD environment (GitHub Actions)  
+  - **Addon-mode**: Real Home Assistant add-on environment
+- **Script Messages**: Updated user-facing messages to match official convention
+- **Documentation Alignment**: Ensured all test scripts follow README.md naming standards
+
+### Technical Details
+
+**Before**: Mixed terminology ("addon mode", "GitHub Actions mode", "local test mode")
+**After**: Consistent official naming (Test-mode, Github-mode, Addon-mode)
+
+**Files Updated**:
+- `test/build-test.sh`: Header and startup messages
+- `test/health-check.sh`: Environment detection and debug messages
+
+This eliminates confusion and ensures consistent terminology across all project documentation and code.
+
 ## 2.5.14 - 2025-06-30
 
 ### 🔗 UI/UX: Intelligent Direct Access Links

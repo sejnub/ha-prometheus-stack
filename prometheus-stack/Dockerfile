@@ -77,4 +77,5 @@ RUN chmod +x /etc/cont-init.d/00-init.sh && \
     find /etc/s6-overlay/s6-rc.d -name finish -type f -exec chmod +x {} \; && \
     chmod -R 755 /etc/.vscode && \
     chmod +x /usr/local/bin/vscode-toggle && \
-    chmod +x /usr/local/bin/vscode-api-server
+    chmod +x /usr/local/bin/vscode-api-server && \
+    chmod +x /usr/local/bin/grafana-api-server
