@@ -5,6 +5,14 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.5.1 - 2025-01-27
+
+### Fixed
+
+- **Grafana Service**: Fixed s6-rc-compile error caused by improper service type file formatting
+- **Container Startup**: Resolved issue preventing services from starting in test-mode
+- **Service Integration**: Grafana service now properly integrated with s6-overlay
+
 ## 2.5.0 - 2025-01-27
 
 ### 🎉 Major Feature: Grafana Added to the Stack

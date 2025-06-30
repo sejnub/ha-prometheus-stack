@@ -1,6 +1,6 @@
 {
   "name": "Prometheus Stack",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "slug": "prometheus-stack",
   "description": "Complete monitoring stack: Prometheus, Grafana, Alertmanager, Karma and VS Code in one add-on",
   "arch": [
