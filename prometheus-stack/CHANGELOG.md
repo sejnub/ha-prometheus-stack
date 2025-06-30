@@ -5,6 +5,22 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.3.1 - 2025-01-27
+
+### Fixed
+
+- **VS Code Start/Stop Buttons**: Fixed VS Code control buttons not working in addon-mode
+- **API URL Resolution**: Changed from absolute paths (`/api/vscode/*`) to relative paths (`./api/vscode/*`)
+- **Home Assistant Ingress**: VS Code API calls now stay within ingress context instead of breaking out to Home Assistant root
+- **Cross-Mode Compatibility**: VS Code buttons now work correctly in both test-mode and addon-mode
+
+### Technical Details
+
+- The issue was that absolute API paths (`/api/vscode/status`) resolved to Home Assistant's root (`http://homeassistant.internal:8123/api/vscode/status`) in addon-mode
+- Fixed by using relative paths (`./api/vscode/status`) which stay within the addon's ingress context
+- Backend VS Code API server was working correctly - the issue was purely frontend URL resolution
+- All API endpoints (`/api/vscode/status`, `/api/vscode/start`, `/api/vscode/stop`) now work in both modes
+
 ## 2.3.0 - 2025-01-27
 
 ### Added
