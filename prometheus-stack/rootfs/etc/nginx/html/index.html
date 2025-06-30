@@ -32,24 +32,11 @@
             margin-top: 20px;
         }
         .service-card {
-            background: #f8f9fa;
-            border-radius: 6px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             padding: 20px;
-            border: 1px solid #dee2e6;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .service-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .service-card.limited {
-            border-left: 4px solid #ffc107;
-        }
-        .service-card.controllable {
-            border-left: 4px solid #17a2b8;
-        }
-        .service-card.limited.controllable {
-            border-left: 4px solid #fd7e14;
+            margin: 20px 0;
         }
         .service-grid::before {
             content: '';
@@ -168,7 +155,7 @@
         
         <div class="service-grid">
             <!-- CORE MONITORING STACK -->
-            <div class="service-card limited">
+            <div class="service-card">
                 <h2>📊 Prometheus</h2>
                 <div class="description">
                     Time series database and monitoring system. Query metrics, create alerts, and visualize your data.
@@ -210,7 +197,7 @@
             </div>
 
             <!-- VISUALIZATION & DASHBOARDS -->
-            <div class="service-card limited controllable">
+            <div class="service-card">
                 <h2>📊 Grafana</h2>
                 <div class="description">
                     Beautiful dashboards and advanced visualization. Create stunning charts and monitor your metrics with the world's most popular observability platform.
@@ -252,7 +239,7 @@
             </div>
 
             <!-- DEVELOPMENT TOOLS -->
-            <div class="service-card controllable">
+            <div class="service-card">
                 <h2>💻 VS Code</h2>
                 <div class="description">
                     Full-featured code editor with extensions. Edit configuration files, write scripts, and develop directly in your browser.

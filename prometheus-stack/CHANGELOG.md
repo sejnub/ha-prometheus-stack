@@ -5,6 +5,30 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.6.3 - 2025-06-30
+
+### 🎨 Simplified: Removed Colored Service Card Borders
+
+### Removed
+
+- **Colored Left Borders**: Removed all colored left border styling from service cards for cleaner, more uniform appearance
+- **CSS Classes**: Removed `.limited`, `.controllable`, and `.limited.controllable` styling classes
+- **Visual Complexity**: Simplified service card design to focus on content rather than visual indicators
+
+### Technical Details
+
+**CSS Changes:**
+- Removed colored border-left styling rules
+- Standardized all service cards to use the same white background and subtle shadow
+- Removed class-based visual differentiation system
+
+**HTML Changes:**
+- Removed all CSS class attributes from service card divs
+- All service cards now use the standard `.service-card` class only
+
+**Result:**
+All service cards now have a clean, uniform appearance without colored borders. Service characteristics (ingress limitations, controllable features) are still clearly described in the text content but no longer indicated through visual styling.
+
 ## 2.6.2 - 2025-06-30
 
 ### 🔧 Fixed: Link Consistency & Restored Missing Service
