@@ -236,10 +236,25 @@
         </div>
     </div>
     <script>
-        // VS Code control functions  
+        // VS Code control functions
+        function getApiUrl(endpoint) {
+            // In Home Assistant ingress mode, we need to use the current page URL
+            // to ensure API calls stay within the ingress context
+            const currentUrl = new URL(window.location.href);
+            
+            // If we're in an ingress context, construct the proper URL
+            if (currentUrl.pathname.includes('ingress')) {
+                // Use current origin and path to build the API URL
+                return new URL(endpoint, currentUrl).href;
+            } else {
+                // Test mode - use relative path
+                return endpoint;
+            }
+        }
+        
         async function checkVSCodeStatus() {
             try {
-                const response = await fetch('api/vscode/status');
+                const response = await fetch(getApiUrl('api/vscode/status'));
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
@@ -261,7 +276,7 @@
             updateVSCodeStatus('loading', 'Starting VS Code...');
             setButtonsEnabled(false);
             try {
-                const response = await fetch('api/vscode/start', { method: 'POST' });
+                const response = await fetch(getApiUrl('api/vscode/start'), { method: 'POST' });
                 const data = await response.json();
                 if (data.status === 'success') {
                     updateVSCodeStatus('running', data.message);
@@ -280,7 +295,7 @@
             updateVSCodeStatus('loading', 'Stopping VS Code...');
             setButtonsEnabled(false);
             try {
-                const response = await fetch('api/vscode/stop', { method: 'POST' });
+                const response = await fetch(getApiUrl('api/vscode/stop'), { method: 'POST' });
                 const data = await response.json();
                 if (data.status === 'success') {
                     updateVSCodeStatus('stopped', data.message);
