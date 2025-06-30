@@ -5,16 +5,33 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 2.3.11 - 2025-01-27
+## 2.4.0 - 2025-01-27
 
-### Removed
+### 🎉 Major Milestone: VS Code Ingress Integration Complete
 
-- **Debug Logging**: Removed debug console.log statements from getApiUrl() function
-- **Code Cleanup**: Simplified code now that ingress URL issues are resolved
+### Added
+
+- **Version Display**: Version automatically displayed in web interface header
+- **Build-Time Version Injection**: Single source of truth for version from config.json
+- **VS Code Start/Stop Controls**: Fully functional VS Code management in both test-mode and addon-mode
+
+### Fixed
+
+- **🔧 VS Code Ingress URLs**: Complete fix for VS Code start/stop buttons not working in addon-mode
+- **Cross-Mode Compatibility**: Seamless operation in both Home Assistant ingress and direct access modes
+- **URL Construction**: Intelligent detection and proper routing for API calls within ingress context
 
 ### Improved
 
-- **Cleaner Code**: Reduced complexity after confirming VS Code start/stop buttons work correctly in addon-mode
+- **Code Quality**: Clean, production-ready code without debugging artifacts
+- **User Experience**: Reliable VS Code controls with proper status indication
+- **DRY Principle**: Eliminated version redundancy across codebase
+
+### Technical Notes
+
+- **Home Assistant Caching**: Discovered addon uninstall/reinstall required to clear HA's aggressive file caching
+- **Ingress Context Detection**: Smart URL construction based on pathname analysis
+- **Cross-Browser Compatibility**: Verified working across different browsers
 
 ## 2.3.9 - 2025-01-27
 
