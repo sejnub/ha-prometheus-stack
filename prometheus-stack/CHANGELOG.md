@@ -5,17 +5,29 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.3.11 - 2025-01-27
+
+### Removed
+
+- **Debug Logging**: Removed debug console.log statements from getApiUrl() function
+- **Code Cleanup**: Simplified code now that ingress URL issues are resolved
+
+### Improved
+
+- **Cleaner Code**: Reduced complexity after confirming VS Code start/stop buttons work correctly in addon-mode
+
 ## 2.3.9 - 2025-01-27
 
 ### Added
 
 - **Version Display**: Added version display in web interface header
 - **Build-Time Version Injection**: Version is automatically extracted from config.json and injected into HTML during Docker build
-- **Debug Logging**: Added extensive console logging to getApiUrl() function for diagnosing ingress URL issues
+- **VS Code Ingress Fix**: Fixed VS Code start/stop buttons not working in addon-mode with proper URL construction
 
 ### Improved
 
 - **DRY Principle**: Eliminated version redundancy by using single source of truth (config.json)
+- **Cross-Mode Compatibility**: VS Code buttons now work correctly in both test-mode and addon-mode
 
 ## 2.3.8 - 2025-01-27
 

@@ -241,31 +241,14 @@
     <script>
         // VS Code control functions
         function getApiUrl(endpoint) {
-            // Debug logging
-            console.log('=== getApiUrl DEBUG ===');
-            console.log('endpoint:', endpoint);
-            console.log('window.location.href:', window.location.href);
-            console.log('window.location.pathname:', window.location.pathname);
-            console.log('window.location.origin:', window.location.origin);
-            console.log('pathname includes ingress:', window.location.pathname.includes('ingress'));
-            
             // Check if we're in Home Assistant ingress mode
             if (window.location.pathname.includes('ingress')) {
                 // Build absolute URL using current location
                 const currentPath = window.location.pathname;
                 const baseUrl = window.location.origin + currentPath;
-                const finalUrl = baseUrl.endsWith('/') ? baseUrl + endpoint : baseUrl + '/' + endpoint;
-                
-                console.log('currentPath:', currentPath);
-                console.log('baseUrl:', baseUrl);
-                console.log('finalUrl:', finalUrl);
-                console.log('=== END DEBUG ===');
-                
-                return finalUrl;
+                return baseUrl.endsWith('/') ? baseUrl + endpoint : baseUrl + '/' + endpoint;
             } else {
                 // Test mode - use relative path
-                console.log('Test mode - returning relative path:', endpoint);
-                console.log('=== END DEBUG ===');
                 return endpoint;
             }
         }
