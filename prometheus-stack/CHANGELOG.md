@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- markdownlint-disable MD024 -->
 
+## 2.7.13 - 2025-07-01
+
+### Changed
+
+- **Sync Tools Organization**: Moved sync tools to dedicated `sync-tools` directory
+- **Build Script Clarity**: Renamed `build-test.sh` to `build.sh` for better clarity
+- **Sync Tools Naming**: Added numerical prefixes to sync tools to indicate execution order
+- **Documentation**: Updated all references to reflect new file locations and names
+
 ## 2.7.12 - 2025-07-01
 
 ### Fixed
