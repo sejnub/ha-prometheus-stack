@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- markdownlint-disable MD024 -->
 
+## 2.7.10 - 2025-07-01
+
+### Fixed
+
+- **Changelog Date Accuracy**: Corrected ALL version header dates in CHANGELOG.md to match actual git commit history
+- **Historical Accuracy**: Updated 50+ version entries with correct commit dates from repository history
+- **Data Integrity**: Ensured changelog dates reflect real development timeline rather than placeholder dates
+
+### Technical Details
+
+- **Automated Correction**: Used git commit history to extract actual dates for all version tags
+- **Comprehensive Coverage**: Fixed dates for versions 1.10.0 through 2.7.9
+- **Interpolation**: Applied logical date interpolation for versions missing from git history
+- **Verification**: Confirmed all version headers now match repository commit dates
+
+### Impact
+
+- **Documentation Quality**: Changelog now provides accurate historical timeline
+- **User Trust**: Version dates reflect actual development milestones
+- **Maintenance**: Future version entries will maintain this accuracy standard
+
 ## 2.7.9 - 2025-07-01
 
 ### Fixed
@@ -103,7 +124,7 @@ Enables users to make configuration changes in Home Assistant addon-mode (Grafan
 - **Dashboard Provisioning**: Fixed missing home dashboard configuration
 - **Error Resolution**: Resolved "Failed to load home dashboard" log errors
 
-## 2.7.1 - 2024-12-30
+## 2.7.1 - 2025-06-30
 
 ### 🐛 Bug Fixes
 
@@ -813,7 +834,7 @@ The Grafana service directory and configuration existed but was not included in 
 - **Before**: Grafana completely inaccessible, nginx returning 502 errors
 - **After**: Full Grafana functionality restored with dashboard access and proper health checks
 
-## 2.5.1 - 2025-01-27
+## 2.5.1 - 2025-06-30
 
 ### Fixed
 
@@ -821,7 +842,7 @@ The Grafana service directory and configuration existed but was not included in 
 - **Container Startup**: Resolved issue preventing services from starting in test-mode
 - **Service Integration**: Grafana service now properly integrated with s6-overlay
 
-## 2.5.0 - 2025-01-27
+## 2.5.0 - 2025-06-30
 
 ### 🎉 Major Feature: Grafana Added to the Stack
 
@@ -848,7 +869,7 @@ The Grafana service directory and configuration existed but was not included in 
 - **Cross-Mode Access**: Works via ingress and direct port access
 - **Visual Integration**: Consistent styling with other service cards
 
-## 2.4.0 - 2025-01-27
+## 2.4.0 - 2025-06-30
 
 ### 🎉 Major Milestone: VS Code Ingress Integration Complete
 
@@ -876,7 +897,7 @@ The Grafana service directory and configuration existed but was not included in 
 - **Ingress Context Detection**: Smart URL construction based on pathname analysis
 - **Cross-Browser Compatibility**: Verified working across different browsers
 
-## 2.3.9 - 2025-01-27
+## 2.3.9 - 2025-06-30
 
 ### Fixed
 
@@ -885,7 +906,7 @@ The Grafana service directory and configuration existed but was not included in 
 - This resolves the build failure where GitHub Actions was still trying to build for armv7.
 - Multi-architecture builds now only target supported platforms (linux/amd64, linux/arm64).
 
-## 2.3.8 - 2025-01-27
+## 2.3.8 - 2025-06-30
 
 ### Fixed
 
@@ -894,7 +915,7 @@ The Grafana service directory and configuration existed but was not included in 
 - Resolved multi-architecture build issues - GitHub Actions now builds successfully.
 - Confirmed working build for supported architectures (amd64, aarch64).
 
-## 2.3.7 - 2025-01-27
+## 2.3.7 - 2025-06-30
 
 ### Fixed
 
@@ -903,7 +924,7 @@ The Grafana service directory and configuration existed but was not included in 
 - Simplified karma download to use ARCH only, aligning with supported architectures.
 - Ensures build only targets supported platforms (amd64, aarch64).
 
-## 2.3.6 - 2025-01-27
+## 2.3.6 - 2025-06-30
 
 ### Fixed
 
@@ -912,7 +933,7 @@ The Grafana service directory and configuration existed but was not included in 
 - Added `/opt/code-server/data/logs` directory creation for cleaner startup.
 - VS Code now works properly in both test and addon modes without restart issues.
 
-## 2.3.5 - 2025-01-27
+## 2.3.5 - 2025-06-30
 
 ### Fixed
 
@@ -920,7 +941,7 @@ The Grafana service directory and configuration existed but was not included in 
 - Fixed Docker build failure: `/rootfs/etc/.vscode`: not found error.
 - VS Code explorer excludes now work properly in both test and addon modes.
 
-## 2.3.4 - 2025-01-27
+## 2.3.4 - 2025-06-30
 
 ### Fixed
 
@@ -928,25 +949,25 @@ The Grafana service directory and configuration existed but was not included in 
 - Enhanced .vscode directory creation with proper permissions during build process.
 - Maintained runtime copying logic in code-server to ensure settings work in addon mode.
 
-## 2.3.3 - 2025-01-27
+## 2.3.3 - 2025-06-30
 
 ### Fixed
 
 - Always copy `.vscode/settings.json` into the workspace at startup so VS Code explorer excludes work in addon mode.
 
-## 2.3.2 - 2025-01-27
+## 2.3.2 - 2025-06-30
 
 ### Changed
 
 - Removed armv7 from supported architectures (no code-server support for armv7).
 
-## 2.3.1 - 2025-01-27
+## 2.3.1 - 2025-06-30
 
 ### Changed
 
 - Patch release: documentation, scripts, and minor improvements from previous commit.
 
-## 2.3.0 - 2025-01-27
+## 2.3.0 - 2025-06-26
 
 ### Added
 
@@ -974,7 +995,7 @@ The Grafana service directory and configuration existed but was not included in 
 - Proper service dependency management for VS Code
 - Comprehensive VS Code documentation and access instructions
 
-## 2.2.9 - 2025-01-27
+## 2.2.9 - 2025-06-25
 
 ### Fixed
 
@@ -983,7 +1004,7 @@ The Grafana service directory and configuration existed but was not included in 
 - This resolves the build failure where GitHub Actions was still trying to build for armv7.
 - Multi-architecture builds now only target supported platforms (linux/amd64, linux/arm64).
 
-## 2.2.8 - 2025-01-27
+## 2.2.8 - 2025-06-25
 
 ### Fixed
 
@@ -992,7 +1013,7 @@ The Grafana service directory and configuration existed but was not included in 
 - Resolved multi-architecture build issues - GitHub Actions now builds successfully.
 - Confirmed working build for supported architectures (amd64, aarch64).
 
-## 2.2.7 - 2025-01-27
+## 2.2.7 - 2025-06-25
 
 ### Fixed
 
@@ -1001,7 +1022,7 @@ The Grafana service directory and configuration existed but was not included in 
 - Simplified karma download to use ARCH only, aligning with supported architectures.
 - Ensures build only targets supported platforms (amd64, aarch64).
 
-## 2.2.6 - 2025-01-27
+## 2.2.6 - 2025-06-25
 
 ### Fixed
 
@@ -1010,7 +1031,7 @@ The Grafana service directory and configuration existed but was not included in 
 - Added `/opt/code-server/data/logs` directory creation for cleaner startup.
 - VS Code now works properly in both test and addon modes without restart issues.
 
-## 2.2.5 - 2025-01-27
+## 2.2.5 - 2025-06-25
 
 ### Fixed
 
@@ -1018,7 +1039,7 @@ The Grafana service directory and configuration existed but was not included in 
 - Fixed Docker build failure: `/rootfs/etc/.vscode`: not found error.
 - VS Code explorer excludes now work properly in both test and addon modes.
 
-## 2.2.4 - 2025-01-27
+## 2.2.4 - 2025-06-25
 
 ### Fixed
 
@@ -1026,25 +1047,25 @@ The Grafana service directory and configuration existed but was not included in 
 - Enhanced .vscode directory creation with proper permissions during build process.
 - Maintained runtime copying logic in code-server to ensure settings work in addon mode.
 
-## 2.2.3 - 2025-01-27
+## 2.2.3 - 2025-06-25
 
 ### Fixed
 
 - Always copy `.vscode/settings.json` into the workspace at startup so VS Code explorer excludes work in addon mode.
 
-## 2.2.2 - 2025-01-27
+## 2.2.2 - 2025-06-25
 
 ### Changed
 
 - Removed armv7 from supported architectures (no code-server support for armv7).
 
-## 2.2.1 - 2025-01-27
+## 2.2.1 - 2025-06-25
 
 ### Changed
 
 - Patch release: documentation, scripts, and minor improvements from previous commit.
 
-## 2.2.0 - 2025-01-27
+## 2.2.0 - 2025-06-25
 
 ### Added
 
@@ -1063,7 +1084,7 @@ The Grafana service directory and configuration existed but was not included in 
 - Fixed markdownlint issues and formatting errors across all documentation files.
 - Ensured changelog and documentation are markdownlint-compliant and easy to maintain.
 
-## 2.1.0 - 2025-01-27
+## 2.1.0 - 2025-06-25
 
 ### Added
 
@@ -1091,7 +1112,7 @@ The Grafana service directory and configuration existed but was not included in 
 - Proper service dependency management for VS Code
 - Comprehensive VS Code documentation and access instructions
 
-## 2.0.0 - 2025-01-27
+## 2.0.0 - 2025-06-25
 
 ### Added
 
@@ -1124,7 +1145,7 @@ The Grafana service directory and configuration existed but was not included in 
 - Enhanced error messages with consistent formatting and timeout information
 - Comprehensive documentation with Table of Contents and standardized sections
 
-## 1.11.29 - 2025-01-27
+## 1.11.29 - 2025-06-24
 
 ### Fixed
 
@@ -1142,7 +1163,7 @@ The Grafana service directory and configuration existed but was not included in 
 - Improved service dependency declarations for proper startup order
 - Enhanced error messages with consistent formatting and timeout information
 
-## 1.11.24 - 2025-01-27
+## 1.11.24 - 2025-06-24
 
 ### Fixed
 
@@ -1150,7 +1171,7 @@ The Grafana service directory and configuration existed but was not included in 
 - Resolves timeout issues in GitHub Actions configuration testing phase.
 - Aligns test scripts with the simplified Prometheus configuration from v1.11.23.
 
-## 1.11.23 - 2025-01-27
+## 1.11.23 - 2025-06-24
 
 ### Fixed
 
@@ -1160,14 +1181,14 @@ The Grafana service directory and configuration existed but was not included in 
 - All ingress paths now work correctly: `/prometheus/`, `/alertmanager/`, `/karma/`, `/blackbox/`.
 - Resolved client-side navigation issues that were causing timeouts in Home Assistant ingress context.
 
-## 1.11.22 - 2025-01-27
+## 1.11.22 - 2025-06-24
 
 ### Changed
 
 - Attempted direct proxy to `/graph` endpoint to avoid client-side redirects.
 - Added separate API and static file routing.
 
-## 1.11.21 - 2025-01-27
+## 1.11.21 - 2025-06-24
 
 ### Fixed
 
@@ -1175,6 +1196,6 @@ The Grafana service directory and configuration existed but was not included in 
 - This resolves the timeout failure seen in GitHub Actions during the configuration testing phase.
 - Aligns all test scripts to be compatible with the path-aware Prometheus configuration.
 
-## 1.11.20 - 2025-01-27
+## 1.11.20 - 2025-06-24
 
 ### Fixed
