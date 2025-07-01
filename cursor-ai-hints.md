@@ -71,9 +71,11 @@
 
 - We have three run modes
 
-  - **Test-mode**: When started on the local development computer on which cursor-ai runs
+  - **Test-Mode**: When started on the local development computer on which cursor-ai runs
   - **Github-Mode**: When Run by Github actions
   - **Addon-Mode**: When run as a home Assistant Add-On
+
+- In all Documentation and UIs the modes must be called exactly this and not just similarily
 
 - The add-on must run equally well in all run modes
 
