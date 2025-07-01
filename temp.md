@@ -13,4 +13,5 @@ So we should keep both comparisons and do them properly:
 "Source → Extracted": Compare source files with extracted files
 "Runtime → Extracted": For normal files, compare container files with extracted files. For generated files (like alertmanager.yml), compare what would be generated from options.json with extracted files.
 
+The script is meant to report no changes if no manual changes happended. But any manual change to any of the three versions (source, runtime, extracted) has to be reported.
 

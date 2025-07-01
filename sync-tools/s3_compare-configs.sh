@@ -156,10 +156,6 @@ config = {
         'resolve_timeout': '5m'
     },
     'route': {
-        'group_by': ['alertname'],
-        'group_wait': '30s',
-        'group_interval': '5m',
-        'repeat_interval': '12h',
         'receiver': 'default'
     },
     'receivers': [
@@ -185,7 +181,7 @@ if 'alertmanager_receiver' in options and 'alertmanager_to_email' in options:
     ]
 
 with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
-    yaml.dump(config, f, default_flow_style=False)
+    yaml.dump(config, f, default_flow_style=False, sort_keys=True)
 " 2>/dev/null
                     
                     # Compare with generated config
@@ -266,18 +262,47 @@ with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
 filter_known_differences() {
     local file="$1"
     
+    # Check if it's a YAML file
+    if [[ "$file" == *.yml ]] || [[ "$file" == *.yaml ]]; then
+        # For YAML files, normalize the format using Python
+        python3 -c "
+import yaml
+import sys
+
+try:
+    with open('$file', 'r') as f:
+        data = yaml.safe_load(f)
+    
+    # Output normalized YAML
+    print(yaml.dump(data, default_flow_style=False))
+except Exception as e:
+    # If YAML parsing fails, fall back to text processing
+    with open('$file', 'r') as f:
+        content = f.read()
+    
     # Remove comments, empty lines, and normalize whitespace
-    sed 's/#.*//;/^[[:space:]]*$/d' "$file" | \
-    # Remove environment variable placeholders
-    sed 's/${[^}]*}/ENV_VAR/g' | \
-    # Remove version numbers
-    sed 's/version: [0-9.]\+/version: X.Y.Z/g' | \
-    # Remove timestamps
-    sed 's/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}T[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}Z/TIMESTAMP/g' | \
-    # Remove UUIDs
-    sed 's/[a-f0-9]\{8\}-[a-f0-9]\{4\}-[a-f0-9]\{4\}-[a-f0-9]\{4\}-[a-f0-9]\{12\}/UUID/g' | \
-    # Remove line endings
-    tr -d '\r'
+    lines = []
+    for line in content.split('\n'):
+        line = line.split('#')[0].strip()  # Remove comments
+        if line:  # Skip empty lines
+            lines.append(line)
+    
+    print('\n'.join(lines))
+" 2>/dev/null || cat "$file"
+    else
+        # For non-YAML files, use the original text processing
+        sed 's/#.*//;/^[[:space:]]*$/d' "$file" | \
+        # Remove environment variable placeholders
+        sed 's/${[^}]*}/ENV_VAR/g' | \
+        # Remove version numbers
+        sed 's/version: [0-9.]\+/version: X.Y.Z/g' | \
+        # Remove timestamps
+        sed 's/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}T[0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}Z/TIMESTAMP/g' | \
+        # Remove UUIDs
+        sed 's/[a-f0-9]\{8\}-[a-f0-9]\{4\}-[a-f0-9]\{4\}-[a-f0-9]\{4\}-[a-f0-9]\{12\}/UUID/g' | \
+        # Remove line endings
+        tr -d '\r'
+    fi
 }
 
 compare_alertmanager() {
