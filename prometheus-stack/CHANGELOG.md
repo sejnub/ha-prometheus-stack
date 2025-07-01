@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- markdownlint-disable MD024 -->
 
+## 2.7.12 - 2025-07-01
+
+### Fixed
+
+- **Tag Format**: Removed 'v' prefix from version tags for better consistency
+
 ## 2.7.11 - 2025-07-01
 
 ### Changed
