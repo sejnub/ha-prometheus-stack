@@ -12,11 +12,11 @@ The Prometheus Stack addon stores all configuration files inside Docker containe
 
 ## 📁 Tool Overview
 
-| Script | Purpose | Works In |
-|--------|---------|----------|
-| **`quick-ssh-test.sh`** | Test container access and verify file availability | Both modes |
+| Script                   | Purpose                                                | Works In   |
+| ------------------------ | ------------------------------------------------------ | ---------- |
+| **`quick-ssh-test.sh`**  | Test container access and verify file availability     | Both modes |
 | **`extract-configs.sh`** | Extract ALL configuration files from running container | Both modes |
-| **`compare-configs.sh`** | Compare extracted files with git repository | Both modes |
+| **`compare-configs.sh`** | Compare extracted files with git repository            | Both modes |
 
 ## 🚀 Quick Start
 

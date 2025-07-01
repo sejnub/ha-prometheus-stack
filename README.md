@@ -2,7 +2,6 @@
 
 A comprehensive monitoring stack for Home Assistant that includes Prometheus, Alertmanager, Karma, Blackbox Exporter, and VS Code in a single add-on.
 
-- [Rules to Remember](#rules-to-remember)
 - [1. What is this?](#1-what-is-this)
 - [2. Key Features](#2-key-features)
 - [3. Installation](#3-installation)
@@ -23,18 +22,6 @@ A comprehensive monitoring stack for Home Assistant that includes Prometheus, Al
 - [9. Development and Testing](#9-development-and-testing)
 - [10. Support](#10-support)
 - [11. License](#11-license)
-
-## Rules to Remember
-
-- The add-on must run equally well in the following modes
-
-  - **Test-mode**: When started on the local development computer on which cursor-ai runs
-  - **Github-Mode**: When Run by Github actions
-  - **Addon-Mode**: When run as a home Assistant Add-On
-
-- All waits must be loops that have a minimal fixed time (0.5 seconds) and then check what they are waiting for
-
-- Question: Is it enough that the "build"-script relies on the folders "dependencies.d" or must each service wait for the previous one really answering
 
 ## 1. What is this?
 
