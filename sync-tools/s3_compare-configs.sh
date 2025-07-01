@@ -124,12 +124,19 @@ check_new_files() {
     fi
 }
 
+# Initialize counters for different types of changes
+declare -i expected_changes=0    # runtime != extracted (normal workflow)
+declare -i irregular_changes=0   # any other differences
+declare -i total_files=0
+
 compare_files() {
     local source_file="$1"
     local target_file="$2"
     local description="$3"
     local is_runtime="${4:-false}"
     local is_generated="${5:-false}"
+    
+    ((total_files++))
     
     if [ "$is_runtime" = "true" ]; then
         # For runtime files, we need to extract them from the container first
@@ -192,9 +199,11 @@ with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
                             echo "      ❌ $description: Configuration differs from what would be generated from options.json"
                             echo "      📋 Differences:"
                             diff -u <(filter_known_differences "${temp_dir}/generated_alertmanager.yml") <(filter_known_differences "$target_file") | sed 's/^/         /'
+                            ((expected_changes++))
                         fi
                     else
                         echo "      ❌ $description: Could not generate config from options.json"
+                        ((irregular_changes++))
                     fi
                     rm -rf "$temp_dir"
                     return
@@ -212,6 +221,7 @@ with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
             
             if ! docker cp "${container_id}:$container_path" "$temp_file" 2>/dev/null; then
                 echo "      ❌ $description: File not found in container"
+                ((irregular_changes++))
                 rm -rf "$temp_dir"
                 return 1
             fi
@@ -225,6 +235,7 @@ with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
             echo "      ✅ $description: Generated at runtime"
         else
             echo "      ❌ $description: Source file missing (not in repository)"
+            ((irregular_changes++))
         fi
         [ -d "$temp_dir" ] && rm -rf "$temp_dir"
         return 1
@@ -233,6 +244,7 @@ with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
     # For target files, check if they exist in the extracted directory
     if [ ! -f "$target_file" ]; then
         echo "      ❌ $description: Target file missing"
+        ((irregular_changes++))
         [ -d "$temp_dir" ] && rm -rf "$temp_dir"
         return 1
     fi
@@ -252,6 +264,13 @@ with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
         echo "      ❌ $description: Files differ"
         echo "      📋 Differences:"
         diff -u "$temp_source" "$temp_target" | sed 's/^/         /'
+        
+        # Classify the type of change
+        if [ "$is_runtime" = "true" ]; then
+            ((expected_changes++))  # Runtime != Extracted (normal workflow)
+        else
+            ((irregular_changes++))  # Source != Extracted (irregular)
+        fi
     fi
     
     # Cleanup
@@ -550,16 +569,22 @@ check_new_files
 
 echo ""
 echo "📋 Summary & Next Steps:"
-echo "================================"
-echo "1. ✅ Identical files: No action needed"
-echo "2. ⚠️ Different files: Review changes using the diff commands shown above"
-echo "3. 🆕 New files: Consider adding to source and runtime locations"
-echo "4. 🔄 Dynamic configs (alertmanager.yml): Generated from options.json"
+echo "================================="
+echo "📊 Files analyzed: $total_files comparisons"
+echo "✅ Expected changes: $expected_changes (runtime → extracted differences - normal workflow)"
+echo "⚠️  Irregular changes: $irregular_changes (unexpected differences that need attention)"
+
+echo ""
+echo "💡 Change Types:"
+echo "   - Expected: Manual changes made in container, then extracted (normal workflow)"
+echo "   - Irregular: Source ≠ Extracted or other unexpected differences"
+
 echo ""
 echo "💡 File Locations:"
-echo "   - Extracted: Current running config ($EXTRACTED_DIR_PATH/...)"
+echo "   - Extracted: Current running config (/home/sejnub/ha-proplus/./ssh-extracted-configs/...)"
 echo "   - Source: Git repository files (./prometheus-stack/...)"
 echo "   - Runtime: Container filesystem (./prometheus-stack/rootfs/etc/...)"
+
 echo ""
 echo "💡 Workflow:"
 echo "   1. Review differences: Use the 'diff' commands shown above"
@@ -568,10 +593,10 @@ echo "   3. Update runtime files: Copy to runtime location"
 echo "   4. Test changes: Run build.sh to verify everything works"
 echo "   5. Commit: Add changes to git when satisfied"
 
-# Check if comparison was successful and provide summary
-if [ -d "./$EXTRACTED_DIR" ] && [ "$(find ./$EXTRACTED_DIR -type f 2>/dev/null | wc -l)" -gt 0 ]; then
-    print_status_icon "OK" "Configuration comparison completed successfully - Review differences above"
+if [ $expected_changes -eq 0 ] && [ $irregular_changes -eq 0 ]; then
+    print_status_icon "OK" "No changes detected - all configurations are in sync"
+elif [ $irregular_changes -eq 0 ]; then
+    print_status_icon "INFO" "$expected_changes expected changes detected - review and sync as needed"
 else
-    print_status_icon "ERROR" "Configuration comparison failed - No extracted files found"
-    exit 1
+    print_status_icon "WARNING" "$irregular_changes irregular changes detected (and $expected_changes expected changes)- manual review required"
 fi 
