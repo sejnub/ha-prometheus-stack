@@ -251,10 +251,62 @@ with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
                     fi
                     return
                     ;;
-                prometheus.yml|blackbox.yml)
-                    # These files are generated at runtime, so we can't compare them
-                    echo "      ✅ $description: Generated at runtime"
+                prometheus.yml)
+                    # For prometheus.yml, compare with current runtime file as baseline
+                    docker cp "${container_id}:/etc/prometheus/prometheus.yml" "${temp_dir}/generated_prometheus.yml" 2>/dev/null
+                    
+                    # Compare with runtime config
+                    if [ -f "${temp_dir}/generated_prometheus.yml" ]; then
+                        if diff -u <(filter_known_differences "${temp_dir}/generated_prometheus.yml") <(filter_known_differences "$target_file") >/dev/null 2>&1; then
+                            echo "      ✅ $description: Identical (after filtering placeholders)"
+                        else
+                            echo "      ❌ $description: Configuration differs from runtime version"
+                            echo "      📋 Differences:"
+                            diff -u <(filter_known_differences "${temp_dir}/generated_prometheus.yml") <(filter_known_differences "$target_file") | sed 's/^/         /'
+                            has_diff=true
+                        fi
+                    else
+                        echo "      ❌ $description: Could not access runtime config"
+                        has_diff=true
+                    fi
                     rm -rf "$temp_dir"
+                    
+                    # Update file status for runtime comparison
+                    local current_status="${file_status[$filename]:-,}"
+                    if [ "$has_diff" = "true" ]; then
+                        file_status[$filename]="${current_status%,},runtime_diff"
+                    else
+                        file_status[$filename]="${current_status%,},runtime_same"
+                    fi
+                    return
+                    ;;
+                blackbox.yml)
+                    # For blackbox.yml, compare with current runtime file as baseline
+                    docker cp "${container_id}:/etc/blackbox_exporter/blackbox.yml" "${temp_dir}/generated_blackbox.yml" 2>/dev/null
+                    
+                    # Compare with runtime config
+                    if [ -f "${temp_dir}/generated_blackbox.yml" ]; then
+                        if diff -u <(filter_known_differences "${temp_dir}/generated_blackbox.yml") <(filter_known_differences "$target_file") >/dev/null 2>&1; then
+                            echo "      ✅ $description: Identical (after filtering placeholders)"
+                        else
+                            echo "      ❌ $description: Configuration differs from runtime version"
+                            echo "      📋 Differences:"
+                            diff -u <(filter_known_differences "${temp_dir}/generated_blackbox.yml") <(filter_known_differences "$target_file") | sed 's/^/         /'
+                            has_diff=true
+                        fi
+                    else
+                        echo "      ❌ $description: Could not access runtime config"
+                        has_diff=true
+                    fi
+                    rm -rf "$temp_dir"
+                    
+                    # Update file status for runtime comparison
+                    local current_status="${file_status[$filename]:-,}"
+                    if [ "$has_diff" = "true" ]; then
+                        file_status[$filename]="${current_status%,},runtime_diff"
+                    else
+                        file_status[$filename]="${current_status%,},runtime_same"
+                    fi
                     return
                     ;;
             esac
