@@ -1,7 +1,17 @@
 #!/bin/bash
 # compare-configs.sh - Compare extracted configuration files with git repository
 
+# Auto-detect mode for informational purposes
+if docker ps --filter 'name=prometheus-stack-test' --format '{{.Names}}' | grep -q prometheus-stack-test 2>/dev/null; then
+    echo "🧪 Test mode detected (local container)"
+    MODE_INFO="Test mode - comparing with local test container configs"
+else
+    echo "🏠 Addon mode detected (remote Home Assistant)"
+    MODE_INFO="Addon mode - comparing with Home Assistant addon configs"
+fi
+
 echo "🔍 Comparing extracted configuration files with git repository..."
+echo "$MODE_INFO"
 echo "================================================================"
 
 # Check if extraction has been done
@@ -44,31 +54,21 @@ SOURCE_DASHBOARDS="./dashboards"
 if [ -d "./ssh-extracted-configs/dashboards" ]; then
     echo "   Extracted: $(find ./ssh-extracted-configs/dashboards -name "*.json" 2>/dev/null | wc -l) dashboard files"
     
-    # Compare with runtime dashboards
-    if [ -d "$RUNTIME_DASHBOARDS" ]; then
-        echo ""
-        echo "   📋 Runtime dashboard comparison:"
-        for file in $RUNTIME_DASHBOARDS/*.json; do
-            if [ -f "$file" ]; then
-                filename=$(basename "$file")
-                extracted_file="./ssh-extracted-configs/dashboards/$filename"
-                compare_files "$file" "$extracted_file" "$filename"
-            fi
-        done
-    fi
+    # Compare each dashboard
+    for dashboard in ./ssh-extracted-configs/dashboards/dashboards/*.json; do
+        if [ -f "$dashboard" ]; then
+            filename=$(basename "$dashboard")
+            compare_files "$SOURCE_DASHBOARDS/$filename" "$dashboard" "Dashboard: $filename"
+        fi
+    done
     
-    # Compare with source dashboards
-    if [ -d "$SOURCE_DASHBOARDS" ]; then
-        echo ""
-        echo "   📋 Source dashboard comparison:"
-        for file in $SOURCE_DASHBOARDS/*.json; do
-            if [ -f "$file" ]; then
-                filename=$(basename "$file")
-                extracted_file="./ssh-extracted-configs/dashboards/$filename"
-                compare_files "$file" "$extracted_file" "$filename"
-            fi
-        done
-    fi
+    # Also compare with runtime versions
+    for dashboard in ./ssh-extracted-configs/dashboards/dashboards/*.json; do
+        if [ -f "$dashboard" ]; then
+            filename=$(basename "$dashboard")
+            compare_files "$RUNTIME_DASHBOARDS/$filename" "$dashboard" "Runtime: $filename"
+        fi
+    done
 else
     echo "   ❌ No dashboards extracted"
 fi
@@ -83,21 +83,20 @@ if [ -d "./ssh-extracted-configs/prometheus" ]; then
     echo "   Extracted: $(find ./ssh-extracted-configs/prometheus -type f 2>/dev/null | wc -l) prometheus files"
     
     # Compare prometheus.yml
-    compare_files "$RUNTIME_PROMETHEUS/prometheus.yml" "./ssh-extracted-configs/prometheus/prometheus.yml" "prometheus.yml"
+    compare_files "./prometheus-stack/prometheus.yml" "./ssh-extracted-configs/prometheus/prometheus.yml" "prometheus.yml (source)"
+    compare_files "$RUNTIME_PROMETHEUS/prometheus.yml" "./ssh-extracted-configs/prometheus/prometheus.yml" "prometheus.yml (runtime)"
     
     # Compare alert rules if they exist
-    if [ -d "$RUNTIME_PROMETHEUS/rules" ] && [ -d "./ssh-extracted-configs/prometheus/rules" ]; then
-        echo ""
-        echo "   📋 Alert rules comparison:"
-        for file in $RUNTIME_PROMETHEUS/rules/*; do
-            if [ -f "$file" ]; then
-                filename=$(basename "$file")
-                extracted_file="./ssh-extracted-configs/prometheus/rules/$filename"
-                compare_files "$file" "$extracted_file" "rules/$filename"
+    if [ -d "./ssh-extracted-configs/prometheus/rules" ]; then
+        echo "   📋 Alert rules found in extracted files"
+        for rule_file in ./ssh-extracted-configs/prometheus/rules/*.yml; do
+            if [ -f "$rule_file" ]; then
+                filename=$(basename "$rule_file")
+                compare_files "$RUNTIME_PROMETHEUS/rules/$filename" "$rule_file" "Alert rule: $filename"
             fi
         done
     fi
-else  
+else
     echo "   ❌ No prometheus config extracted"
 fi
 
@@ -111,17 +110,11 @@ if [ -d "./ssh-extracted-configs/grafana" ]; then
     echo "   Extracted: $(find ./ssh-extracted-configs/grafana -type f 2>/dev/null | wc -l) grafana files"
     
     # Compare grafana.ini
-    compare_files "$RUNTIME_GRAFANA/grafana.ini" "./ssh-extracted-configs/grafana/grafana.ini" "grafana.ini"
+    compare_files "./prometheus-stack/grafana.ini" "./ssh-extracted-configs/grafana/grafana.ini" "grafana.ini (source)"
     
-    # Compare provisioning configs
-    if [ -d "$RUNTIME_GRAFANA/provisioning" ] && [ -d "./ssh-extracted-configs/grafana/provisioning" ]; then
-        echo ""
-        echo "   📋 Provisioning comparison:"
-        find "$RUNTIME_GRAFANA/provisioning" -type f | while read file; do
-            rel_path=${file#$RUNTIME_GRAFANA/provisioning/}
-            extracted_file="./ssh-extracted-configs/grafana/provisioning/$rel_path"
-            compare_files "$file" "$extracted_file" "provisioning/$rel_path"
-        done
+    # Compare provisioning files
+    if [ -f "./ssh-extracted-configs/grafana/provisioning/datasources/prometheus.yml" ]; then
+        compare_files "$RUNTIME_GRAFANA/provisioning/datasources/prometheus.yml" "./ssh-extracted-configs/grafana/provisioning/datasources/prometheus.yml" "Datasource: prometheus.yml"
     fi
 else
     echo "   ❌ No grafana config extracted"
@@ -137,7 +130,8 @@ if [ -d "./ssh-extracted-configs/blackbox" ]; then
     echo "   Extracted: $(find ./ssh-extracted-configs/blackbox -type f 2>/dev/null | wc -l) blackbox files"
     
     # Compare blackbox.yml
-    compare_files "$RUNTIME_BLACKBOX/blackbox.yml" "./ssh-extracted-configs/blackbox/blackbox.yml" "blackbox.yml"
+    compare_files "./prometheus-stack/blackbox.yml" "./ssh-extracted-configs/blackbox/blackbox.yml" "blackbox.yml (source)"
+    compare_files "$RUNTIME_BLACKBOX/blackbox.yml" "./ssh-extracted-configs/blackbox/blackbox.yml" "blackbox.yml (runtime)"
 else
     echo "   ❌ No blackbox config extracted"
 fi
@@ -151,8 +145,12 @@ RUNTIME_ALERTMANAGER="./prometheus-stack/rootfs/etc/alertmanager"
 if [ -d "./ssh-extracted-configs/alerting" ]; then
     echo "   Extracted: $(find ./ssh-extracted-configs/alerting -type f 2>/dev/null | wc -l) alerting files"
     
-    # Compare alertmanager.yml
-    compare_files "$RUNTIME_ALERTMANAGER/alertmanager.yml" "./ssh-extracted-configs/alerting/alertmanager.yml" "alertmanager.yml"
+    # Compare alertmanager.yml (note: this is dynamically generated, so differences are expected)
+    if [ -f "./ssh-extracted-configs/alerting/alertmanager.yml" ]; then
+        echo "   🔄 alertmanager.yml - DYNAMIC (generated from options.json)"
+        echo "      📋 Generated config (differences expected):"
+        echo "      📋 Run: cat ./ssh-extracted-configs/alerting/alertmanager.yml"
+    fi
 else
     echo "   ❌ No alerting config extracted"
 fi
@@ -166,35 +164,34 @@ FOUND_NEW=false
 # Check each component for new files
 for component in dashboards prometheus grafana blackbox alerting; do
     if [ -d "./ssh-extracted-configs/$component" ]; then
-        find "./ssh-extracted-configs/$component" -type f | while read extracted_file; do
-            # Try to find corresponding git file
-            filename=$(basename "$extracted_file")
-            rel_path=${extracted_file#./ssh-extracted-configs/$component/}
-            
-            found_in_git=false
-            case $component in
-                "dashboards")
-                    [ -f "$RUNTIME_DASHBOARDS/$filename" ] || [ -f "$SOURCE_DASHBOARDS/$filename" ] && found_in_git=true
-                    ;;
-                "prometheus")
-                    [ -f "$RUNTIME_PROMETHEUS/$rel_path" ] && found_in_git=true
-                    ;;
-                "grafana")
-                    [ -f "$RUNTIME_GRAFANA/$rel_path" ] && found_in_git=true
-                    ;;
-                "blackbox")
-                    [ -f "$RUNTIME_BLACKBOX/$rel_path" ] && found_in_git=true
-                    ;;
-                "alerting")
-                    [ -f "$RUNTIME_ALERTMANAGER/$rel_path" ] && found_in_git=true
-                    ;;
-            esac
-            
-            if [ "$found_in_git" = false ]; then
-                echo "   🆕 $component/$rel_path - NEW FILE"
-                FOUND_NEW=true
+        while IFS= read -r -d '' file; do
+            filename=$(basename "$file")
+            if [ "$component" = "dashboards" ]; then
+                if [ ! -f "./dashboards/$filename" ] && [ ! -f "$RUNTIME_DASHBOARDS/$filename" ]; then
+                    echo "   🆕 $component/$filename"
+                    FOUND_NEW=true
+                fi
+            elif [ "$component" = "alerting" ]; then
+                # Skip alertmanager.yml as it's always dynamic
+                if [ "$filename" != "alertmanager.yml" ]; then
+                    echo "   🆕 $component/$filename"
+                    FOUND_NEW=true
+                fi
+            else
+                # For other components, check if file exists in source
+                source_file=""
+                case "$component" in
+                    "prometheus") source_file="./prometheus-stack/$filename" ;;
+                    "grafana") source_file="./prometheus-stack/$filename" ;;
+                    "blackbox") source_file="./prometheus-stack/$filename" ;;
+                esac
+                
+                if [ -n "$source_file" ] && [ ! -f "$source_file" ]; then
+                    echo "   🆕 $component/$filename"
+                    FOUND_NEW=true
+                fi
             fi
-        done
+        done < <(find "./ssh-extracted-configs/$component" -type f -print0 2>/dev/null)
     fi
 done
 
@@ -203,17 +200,16 @@ if [ "$FOUND_NEW" = false ]; then
 fi
 
 echo ""
-echo "🎯 Next Steps:"
-echo "   • Review DIFFERENT files manually using suggested diff commands"
-echo "   • Copy desired changes to git repository"  
-echo "   • Update both source and runtime files as needed"
-echo "   • Run ./test/full-test.sh to test changes"
-echo "   • Commit changes with proper changelog"
-
+echo "📋 Summary & Next Steps:"
+echo "================================"
+echo "1. ✅ Files with IDENTICAL: No action needed"
+echo "2. 🔄 Files with DIFFERENT: Review differences and decide what to sync"
+echo "3. 🆕 NEW FILES: Consider adding to git repository"
+echo "4. 📋 DYNAMIC configs (alertmanager.yml): Check if options.json needs updating"
 echo ""
-echo "💡 Typical sync workflow:"
-echo "   1. Focus on files marked 🔄 DIFFERENT"
-echo "   2. Review 🆕 NEW FILES to see if they should be added to git"
+echo "💡 Workflow:"
+echo "   1. Review differences: Use the 'diff' commands shown above"
+echo "   2. Copy desired changes: Manually update files in git repository"
 echo "   3. Update corresponding files in prometheus-stack/rootfs/etc/"
-echo "   4. Update source files in dashboards/ if applicable"
-echo "   5. Test the build to ensure everything works" 
+echo "   4. Test changes: Run build-test.sh to verify everything works"
+echo "   5. Commit: Add changes to git when satisfied" 

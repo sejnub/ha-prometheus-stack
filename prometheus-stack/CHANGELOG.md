@@ -5,9 +5,26 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<!-- markdownlint-disable MD024 -->
+
+## 2.7.9 - 2025-06-30
+
+### Fixed
+
+- **Markdown Linting Issues**: Fixed all markdownlint violations across documentation files
+- **Release Template**: Reformatted RELEASE_TEMPLATE.md to use proper markdown syntax with italicized placeholders
+- **Documentation Quality**: Improved markdown formatting consistency throughout the project
+
+### Technical Details
+
+- **MD032 Compliance**: Fixed "lists should be surrounded by blank lines" violations in CHANGELOG.md
+- **Link Reference Issues**: Resolved "no link definition found" errors in RELEASE_TEMPLATE.md
+- **Template Formatting**: Converted square bracket placeholders to italicized text for better markdown compatibility
+
 ## 2.7.8 - 2025-06-30
 
 ### Added
+
 - **Addon Configuration Sync Tools**: Complete toolset for syncing configuration changes from addon-mode back to git repository
 - **SSH-based Extraction**: Tools to extract ALL configuration files from running container via SSH
 - **Comprehensive Config Support**: Support for Prometheus, Grafana, Blackbox, Alertmanager, and dashboard configurations
@@ -15,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sync Documentation**: Complete workflow documentation for maintaining configurations across development and deployment modes
 
 ### Technical Details
+
 - **`addon-sync-tools/`**: New directory with specialized sync tools
 - **`extract-configs.sh`**: Extract all configuration files from running addon container
 - **`compare-configs.sh`**: Compare extracted configurations with git repository files
@@ -22,32 +40,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Container-based Extraction**: Handles addons that store configurations in containers (not `/addon_configs/`)
 
 ### Use Case
+
 Enables users to make configuration changes in Home Assistant addon-mode (Grafana dashboards, Prometheus targets, alert rules, etc.) and sync those changes back to their git repository for version control and future deployments.
 
 ## 2.7.6 - 2025-06-30
 
 ### Fixed
+
 - **Dashboard Consistency**: Fixed missing 📊 emoji icon for Prometheus panel title to maintain visual consistency across all component status panels
 
 ## 2.7.5 - 2025-06-30
 
 ### Fixed
+
 - **Services UP Panel**: Completely removed problematic "Services UP" panel from all dashboard copies (source and runtime directories)
 - **Hardcoded Values**: Fixed hardcoded `vector(1)` query that always returned "1" regardless of actual service status
 - **Dashboard Architecture**: Clarified file structure - `dashboards/` (development source) vs `prometheus-stack/rootfs/` (runtime files used by Docker)
 
 ### Changed
+
 - **Dashboard Display**: Dashboard now shows only individual component status panels without confusing aggregated count
 - **User Experience**: Eliminated misleading "Services UP: 1" display that didn't reflect actual service states
 
 ## 2.7.4 - 2025-06-30
 
 ### Removed
+
 - **Services UP Panel**: Initial removal of "Services UP" panel from main dashboard source directory
 
 ## 2.7.3 - 2025-06-30
 
 ### Fixed
+
 - **Dashboard Data Source Issue**: Fixed "No data" problem in Grafana dashboards caused by data source UID mismatch
 - **Dashboard Layout**: Enhanced "Addon Components Monitoring" dashboard with 8 components in top row instead of 4
 - **Grafana Status Display**: Fixed Grafana service status to show "UP" correctly
@@ -55,11 +79,13 @@ Enables users to make configuration changes in Home Assistant addon-mode (Grafan
 - **Cross-Mode Compatibility**: Improved dashboard queries to work in both test-mode and addon-mode
 
 ### Added
+
 - **Enhanced Monitoring**: Added Supervisor and Home Assistant status panels with fallback support
 - **Better Error Handling**: Added "N/A" display for unavailable metrics instead of blank panels
 - **Flexible Queries**: Added fallback queries using `or on() vector(0)` for missing services
 
 ### Changed
+
 - **Dashboard Grid Layout**: Adjusted panel widths to accommodate 8 components (width 3 instead of 4)
 - **Service Coverage**: Expanded monitoring to include more addon-specific components
 
@@ -126,23 +152,28 @@ This release represents a major milestone in the Prometheus Stack addon's evolut
 ### 📊 Service Status
 
 **Core Monitoring Stack:**
+
 - ✅ **Prometheus**: Working with ingress limitation notes and direct port access
-- ✅ **Alertmanager**: Full ingress compatibility  
+- ✅ **Alertmanager**: Full ingress compatibility
 - ✅ **Blackbox Exporter**: Full ingress compatibility
 
 **Visualization & Dashboards:**
+
 - ✅ **Grafana**: No-login access with start/stop controls and direct port access
 - ✅ **Karma**: Full ingress compatibility
 
 **Development Tools:**
+
 - ✅ **VS Code**: Full ingress compatibility with start/stop controls
 
 **Infrastructure:**
+
 - ✅ **NGINX Status**: Full monitoring capability
 
 ### 🏗️ Technical Foundation
 
 This release establishes a solid foundation for future development with:
+
 - Clean, maintainable codebase
 - Consistent service patterns
 - Professional user interface
@@ -162,6 +193,7 @@ All 7 services are fully functional with comprehensive health checks, proper ser
 ### Technical Details
 
 **CSS Change:**
+
 ```css
 .service-card {
     background: #f8f9fa;  /* Changed from: white */
@@ -185,6 +217,7 @@ The previous white service cards on white background created poor visibility, ma
 ### Technical Details
 
 **Grafana Configuration Changes (`grafana.ini`):**
+
 ```ini
 [auth.anonymous]
 enabled = true
@@ -196,6 +229,7 @@ disable_login_form = true
 ```
 
 **Consistency Achieved:**
+
 - **No Authentication Required**: Grafana now matches the authentication model of all other services
 - **Direct Access**: Users can access Grafana dashboards immediately without login prompts
 - **Simplified UX**: Removes the need to remember or configure login credentials
@@ -204,6 +238,7 @@ disable_login_form = true
 This change is appropriate for home/internal network usage where all services in the stack operate without authentication. The addon is designed for local Home Assistant environments where network-level security is typically handled at the router/firewall level.
 
 **Interface Updates:**
+
 - Removed "Default Login: admin/admin" note from Grafana service card
 - Updated limitation text to be more generic about ingress redirect issues
 - Cleaner, more consistent user experience across all services
@@ -219,14 +254,16 @@ This change is appropriate for home/internal network usage where all services in
 ### Technical Details
 
 **Consistent Logic Applied:**
+
 - **Direct links provided**: Only for services with **ingress limitations** that need port access as backup
 - **No direct links**: For services that work fine through Home Assistant's ingress system
 
 **Current Status:**
+
 - **✅ Prometheus**: Direct link (Port 9090) - Has ingress limitations (fails in Addon-mode)
 - **✅ Grafana**: Direct link (Port 3000) - Has ingress limitations (doesn't work through ingress)
 - **❌ VS Code**: No direct link - Works perfectly through ingress in all modes
-- **❌ Alertmanager**: No direct link - Works perfectly through ingress  
+- **❌ Alertmanager**: No direct link - Works perfectly through ingress
 - **❌ Blackbox**: No direct link - Works perfectly through ingress
 - **❌ Karma**: No direct link - Works perfectly through ingress
 - **❌ NGINX**: No direct link - Works perfectly through ingress
@@ -235,6 +272,7 @@ This change is appropriate for home/internal network usage where all services in
 VS Code's previous start/stop button issues were **frontend API problems**, not ingress problems. The VS Code web interface itself works fine through Home Assistant's ingress system and doesn't require direct port access.
 
 **JavaScript Changes:**
+
 - Removed `setupDirectLink('vscode-direct-link', 8443, 'VS Code');` call
 - Simplified direct link management to only handle Prometheus and Grafana
 
@@ -253,15 +291,18 @@ This creates a clear, logical pattern where direct links are only provided for s
 ### Technical Details
 
 **CSS Changes:**
+
 - Removed colored border-left styling rules
 - Standardized all service cards to use the same white background and subtle shadow
 - Removed class-based visual differentiation system
 
 **HTML Changes:**
+
 - Removed all CSS class attributes from service card divs
 - All service cards now use the standard `.service-card` class only
 
 **Result:**
+
 All service cards now have a clean, uniform appearance without colored borders. Service characteristics (ingress limitations, controllable features) are still clearly described in the text content but no longer indicated through visual styling.
 
 ## 2.6.2 - 2025-06-30
@@ -279,17 +320,20 @@ All service cards now have a clean, uniform appearance without colored borders. 
 ### Technical Details
 
 **Link Pattern Standardization:**
+
 - **Ingress Links**: All use 🔗 icon with consistent formatting
 - **Direct Links**: All use 🚀 icon with consistent `(Port XXXX - Checking...)` format
 - **Health/Status**: All use 🏥 icon for health endpoints
 - **Metrics**: All use 📈 icon for metrics endpoints
 
 **Service Classification:**
+
 - `limited`: Services with ingress limitations (Prometheus, Grafana)
-- `controllable`: Services with start/stop controls (VS Code, Grafana) 
+- `controllable`: Services with start/stop controls (VS Code, Grafana)
 - `limited controllable`: Services with both characteristics (Grafana)
 
 **Current Link Status:**
+
 - **Services with Ingress + Direct**: Prometheus, Grafana, VS Code
 - **Services with Ingress Only**: Alertmanager, Blackbox, Karma, NGINX
 - **Consistent Explanatory Text**: Applied where relevant for user clarity
@@ -310,21 +354,24 @@ All service cards now have a clean, uniform appearance without colored borders. 
 ### Technical Details
 
 **Card Structure Standardization:**
+
 - Description section (all services)
-- Notes section (where applicable) 
+- Notes section (where applicable)
 - Limitations section (where applicable)
 - Status controls (controllable services)
 - Links section (consistent ordering)
 
 **Visual Improvements:**
+
 - Color-coded service types with left border indicators
 - Consistent note and limitation styling with proper backgrounds
 - Improved button and link styling
 - Better spacing and typography hierarchy
 
 **Logical Grouping:**
+
 1. **Core Monitoring**: Prometheus, Alertmanager, Blackbox Exporter
-2. **Visualization**: Grafana, Karma  
+2. **Visualization**: Grafana, Karma
 3. **Development**: VS Code
 4. **Infrastructure**: NGINX Status
 
@@ -363,7 +410,7 @@ This creates a more professional, organized interface while preserving all accur
 ### Benefits
 
 - **Resource Optimization**: Stop Grafana when not needed to save CPU/memory
-- **Operational Control**: Start services on-demand for maintenance or troubleshooting  
+- **Operational Control**: Start services on-demand for maintenance or troubleshooting
 - **Monitoring**: Real-time visibility into service states
 - **Consistency**: Unified control interface matching VS Code implementation
 
@@ -382,7 +429,7 @@ This brings Grafana service management to parity with VS Code, providing users c
 
 - **Test Scripts Naming**: Updated all references to use official three-mode convention:
   - **Test-mode**: Local development environment (Cursor AI)
-  - **Github-mode**: CI/CD environment (GitHub Actions)  
+  - **Github-mode**: CI/CD environment (GitHub Actions)
   - **Addon-mode**: Real Home Assistant add-on environment
 - **Script Messages**: Updated user-facing messages to match official convention
 - **Documentation Alignment**: Ensured all test scripts follow README.md naming standards
@@ -393,6 +440,7 @@ This brings Grafana service management to parity with VS Code, providing users c
 **After**: Consistent official naming (Test-mode, Github-mode, Addon-mode)
 
 **Files Updated**:
+
 - `test/build-test.sh`: Header and startup messages
 - `test/health-check.sh`: Environment detection and debug messages
 
@@ -420,7 +468,8 @@ This eliminates confusion and ensures consistent terminology across all project 
 **Before**: Static links regardless of port configuration → broken links for disabled ports
 **After**: Dynamic port accessibility checking with user-friendly feedback
 
-**Implementation**: 
+**Implementation**:
+
 - Single `setupDirectLink()` function handles all three services (DRY principle)
 - Non-blocking `fetch()` checks with graceful fallback
 - Consistent UX across Prometheus (9090), Grafana (3000), and VS Code (8443)
@@ -442,12 +491,14 @@ This eliminates confusion and ensures consistent terminology across all project 
 **Before**: Fixed delays regardless of actual service readiness
 **After**: Dynamic condition checking with 0.5s intervals for optimal responsiveness
 
-**Timeout Period Maintenance:**
+**Timeout Period Maintenance**:
+
 - **Grafana**: 30→120 attempts to maintain 60-second total timeout (30×2s → 120×0.5s)
 - **Cleanup**: 30→120 attempts to maintain 60-second total timeout (30×2s → 120×0.5s)
 - **Response time**: 4x faster when services are ready (2s → 0.5s intervals)
 
-**VS Code Service Improvements:**
+**VS Code Service Improvements**:
+
 - Replaced `sleep 3` with condition check for `s6-svstat` and `s6-rc` availability
 - Removed unnecessary `sleep 1` delay in test mode
 - Added timeout protection (6 seconds max) with graceful fallback
@@ -475,7 +526,8 @@ All s6-overlay service dependency files incorrectly contained service names when
 
 ### Technical Details
 
-**Affected Files:**
+**Affected Files**:
+
 - `/etc/s6-overlay/s6-rc.d/vscode-api/dependencies.d/legacy-cont-init`
 - `/etc/s6-overlay/s6-rc.d/prometheus/dependencies.d/blackbox-exporter`
 - `/etc/s6-overlay/s6-rc.d/prometheus/dependencies.d/legacy-cont-init`
@@ -511,12 +563,14 @@ The Grafana service dependency file `/etc/s6-overlay/s6-rc.d/grafana/dependencie
 
 ### Technical Details
 
-**Before**: 
+**Before**:
+
 - Dependency file: `00000000  20` (space character only)
 - Result: s6-overlay cannot resolve Grafana dependencies → service never starts
 
 **After**:
-- Dependency file: `70 72 6f 6d 65 74 68 65 75 73 20 0a` ("prometheus " + newline)  
+
+- Dependency file: `70 72 6f 6d 65 74 68 65 75 73 20 0a` ("prometheus " + newline)
 - Result: s6-overlay properly starts Grafana after Prometheus is ready
 
 ### Impact
@@ -547,8 +601,9 @@ The Grafana service dependency file `/etc/s6-overlay/s6-rc.d/grafana/dependencie
 ### Technical Details
 
 **Now Testing All 7 Services:**
+
 1. ✅ Prometheus (metrics collection)
-2. ✅ Alertmanager (alert management) 
+2. ✅ Alertmanager (alert management)
 3. ✅ Blackbox Exporter (endpoint monitoring)
 4. ✅ Karma (alert dashboard)
 5. ✅ **Grafana** (visualization - newly added)
@@ -556,8 +611,9 @@ The Grafana service dependency file `/etc/s6-overlay/s6-rc.d/grafana/dependencie
 7. ✅ NGINX (ingress proxy)
 
 **Comprehensive Test Coverage:**
+
 - **6 Configuration Files**: All service configs validated
-- **3 Data Directories**: All persistent storage checked  
+- **3 Data Directories**: All persistent storage checked
 - **8 Functionality Tests**: All services + ingress proxy paths
 - **7 Basic Health Checks**: Individual service health validation
 - **6 Ingress Paths**: All subpath routing tested
@@ -610,17 +666,19 @@ This matches the network configuration pattern used by other services in the sta
 ### Technical Clarification
 
 **Prometheus (✅ Test Mode, ❌ Addon Mode):**
+
 - Uses relative redirects that resolve within ingress context in test mode
 - Still fails in addon mode due to Home Assistant's complex ingress URL structure
 
 **Grafana (❌ All Modes):**
+
 - Uses absolute redirects (`/login`) that break out of ingress context in any mode
 - Requires direct port access (3000) for functionality
 
 ### User Interface Updates
 
 - **Prometheus Link**: Changed from "Broken in Ingress" → "Works in Test Mode"
-- **Grafana Link**: Changed from "Limited in Ingress" → "Broken - Absolute Redirects"  
+- **Grafana Link**: Changed from "Limited in Ingress" → "Broken - Absolute Redirects"
 - **Recommendation Updates**: Prometheus "Recommended" vs Grafana "Required" for direct access
 
 ## 2.5.6 - 2025-06-30
@@ -637,18 +695,21 @@ This matches the network configuration pattern used by other services in the sta
 ### Key Discovery: Test Mode ≠ Addon Mode
 
 **Test Mode Behavior:**
+
 - Prometheus: `/prometheus/` → redirects to `/graph` → works (shorter path context)
 - Grafana: `/grafana/` → redirects to `/login` → limited by `<base href="/">`
 
 **Addon Mode Behavior (Home Assistant Ingress):**
+
 - Prometheus: `/addon_slug/ingress/prometheus/` → redirects to `/graph` → breaks out of ingress context ❌
 - Grafana: `/addon_slug/ingress/grafana/` → redirects to `/login` → breaks out of ingress context ❌
 
 ### Technical Analysis
 
 Both services fail in addon mode due to **absolute path redirects** that break out of the `/addon_slug/ingress/` context:
+
 - Prometheus redirects to `/graph` instead of relative path
-- Grafana redirects to `/login` instead of relative path  
+- Grafana redirects to `/login` instead of relative path
 - Both redirects escape the Home Assistant ingress URL structure
 
 ### Impact
@@ -671,10 +732,12 @@ This explains why both Grafana links appear broken in the user's addon mode test
 The fundamental difference between Prometheus and Grafana:
 
 **Prometheus (✅ Works with Ingress):**
+
 - Uses relative paths: `src="./static/js/main.js"`
 - Path resolution: `/prometheus/` + `./static/js/main.js` = `/prometheus/static/js/main.js` ✅
 
-**Grafana (❌ Limited with Ingress):**  
+**Grafana (❌ Limited with Ingress):**
+
 - Uses `<base href="/">` + relative paths: `href="public/img/icon.png"`
 - Path resolution: `/grafana/` + `public/img/icon.png` + `<base href="/">` = `/public/img/icon.png` ❌
 
@@ -696,6 +759,7 @@ This correction means users can confidently use Prometheus through both ingress 
 ### Background
 
 After documenting the Grafana ingress limitation in v2.5.3, both Grafana links appeared broken to users:
+
 - Ingress link (`/grafana/`) had the documented `<base href="/">` limitation
 - Direct link (port 3000) didn't work because the port wasn't exposed
 
@@ -814,154 +878,101 @@ The Grafana service directory and configuration existed but was not included in 
 
 ## 2.3.9 - 2025-01-27
 
-### Added
+### Fixed
 
-- **Version Display**: Added version display in web interface header
-- **Build-Time Version Injection**: Version is automatically extracted from config.json and injected into HTML during Docker build
-- **VS Code Ingress Fix**: Fixed VS Code start/stop buttons not working in addon-mode with proper URL construction
-
-### Improved
-
-- **DRY Principle**: Eliminated version redundancy by using single source of truth (config.json)
-- **Cross-Mode Compatibility**: VS Code buttons now work correctly in both test-mode and addon-mode
+- Fixed GitHub Actions workflow to remove armv7 from multi-architecture build platforms.
+- Removed `linux/arm/v7` from `.github/workflows/build.yml` platforms list.
+- This resolves the build failure where GitHub Actions was still trying to build for armv7.
+- Multi-architecture builds now only target supported platforms (linux/amd64, linux/arm64).
 
 ## 2.3.8 - 2025-01-27
 
 ### Fixed
 
-- **VS Code API URL Construction**: Fixed absolute URL construction for Home Assistant ingress context
-- **Ingress Path Resolution**: Uses `window.location.pathname` to build proper ingress URLs  
-- **API Call Routing**: Ensures API calls stay within addon's ingress context (`/addon_slug/ingress/api/vscode/status`)
-- **Frontend Fix**: Addresses issue where relative URLs weren't resolving correctly in ingress mode
+- Added explicit error handling for unsupported architectures in Dockerfile.
+- Build now fails fast with clear error message for unsupported platforms.
+- Resolved multi-architecture build issues - GitHub Actions now builds successfully.
+- Confirmed working build for supported architectures (amd64, aarch64).
 
-### Technical Details
+## 2.3.7 - 2025-01-27
 
-- Changed getApiUrl() to build absolute URLs using current window location
-- Constructs URLs like: `origin + pathname + '/' + endpoint`
-- Should resolve to proper ingress URLs instead of breaking out to HA root
-- Maintains compatibility with test-mode using relative paths
+### Fixed
+
+- Fixed multi-architecture build by removing armv7 references from Dockerfile.
+- Removed armv7l case from architecture detection and ARM_ARCH variable.
+- Simplified karma download to use ARCH only, aligning with supported architectures.
+- Ensures build only targets supported platforms (amd64, aarch64).
 
 ## 2.3.6 - 2025-01-27
 
 ### Fixed
 
-- **VS Code API URLs in Addon-Mode**: Improved URL resolution for Home Assistant ingress context
-- **Ingress Detection**: Added smart detection of ingress vs test mode for proper API URLs
-- **URL Construction**: Uses `new URL()` constructor for proper relative URL resolution
-- **Cross-Mode Compatibility**: Enhanced support for both addon-mode and test-mode API calls
-
-### Technical Details
-
-- Added `getApiUrl()` function that detects ingress context by checking pathname
-- In ingress mode: uses `new URL(endpoint, currentUrl)` for proper resolution
-- In test mode: uses simple relative paths as before
-- Should resolve API calls to correct ingress URLs instead of Home Assistant root
+- Fixed VS Code startup restart loop in test mode by improving copy logic in code-server run script.
+- VS Code now only copies settings file when needed, preventing infinite restart when workspace equals source location.
+- Added `/opt/code-server/data/logs` directory creation for cleaner startup.
+- VS Code now works properly in both test and addon modes without restart issues.
 
 ## 2.3.5 - 2025-01-27
 
 ### Fixed
 
-- **Circular Dependency**: Removed circular dependency between vscode-api and user services
-- **Test-Mode Compatibility**: Fixed s6-rc-compile error that prevented test-mode startup
-- **Service Architecture**: vscode-api no longer depends on user service to avoid dependency loop
-- **Startup Reliability**: Timeout mechanism handles initialization without requiring dependency
-
-### Technical Details
-
-- Removed `/etc/s6-overlay/s6-rc.d/vscode-api/dependencies.d/user` dependency file
-- user bundle includes vscode-api, so vscode-api cannot depend on user (circular)
-- Timeout mechanism in vscode-api/run script handles `/tmp/.init-complete` gracefully
-- Both test-mode and addon-mode now start services correctly
+- Added missing `.vscode/settings.json` file to git repository (was excluded by .gitignore).
+- Fixed Docker build failure: `/rootfs/etc/.vscode`: not found error.
+- VS Code explorer excludes now work properly in both test and addon modes.
 
 ## 2.3.4 - 2025-01-27
 
-### Improved
+### Fixed
 
-- **VS Code Service Reliability**: Added timeout mechanism to vscode-api service startup
-- **Cross-Mode Compatibility**: Better handling of test-mode vs addon-mode differences  
-- **Error Prevention**: Prevents infinite waiting if user service fails to start
-- **Startup Robustness**: 5-second timeout with fallback for edge cases
-
-### Technical Details
-
-- Added timeout loop (10 attempts × 0.5s = 5 seconds max) for `/tmp/.init-complete`
-- Different behavior for addon-mode (longer wait) vs test-mode (shorter wait)
-- Enhanced logging for better debugging of startup issues
-- Prevents the service from hanging indefinitely in edge cases
+- Fixed Docker build failure by ensuring VS Code settings directory is properly created and copied.
+- Enhanced .vscode directory creation with proper permissions during build process.
+- Maintained runtime copying logic in code-server to ensure settings work in addon mode.
 
 ## 2.3.3 - 2025-01-27
 
 ### Fixed
 
-- **Service Dependencies**: Added missing user service dependency for vscode-api service
-- **Startup Sequence**: Ensures `/tmp/.init-complete` is created before vscode-api starts waiting for it
-- **Fresh Installations**: Prevents vscode-api from hanging indefinitely on first startup
-- **Service Reliability**: Improves overall service startup reliability and order
-
-### Technical Details
-
-- Created `/etc/s6-overlay/s6-rc.d/vscode-api/dependencies.d/user` dependency file
-- Ensures user service (which creates `/tmp/.init-complete`) runs before vscode-api service
-- Prevents the initialization deadlock that required manual intervention
-- All fresh installations should now start VS Code API service correctly
+- Always copy `.vscode/settings.json` into the workspace at startup so VS Code explorer excludes work in addon mode.
 
 ## 2.3.2 - 2025-01-27
 
-### Fixed
+### Changed
 
-- **VS Code API URL Resolution**: Improved fix for VS Code control buttons in addon-mode
-- **Ingress Context**: Changed from `./api/vscode/*` to `api/vscode/*` for better ingress compatibility  
-- **Service Dependencies**: Fixed user service not starting automatically, which caused vscode-api to wait indefinitely
-- **Cross-Mode Compatibility**: Ensures VS Code buttons work correctly in both test-mode and addon-mode
-
-### Technical Details
-
-- Root cause was user service not running → `/tmp/.init-complete` never created → vscode-api stuck waiting
-- Fixed service dependency chain to ensure proper startup sequence
-- Improved API URL construction for Home Assistant ingress context
-- Backend VS Code API server functionality confirmed working correctly
+- Removed armv7 from supported architectures (no code-server support for armv7).
 
 ## 2.3.1 - 2025-01-27
 
-### Fixed
+### Changed
 
-- **VS Code Start/Stop Buttons**: Fixed VS Code control buttons not working in addon-mode
-- **API URL Resolution**: Changed from absolute paths (`/api/vscode/*`) to relative paths (`./api/vscode/*`)
-- **Home Assistant Ingress**: VS Code API calls now stay within ingress context instead of breaking out to Home Assistant root
-- **Cross-Mode Compatibility**: VS Code buttons now work correctly in both test-mode and addon-mode
-
-### Technical Details
-
-- The issue was that absolute API paths (`/api/vscode/status`) resolved to Home Assistant's root (`http://homeassistant.internal:8123/api/vscode/status`) in addon-mode
-- Fixed by using relative paths (`./api/vscode/status`) which stay within the addon's ingress context
-- Backend VS Code API server was working correctly - the issue was purely frontend URL resolution
-- All API endpoints (`/api/vscode/status`, `/api/vscode/start`, `/api/vscode/stop`) now work in both modes
+- Patch release: documentation, scripts, and minor improvements from previous commit.
 
 ## 2.3.0 - 2025-01-27
 
 ### Added
 
-- **VS Code Web Control Interface**: Start and stop VS Code directly from the addon's main web page
-- **Real-time VS Code Status**: Live status indicator showing VS Code running/stopped state
-- **VS Code API Server**: REST API endpoints for service control (`/api/vscode/status`, `/api/vscode/start`, `/api/vscode/stop`)
-- **CPU Usage Optimization**: Stop VS Code when not needed to reduce CPU usage by ~50%
-- **Auto-refresh Status**: VS Code status automatically updates every 30 seconds
-- **Interactive Control Buttons**: Start/Stop buttons with visual feedback and loading states
-- **Command Line Tools**: Added `vscode-toggle` script for manual VS Code control via SSH
+- **VS Code Integration**: Full-featured code editor with extensions support
+- **Code-Server**: VS Code Server (v4.19.1) for browser-based development
+- **VS Code Configuration**: Enable/disable, password protection, and workspace configuration
+- **VS Code Ingress Support**: Access VS Code through Home Assistant ingress at `/vscode/`
+- **Direct VS Code Access**: Direct port access at 8443 for full functionality
+- **VS Code Health Monitoring**: Integrated health checks for VS Code service
 
 ### Changed
 
-- Enhanced main dashboard with VS Code control panel including status and buttons
-- Added new s6-overlay service `vscode-api` for web-based VS Code management
-- Updated NGINX configuration to route VS Code API requests
-- Improved user experience with on-demand VS Code access
+- **BREAKING**: Added new port 8443 for VS Code (disabled by default, use ingress)
+- **BREAKING**: Updated add-on description to include VS Code
+- Enhanced Dockerfile with Node.js, npm, git, and Python3 for VS Code extensions
+- Updated NGINX configuration to include VS Code routing
+- Enhanced main dashboard with VS Code access links
+- Updated test configuration to include VS Code options
 
-### Technical Details
+### Technical Improvements
 
-- New Python-based API server on port 8081 for VS Code service management
-- Uses s6-overlay service control commands (`s6-rc`) for reliable service management
-- All new functionality is additive - existing features unchanged
-- Proper error handling and graceful fallbacks for all control operations
+- VS Code service integrated into S6-Overlay service management
+- Cross-mode compatible VS Code configuration (test, github, addon modes)
+- Persistent VS Code data and extensions storage
+- Proper service dependency management for VS Code
+- Comprehensive VS Code documentation and access instructions
 
 ## 2.2.9 - 2025-01-27
 
@@ -1167,132 +1178,3 @@ The Grafana service directory and configuration existed but was not included in 
 ## 1.11.20 - 2025-01-27
 
 ### Fixed
-
-- Fixed Prometheus self-scrape functionality in test mode by updating `metrics_path`.
-- Aligned `prometheus.yml` with the new `/prometheus/metrics` endpoint.
-- Corrected the health check script to use the proper `/prometheus/-/ready` endpoint.
-
-## 1.11.19 - 2025-01-27
-
-### Fixed
-
-- Reverted environment-based Prometheus configuration that was breaking test mode
-- Added comprehensive sub_filter rules to rewrite URLs in Prometheus web interface content
-- Fixed nginx content filtering to maintain /prometheus/ prefix in all HTML/JS URLs
-- Should resolve ingress context breakout by rewriting client-side URLs at proxy level
-- Maintains compatibility with both test mode and Home Assistant addon mode
-
-## 1.11.18 - 2025-01-27
-
-### Fixed
-
-- Added environment-based Prometheus configuration for proper ingress handling
-- Prometheus now configures external-url and route-prefix only in Home Assistant addon mode
-- Uses SUPERVISOR_TOKEN detection to differentiate between test and addon modes
-- Should resolve client-side URL issues causing ingress context breakout
-
-## 1.11.17 - 2025-01-27
-
-### Fixed
-
-- Completely eliminated redirects for Prometheus main UI to prevent ingress context breakout
-- Changed from redirect to direct proxy to Prometheus graph endpoint
-- Fixed persistent timeout and URL breakout issue in Home Assistant addon mode
-- Removed 301 redirect that was causing browser URL changes outside ingress context
-
-## 1.11.16 - 2025-01-27
-
-### Fixed
-
-- Fixed health check script to accept 301 redirects as valid responses
-- Updated test suite to handle new nginx redirect configuration for Prometheus
-- Resolved GitHub Actions and test mode failures due to unexpected 301 status code
-
-## 1.11.15 - 2025-01-27
-
-### Fixed
-
-- Fixed Prometheus main UI completely breaking out of Home Assistant ingress context
-- Added nginx-level redirect from `/prometheus/` to `/prometheus/graph` to prevent external redirects
-- Reverted Prometheus configuration to prevent it from issuing redirects that break ingress
-- Fixed timeout issue when accessing Prometheus main dashboard through Home Assistant
-
-## 1.11.14 - 2025-01-27
-
-### Fixed
-
-- Fixed Prometheus main UI timeout issue in Home Assistant ingress mode
-- Improved nginx redirect handling for Prometheus `/graph` endpoint
-- Fixed redirect rewriting to properly maintain `/prometheus/` prefix in ingress context
-
-## 1.11.13 - 2025-01-27
-
-### Fixed
-
-- Fixed ingress routing issue where all service links returned 404 errors in Home Assistant addon mode
-- Changed absolute paths to relative paths in index.html for proper ingress compatibility
-
-### Added
-
-- Added `full-test.sh` script for complete automated test cycle (cleanup → build → health check)
-- Enhanced test documentation with new full-test workflow
-
-### Changed
-
-- Improved testing workflow with comprehensive error handling and colored output
-- Updated test README with better structure and new script documentation
-
-## 1.11.12 - 2025-01-27
-
-### Changed
-
-- Version bump for testing and deployment
-
-## 1.11.11 - Previous Release
-
-### Features
-
-- Prometheus time-series database for metrics collection
-- Alertmanager for alert routing and notification management
-- Karma modern web UI for alert management and visualization
-- Blackbox Exporter for external service monitoring
-- Multi-architecture support (amd64, arm64, armv7)
-- Ingress support for seamless Home Assistant integration
-- Pre-configured dashboards for Grafana
-- Email notifications for alerts
-- Dynamic configuration from add-on settings
-- Comprehensive monitoring of Home Assistant and add-ons
-
-### Components
-
-- **Prometheus**: Port 9090 (disabled by default, use ingress)
-- **Alertmanager**: Port 9093 (disabled by default, use ingress)  
-- **Blackbox Exporter**: Port 9115 (disabled by default, use ingress)
-- **Karma**: Port 8080 (disabled by default, use ingress)
-- **NGINX**: Port 80 (ingress routing)
-
-### Configuration Options
-
-- `alertmanager_receiver`: Name of the default alert receiver
-- `alertmanager_to_email`: Email address for alert notifications  
-- `home_assistant_url`: URL of your Home Assistant instance
-- `home_assistant_token`: Long-lived access token for Home Assistant
-- `blackbox_targets`: List of endpoints to monitor with name and URL
-
-### Access
-
-- All services accessible through Home Assistant ingress
-- Main dashboard at add-on's web UI
-- Individual service access through subpaths:
-  - `/prometheus/` - Prometheus UI
-  - `/alertmanager/` - Alertmanager UI  
-  - `/karma/` - Karma UI
-  - `/blackbox/` - Blackbox Exporter UI
-
-### Technical Details
-
-- Built on s6-overlay for service management
-- NGINX reverse proxy for ingress routing
-- Automatic service health monitoring
-- Persistent data storage in `/data`
-- Support for both test mode and Home Assistant addon mode 
