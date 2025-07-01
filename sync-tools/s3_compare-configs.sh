@@ -128,6 +128,7 @@ check_new_files() {
 declare -i expected_changes=0    # runtime != extracted (normal workflow)
 declare -i irregular_changes=0   # any other differences
 declare -i total_files=0
+declare -A file_status  # Track status per file: filename -> "source_diff,runtime_diff"
 
 compare_files() {
     local source_file="$1"
@@ -136,7 +137,8 @@ compare_files() {
     local is_runtime="${4:-false}"
     local is_generated="${5:-false}"
     
-    ((total_files++))
+    local filename=$(basename "$target_file")
+    local has_diff=false
     
     if [ "$is_runtime" = "true" ]; then
         # For runtime files, we need to extract them from the container first
@@ -199,13 +201,21 @@ with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
                             echo "      ❌ $description: Configuration differs from what would be generated from options.json"
                             echo "      📋 Differences:"
                             diff -u <(filter_known_differences "${temp_dir}/generated_alertmanager.yml") <(filter_known_differences "$target_file") | sed 's/^/         /'
-                            ((expected_changes++))
+                            has_diff=true
                         fi
                     else
                         echo "      ❌ $description: Could not generate config from options.json"
-                        ((irregular_changes++))
+                        has_diff=true
                     fi
                     rm -rf "$temp_dir"
+                    
+                    # Update file status for runtime comparison
+                    local current_status="${file_status[$filename]:-,}"
+                    if [ "$has_diff" = "true" ]; then
+                        file_status[$filename]="${current_status%,},runtime_diff"
+                    else
+                        file_status[$filename]="${current_status%,},runtime_same"
+                    fi
                     return
                     ;;
                 prometheus.yml|grafana.ini|blackbox.yml)
@@ -221,11 +231,11 @@ with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
             
             if ! docker cp "${container_id}:$container_path" "$temp_file" 2>/dev/null; then
                 echo "      ❌ $description: File not found in container"
-                ((irregular_changes++))
+                has_diff=true
                 rm -rf "$temp_dir"
-                return 1
+            else
+                source_file="$temp_file"
             fi
-            source_file="$temp_file"
         fi
     fi
     
@@ -235,17 +245,41 @@ with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
             echo "      ✅ $description: Generated at runtime"
         else
             echo "      ❌ $description: Source file missing (not in repository)"
-            ((irregular_changes++))
+            has_diff=true
         fi
         [ -d "$temp_dir" ] && rm -rf "$temp_dir"
+        
+        # Update file status
+        if [ "$is_runtime" = "true" ]; then
+            local current_status="${file_status[$filename]:-,}"
+            if [ "$has_diff" = "true" ]; then
+                file_status[$filename]="${current_status%,},runtime_diff"
+            else
+                file_status[$filename]="${current_status%,},runtime_same"
+            fi
+        else
+            if [ "$has_diff" = "true" ]; then
+                file_status[$filename]="source_diff,${file_status[$filename]#*,}"
+            else
+                file_status[$filename]="source_same,${file_status[$filename]#*,}"
+            fi
+        fi
         return 1
     fi
     
     # For target files, check if they exist in the extracted directory
     if [ ! -f "$target_file" ]; then
         echo "      ❌ $description: Target file missing"
-        ((irregular_changes++))
+        has_diff=true
         [ -d "$temp_dir" ] && rm -rf "$temp_dir"
+        
+        # Update file status
+        if [ "$is_runtime" = "true" ]; then
+            local current_status="${file_status[$filename]:-,}"
+            file_status[$filename]="${current_status%,},runtime_diff"
+        else
+            file_status[$filename]="source_diff,${file_status[$filename]#*,}"
+        fi
         return 1
     fi
     
@@ -264,12 +298,22 @@ with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
         echo "      ❌ $description: Files differ"
         echo "      📋 Differences:"
         diff -u "$temp_source" "$temp_target" | sed 's/^/         /'
-        
-        # Classify the type of change
-        if [ "$is_runtime" = "true" ]; then
-            ((expected_changes++))  # Runtime != Extracted (normal workflow)
+        has_diff=true
+    fi
+    
+    # Update file status
+    if [ "$is_runtime" = "true" ]; then
+        local current_status="${file_status[$filename]:-,}"
+        if [ "$has_diff" = "true" ]; then
+            file_status[$filename]="${current_status%,},runtime_diff"
         else
-            ((irregular_changes++))  # Source != Extracted (irregular)
+            file_status[$filename]="${current_status%,},runtime_same"
+        fi
+    else
+        if [ "$has_diff" = "true" ]; then
+            file_status[$filename]="source_diff,${file_status[$filename]#*,}"
+        else
+            file_status[$filename]="source_same,${file_status[$filename]#*,}"
         fi
     fi
     
@@ -567,10 +611,34 @@ fi
 echo -e "\n🆕 New Files (only in extracted):"
 check_new_files
 
+# Analyze file statuses and count changes
 echo ""
 echo "📋 Summary & Next Steps:"
 echo "================================="
-echo "📊 Files analyzed: $total_files comparisons"
+
+# Count total comparisons and analyze per-file status
+total_files=0
+for filename in "${!file_status[@]}"; do
+    ((total_files++))
+    status="${file_status[$filename]}"
+    source_status="${status%,*}"
+    runtime_status="${status#*,}"
+    
+    # Classify the overall situation for this file
+    if [[ "$source_status" == "source_diff" && "$runtime_status" == "runtime_diff" ]]; then
+        # Both source and runtime differ from extracted - irregular
+        ((irregular_changes++))
+    elif [[ "$source_status" == "source_same" && "$runtime_status" == "runtime_diff" ]]; then
+        # Only runtime differs from extracted - expected workflow
+        ((expected_changes++))
+    elif [[ "$source_status" == "source_diff" && "$runtime_status" == "runtime_same" ]]; then
+        # Only source differs from extracted - irregular
+        ((irregular_changes++))
+    fi
+    # If both are same, no change to count
+done
+
+echo "📊 Files analyzed: $((total_files * 2)) comparisons"
 echo "✅ Expected changes: $expected_changes (runtime → extracted differences - normal workflow)"
 echo "⚠️  Irregular changes: $irregular_changes (unexpected differences that need attention)"
 
@@ -596,7 +664,28 @@ echo "   5. Commit: Add changes to git when satisfied"
 if [ $expected_changes -eq 0 ] && [ $irregular_changes -eq 0 ]; then
     print_status_icon "OK" "No changes detected - all configurations are in sync"
 elif [ $irregular_changes -eq 0 ]; then
-    print_status_icon "INFO" "$expected_changes expected changes detected - review and sync as needed"
+    if [ $expected_changes -eq 1 ]; then
+        print_status_icon "INFO" "$expected_changes expected change detected - review and sync as needed"
+    else
+        print_status_icon "INFO" "$expected_changes expected changes detected - review and sync as needed"
+    fi
 else
-    print_status_icon "WARNING" "$irregular_changes irregular changes detected (and $expected_changes expected changes)- manual review required"
+    if [ $irregular_changes -eq 1 ] && [ $expected_changes -eq 1 ]; then
+        print_status_icon "WARNING" "$irregular_changes irregular change detected (and $expected_changes expected change) - manual review required"
+    elif [ $irregular_changes -eq 1 ]; then
+        print_status_icon "WARNING" "$irregular_changes irregular change detected (and $expected_changes expected changes) - manual review required"
+    elif [ $expected_changes -eq 1 ]; then
+        print_status_icon "WARNING" "$irregular_changes irregular changes detected (and $expected_changes expected change) - manual review required"
+    else
+        print_status_icon "WARNING" "$irregular_changes irregular changes detected (and $expected_changes expected changes) - manual review required"
+    fi
+    echo ""
+    if [ $irregular_changes -eq 1 ]; then
+        print_status "$RED" "🚨 $irregular_changes irregular change detected!"
+        print_status "$RED" "   This change is unexpected and requires manual review."
+    else
+        print_status "$RED" "🚨 $irregular_changes irregular changes detected!"
+        print_status "$RED" "   These changes are unexpected and require manual review."
+    fi
+    print_status "$RED" "   Please examine the differences shown above and take appropriate action."
 fi 
