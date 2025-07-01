@@ -11,7 +11,7 @@
 # 4. Environment variable configuration
 # 5. Network isolation for testing
 #
-# ADVANTAGES over build-test.sh:
+# ADVANTAGES over build.sh:
 # - Better for long-term development
 # - Automatic restart on container failure
 # - Easier to modify configuration

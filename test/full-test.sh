@@ -8,7 +8,7 @@
 # 
 # This script runs the following tests in sequence:
 # 1. cleanup.sh - Clean up any existing test containers and data
-# 2. build-test.sh - Build and start the add-on container
+# 2. build.sh - Build and start the add-on container
 # 3. health-check.sh - Verify all services are healthy
 #
 # The script will stop at the first failure and report the status.
@@ -98,7 +98,7 @@ main() {
     
     # Step 2: Build and start
     echo "--- STEP 2: BUILD AND START ---"
-    if ! run_script "build-test.sh"; then
+    if ! run_script "build.sh"; then
         print_status "ERROR" "❌ Full test failed during build step"
         exit 1
     fi

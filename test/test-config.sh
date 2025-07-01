@@ -20,7 +20,7 @@
 # - Service restart with new configuration
 #
 # REQUIREMENTS: 
-# - Container must be running (use build-test.sh first)
+# - Container must be running (use build.sh first)
 # - jq for JSON parsing (included in Dockerfile)
 # =============================================================================
 
@@ -60,7 +60,7 @@ mkdir -p "$PROJECT_ROOT/test-data"
 
 # Check if container is running
 if ! docker ps | grep -q prometheus-stack; then
-    echo "❌ Container is not running. Start it first with: ./build-test.sh"
+    echo "❌ Container is not running. Start it first with: ./build.sh"
     exit 1
 fi
 

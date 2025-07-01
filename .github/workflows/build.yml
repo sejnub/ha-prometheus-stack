@@ -25,7 +25,7 @@ jobs:
         chmod +x test/*.sh
         
         echo "🔨 Building add-on..."
-        ./test/build-test.sh
+        ./test/build.sh
         
         echo "📊 System Information"
         echo "===================="

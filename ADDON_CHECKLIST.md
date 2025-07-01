@@ -40,7 +40,7 @@
 ## ✅ Testing & Development Setup
 
 - [ ] **Test scripts updated for new folder structure**
-  - Update `test/build-test.sh` to use correct paths
+  - Update `test/build.sh` to use correct paths
   - Update GitHub Actions workflow context
 
 - [ ] **Both modes work: Add-on mode and Test mode**

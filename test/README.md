@@ -9,7 +9,7 @@ This directory contains all testing tools and comprehensive guides for the Prome
   - [2.3. Basic Testing Workflow](#23-basic-testing-workflow)
 - [3. Detailed Script Documentation](#3-detailed-script-documentation)
   - [3.1. `full-test.sh` - Complete Test Cycle](#31-full-testsh---complete-test-cycle)
-  - [3.2. `build-test.sh` - Build and Test Script](#32-build-testsh---build-and-test-script)
+  - [3.2. `build.sh` - Build Script](#32-buildsh---build-script)
   - [3.3. `docker-compose.dev.yml` - Development Configuration](#33-docker-composedevyml---development-configuration)
   - [3.4. `health-check.sh` - Health Verification](#34-health-checksh---health-verification)
   - [3.5. `test-config.sh` - Configuration Testing](#35-test-configsh---configuration-testing)
@@ -38,7 +38,7 @@ This directory contains all testing tools and scripts for the Prometheus Stack H
 test/
 ├── README.md              # This file - comprehensive testing guide
 ├── full-test.sh           # Complete test cycle (cleanup → build → health check)
-├── build-test.sh          # Build and run add-on for testing
+├── build.sh               # Build and run add-on for testing
 ├── docker-compose.dev.yml # Docker Compose for development
 ├── health-check.sh        # Verify all services are healthy
 ├── test-config.sh         # Test different configurations
@@ -74,7 +74,7 @@ For testing with real Home Assistant instance:
    }
    ```
 
-**Note:** The `options.json` file is automatically created with default values when you first run `build-test.sh`. Your changes to this file will be preserved between test runs, and the file is properly gitignored to keep your credentials safe.
+**Note:** The `options.json` file is automatically created with default values when you first run `build.sh`. Your changes to this file will be preserved between test runs, and the file is properly gitignored to keep your credentials safe.
 
 ### 2.3. Basic Testing Workflow
 
@@ -84,7 +84,7 @@ For testing with real Home Assistant instance:
 
 # OR run individual steps:
 # 1. Build and start the add-on
-./test/build-test.sh
+./test/build.sh
 
 # 2. Check if all services are healthy
 ./test/health-check.sh
@@ -107,7 +107,7 @@ For testing with real Home Assistant instance:
 - **Usage**: `./test/full-test.sh`
 - **What it does**:
   - Runs cleanup.sh to clean up any existing containers
-  - Runs build-test.sh to build and start the add-on
+  - Runs build.sh to build and start the add-on
   - Runs health-check.sh to verify all services are healthy
   - Provides comprehensive status reporting with colored output
   - Stops at the first failure and provides helpful error messages
@@ -118,10 +118,10 @@ For testing with real Home Assistant instance:
   - Saves time during development and CI/CD
 - **Output**: Colored status messages for each phase with final summary
 
-### 3.2. `build-test.sh` - Build and Test Script
+### 3.2. `build.sh` - Build Script
 
 - **Purpose**: Build and run the add-on locally for testing
-- **Usage**: `./test/build-test.sh`
+- **Usage**: `./test/build.sh`
 - **What it does**:
   - Builds the Docker image with your add-on code
   - Creates test configuration data (if not exists)
@@ -139,7 +139,7 @@ For testing with real Home Assistant instance:
 
 - **Purpose**: Alternative way to run the add-on for development
 - **Usage**: `docker-compose -f test/docker-compose.dev.yml up -d`
-- **Advantages over build-test.sh**:
+- **Advantages over build.sh**:
   - Better for long-term development
   - Automatic restart on container failure
   - Easier to modify configuration
@@ -211,7 +211,7 @@ For active development with frequent changes:
 ```bash
 # Development cycle
 ./test/cleanup.sh
-./test/build-test.sh
+./test/build.sh
 ./test/health-check.sh
 ./test/monitor.sh
 ```
@@ -230,7 +230,7 @@ For quick validation after small changes:
 For performance analysis:
 
 ```bash
-./test/build-test.sh
+./test/build.sh
 ./test/monitor.sh continuous
 # Let it run for a while, then Ctrl+C
 ./test/cleanup.sh
@@ -251,7 +251,7 @@ Enable debug mode by setting environment variables:
 
 ```bash
 export DEBUG=1
-./test/build-test.sh
+./test/build.sh
 ```
 
 ## 6. Performance Optimization

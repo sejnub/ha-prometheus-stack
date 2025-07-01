@@ -4,7 +4,7 @@
 # PROMETHEUS STACK ADD-ON - LOCAL TESTING SCRIPT (TEST-MODE)
 # =============================================================================
 # PURPOSE: Build and run the Home Assistant add-on locally in Test-mode
-# USAGE:   ./test/build-test.sh (from project root) OR ./build-test.sh (from test folder)
+# USAGE:   ./test/build.sh (from project root) OR ./build.sh (from test folder)
 # 
 # This script:
 # 1. Builds the Docker image with your add-on code

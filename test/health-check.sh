@@ -24,7 +24,7 @@
 # - 0: All services healthy
 # - 1: One or more services unhealthy
 #
-# REQUIREMENTS: Container must be running (use build-test.sh first)
+# REQUIREMENTS: Container must be running (use build.sh first)
 # =============================================================================
 
 set -e  # Exit on any error

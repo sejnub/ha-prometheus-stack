@@ -24,7 +24,7 @@
 # - Single snapshot: ./monitor.sh
 # - Continuous monitoring: ./monitor.sh continuous
 #
-# REQUIREMENTS: Container must be running (use build-test.sh first)
+# REQUIREMENTS: Container must be running (use build.sh first)
 # =============================================================================
 
 set -e  # Exit on any error
