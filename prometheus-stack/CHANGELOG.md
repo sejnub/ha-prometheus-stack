@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- markdownlint-disable MD024 -->
 
+## 2.7.11 - 2025-07-01
+
+### Changed
+
+- **Build Script Rename**: Renamed `build-test.sh` to `build.sh` for better clarity and consistency
+- **Documentation Updates**: Updated all references to the build script across documentation and code
+
 ## 2.7.10 - 2025-07-01
 
 ### Fixed
@@ -462,7 +469,7 @@ This brings Grafana service management to parity with VS Code, providing users c
 
 **Files Updated**:
 
-- `test/build-test.sh`: Header and startup messages
+- `test/build.sh`: Header and startup messages
 - `test/health-check.sh`: Environment detection and debug messages
 
 This eliminates confusion and ensures consistent terminology across all project documentation and code.
@@ -609,12 +616,12 @@ The Grafana service dependency file `/etc/s6-overlay/s6-rc.d/grafana/dependencie
 
 - **Comprehensive Grafana Testing**: Added Grafana to all test scripts with health checks, configuration validation, and functionality testing
 - **Complete VS Code Testing**: Added proper VS Code testing with HTTP status code validation (302 redirect handling)
-- **Enhanced build-test.sh**: Now documents all 7 services including Grafana URLs and ingress paths
+- **Enhanced build.sh**: Now documents all 7 services including Grafana URLs and ingress paths
 - **Enhanced health-check.sh**: Now tests all 7 services with individual health checks and functionality tests
 
 ### Fixed
 
-- **Missing Component Documentation**: Fixed build-test.sh to include Grafana service URLs, health endpoints, and ingress paths
+- **Missing Component Documentation**: Fixed build.sh to include Grafana service URLs, health endpoints, and ingress paths
 - **Incomplete Health Checks**: Added Grafana and VS Code to comprehensive health check suite
 - **VS Code Test Method**: Fixed VS Code test to properly handle 302 redirects (working behavior)
 - **Grafana JSON Parsing**: Fixed Grafana health test to properly parse JSON response format
@@ -642,7 +649,7 @@ The Grafana service dependency file `/etc/s6-overlay/s6-rc.d/grafana/dependencie
 ### Impact
 
 - **Complete Test Coverage**: Every component in the stack is now properly tested
-- **Accurate Documentation**: build-test.sh reflects all available services and endpoints
+- **Accurate Documentation**: build.sh reflects all available services and endpoints
 - **Reliable Health Checks**: Comprehensive validation ensures all services are working correctly
 - **Development Confidence**: Full test suite provides confidence in addon functionality
 
