@@ -218,7 +218,100 @@ with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
                     fi
                     return
                     ;;
-                prometheus.yml|grafana.ini|blackbox.yml)
+                grafana.ini)
+                    # Generate grafana.ini from current options.json for comparison
+                    docker cp "${container_id}:/data/options.json" "${temp_dir}/options.json" 2>/dev/null
+                    
+                    # Generate fresh grafana.ini from current options (simplified version)
+                    python3 -c "
+import json
+
+with open('${temp_dir}/options.json', 'r') as f:
+    options = json.load(f)
+
+config_lines = [
+    '[paths]',
+    'data = /data/grafana',
+    'logs = /data/grafana/logs',
+    'plugins = /data/grafana/plugins',
+    'provisioning = /etc/grafana/provisioning',
+    '',
+    '[server]',
+    'http_addr = 0.0.0.0',
+    'http_port = 3000',
+    'domain = 0.0.0.0',
+    'root_url = %(protocol)s://%(domain)s:%(http_port)s/',
+    'serve_from_sub_path = false',
+    '',
+    '[security]',
+    'admin_user = admin',
+    'admin_password = admin',
+    'allow_embedding = true',
+    'cookie_secure = false',
+    '',
+    '[auth.anonymous]',
+    'enabled = true',
+    'org_name = Main Org.',
+    'org_role = Admin',
+    '',
+    '[auth]',
+    'disable_login_form = true',
+    '',
+    '[users]',
+    'allow_sign_up = false',
+    'allow_org_create = false',
+    'auto_assign_org = true',
+    'auto_assign_org_role = Viewer',
+    '',
+    '[analytics]',
+    'reporting_enabled = false',
+    'check_for_updates = false',
+    '',
+    '[log]',
+    'mode = console',
+    'level = info',
+    '',
+    '[database]',
+    'type = sqlite3',
+    'path = /data/grafana/grafana.db',
+    '',
+    '[dashboards]',
+    'default_home_dashboard_path = /etc/grafana/provisioning/dashboards/home.json',
+    '',
+    '[feature_toggles]',
+    'enable = publicDashboards'
+]
+
+with open('${temp_dir}/generated_grafana.ini', 'w') as f:
+    f.write('\n'.join(config_lines) + '\n')
+" 2>/dev/null
+                    
+                    # Compare with generated config
+                    if [ -f "${temp_dir}/generated_grafana.ini" ]; then
+                        if diff -u <(filter_known_differences "${temp_dir}/generated_grafana.ini") <(filter_known_differences "$target_file") >/dev/null 2>&1; then
+                            echo "      ✅ $description: Identical (after filtering placeholders)"
+                        else
+                            echo "      ❌ $description: Configuration differs from what would be generated from options.json"
+                            echo "      📋 Differences:"
+                            diff -u <(filter_known_differences "${temp_dir}/generated_grafana.ini") <(filter_known_differences "$target_file") | sed 's/^/         /'
+                            has_diff=true
+                        fi
+                    else
+                        echo "      ❌ $description: Could not generate config from options.json"
+                        has_diff=true
+                    fi
+                    rm -rf "$temp_dir"
+                    
+                    # Update file status for runtime comparison
+                    local current_status="${file_status[$filename]:-,}"
+                    if [ "$has_diff" = "true" ]; then
+                        file_status[$filename]="${current_status%,},runtime_diff"
+                    else
+                        file_status[$filename]="${current_status%,},runtime_same"
+                    fi
+                    return
+                    ;;
+                prometheus.yml|blackbox.yml)
                     # These files are generated at runtime, so we can't compare them
                     echo "      ✅ $description: Generated at runtime"
                     rm -rf "$temp_dir"
