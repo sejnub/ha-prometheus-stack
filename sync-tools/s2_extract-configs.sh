@@ -11,13 +11,13 @@ set_defaults
 MODE=$(detect_mode)
 
 if [ "$MODE" = "test" ]; then
-    echo "Test mode detected (local container)"
+    echo "🧪 Test-Mode detected (local container)"
     HA_IP="localhost"
     CONTAINER_FILTER="$LOCAL_CONTAINER_NAME"
     CMD_PREFIX=""
     COPY_METHOD="local"
 else
-    echo "Addon mode detected (remote Home Assistant)"
+    echo "🏠 Addon-Mode detected (remote Home Assistant)"
     HA_IP="$HA_HOSTNAME"
     CONTAINER_FILTER="$REMOTE_CONTAINER_NAME"
     CMD_PREFIX=$(get_ssh_prefix "addon")
@@ -103,7 +103,7 @@ echo "   Extracted files: ./$EXTRACTED_DIR/"
 
 if [ "$COPY_METHOD" = "local" ]; then
     echo ""
-    echo "Test mode notes:"
+    echo "Test-Mode notes:"
     echo "   - Container: $CONTAINER_FILTER"
     echo "   - Config source: ../test-data/options.json"
     echo "   - To restart with new config: docker restart $CONTAINER_FILTER"

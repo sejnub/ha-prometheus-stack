@@ -367,3 +367,17 @@ case "${1:-}" in
         exit 1
         ;;
 esac 
+
+if [ "$MODE" = "test" ]; then
+    echo "🧪 Test-Mode detected (local container)"
+    MODE_INFO="Test-Mode - syncing from local test container"
+    HA_IP="localhost"
+    CONTAINER_FILTER="$LOCAL_CONTAINER_NAME"
+    CMD_PREFIX=""
+else
+    echo "🏠 Addon-Mode detected (remote Home Assistant)"
+    MODE_INFO="Addon-Mode - syncing from remote Home Assistant addon"
+    HA_IP="$HA_HOSTNAME"
+    CONTAINER_FILTER="$REMOTE_CONTAINER_NAME"
+    CMD_PREFIX=$(get_ssh_prefix "addon")
+fi 

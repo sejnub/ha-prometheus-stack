@@ -1,5 +1,5 @@
 #!/bin/bash
-# quick-ssh-test.sh - Test access to prometheus files (works locally and remotely)
+# quick-ssh-test.sh - Test access to prometheus files (works in Test-Mode and Addon-Mode)
 
 # Source configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -11,12 +11,12 @@ set_defaults
 MODE=$(detect_mode)
 
 if [ "$MODE" = "test" ]; then
-    echo "Test mode detected (local container)"
+    echo "�� Test-Mode detected"
     HA_IP="localhost"
     CONTAINER_FILTER="$LOCAL_CONTAINER_NAME"
     CMD_PREFIX=""
 else
-    echo "Addon mode detected (remote Home Assistant)"
+    echo "🏠 Addon-Mode detected (remote Home Assistant)"
     HA_IP="$HA_HOSTNAME"
     CONTAINER_FILTER="$REMOTE_CONTAINER_NAME"
     CMD_PREFIX=$(get_ssh_prefix "addon")
@@ -29,7 +29,7 @@ echo "Testing access to prometheus configuration files..."
 echo "Target: $HA_IP (container filter: $CONTAINER_FILTER)"
 echo "========================================================"
 
-# Execute commands (locally or via SSH)
+# Execute commands (in Test-Mode or via SSH)
 $CMD_PREFIX bash << EOF
 echo '1. Container Status:'
 docker ps --filter 'name=$CONTAINER_FILTER' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
@@ -61,7 +61,7 @@ EOF
 # Local-specific checks (only run locally)
 if [ -z "$CMD_PREFIX" ]; then
     echo ''
-    echo '4. Local Test Data:'
+    echo '4. Test-Mode Data:'
     if [ -d "$SCRIPT_DIR/../test-data" ]; then
         echo "Test data directory found: $SCRIPT_DIR/../test-data"
         ls -la "$SCRIPT_DIR/../test-data/" | head -5
@@ -82,8 +82,8 @@ fi
 echo ""
 echo "Next Steps:"
 if [ -z "$CMD_PREFIX" ]; then
-    echo "- Local container found: Direct Docker access available"
-    echo "- Test mode: Can extract configs directly from local container"
+    echo "- Container found: Direct Docker access available"
+    echo "- Test-Mode: Can extract configs directly from container"
     echo "- Test data: Configuration stored in ../test-data/"
 else
     echo "- Container found: Use SSH Container Access (ONLY option for this addon)"
@@ -98,19 +98,19 @@ echo "   3. Run ./s4_sync-to-repo.sh to automatically sync changes to git reposi
 
 # Check if container was found and provide summary
 if [ -z "$CMD_PREFIX" ]; then
-    # Local mode - check if container exists
+    # Test-Mode - check if container exists
     if docker ps --filter "name=$CONTAINER_FILTER" --format '{{.Names}}' | grep -q "$CONTAINER_FILTER"; then
-        print_status_icon "OK" "Quick SSH test completed successfully - Local container accessible"
+        print_status_icon "OK" "Container access verified in Test-Mode"
     else
-        print_status_icon "ERROR" "Quick SSH test failed - No local container found"
+        print_status_icon "ERROR" "Container access failed in Test-Mode"
         exit 1
     fi
 else
-    # Remote mode - check if we can connect
+    # Addon-Mode - check if we can connect
     if timeout 5 $CMD_PREFIX "echo 'SSH test'" >/dev/null 2>&1; then
-        print_status_icon "OK" "Quick SSH test completed successfully - Remote connection established"
+        print_status_icon "OK" "SSH connection verified in Addon-Mode"
     else
-        print_status_icon "ERROR" "Quick SSH test failed - Cannot connect to remote host"
+        print_status_icon "ERROR" "SSH connection failed in Addon-Mode"
         exit 1
     fi
 fi 

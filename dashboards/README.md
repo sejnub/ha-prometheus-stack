@@ -26,6 +26,17 @@ This directory contains pre-configured Grafana dashboards for monitoring your Pr
 - [6. Support](#6-support)
 - [7. License](#7-license)
 
+## Home Dashboard
+
+The file `home.json` contains the default dashboard that should be set as the home dashboard in Grafana. While the file is named `home.json` to indicate its role as the home dashboard, it is titled "Addon Components Monitoring" to describe its content. This dashboard provides an immediate overview of all add-on component statuses when users first log in to Grafana.
+
+To set this as your home dashboard in Grafana:
+1. Log in to Grafana
+2. Go to the "Addon Components Monitoring" dashboard
+3. Click the star icon to favorite it
+4. Go to Grafana Settings → Preferences
+5. Under "Home Dashboard", select "Addon Components Monitoring"
+
 ## 1. Available Dashboards
 
 ### 1.1. Prometheus Stack Overview (`01-overview.json`)

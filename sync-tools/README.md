@@ -1,13 +1,13 @@
 # Addon Configuration Sync Tools
 
-**Intelligent tools for syncing configuration changes** between your development environment, local testing, and deployed Home Assistant addon. Works seamlessly in both **Test Mode** (local development) and **Addon Mode** (deployed Home Assistant).
+**Intelligent tools for syncing configuration changes** between your development environment and Home Assistant. Works seamlessly in both **Test-Mode** and **Addon-Mode**.
 
 ## 🎯 What These Tools Do
 
 The Prometheus Stack addon stores all configuration files inside Docker containers rather than in `/addon_configs/`. These tools automatically detect your environment and extract/compare configurations accordingly:
 
-- **🧪 Test Mode**: Direct access to local `prometheus-stack-test` container  
-- **🏠 Addon Mode**: SSH access to Home Assistant addon container
+- **🧪 Test-Mode**: Direct access to local `prometheus-stack-test` container  
+- **🏠 Addon-Mode**: SSH access to Home Assistant addon container
 - **🤖 Auto-Detection**: No manual configuration - tools detect the environment automatically
 
 ## 📁 Tool Overview
@@ -21,24 +21,24 @@ The Prometheus Stack addon stores all configuration files inside Docker containe
 
 ## 🚀 Quick Start
 
-### For Local Testing (Test Mode)
+### For Development (Test-Mode)
 
 ```bash
 # 1. Start your test container first
 cd .. && ./test/build.sh
 
-# 2. Use the sync tools (auto-detects test mode)
+# 2. Use the sync tools (auto-detects Test-Mode)
 cd sync-tools
-./s1_quick-ssh-test.sh      # ✅ Tests local container access
-./s2_extract-configs.sh     # ✅ Extracts from local container
+./s1_quick-ssh-test.sh      # ✅ Tests container access
+./s2_extract-configs.sh     # ✅ Extracts configurations
 ./s3_compare-configs.sh     # ✅ Compares with git repo
 ./s4_sync-to-repo.sh        # ✅ Automatically syncs changes to repository
 ```
 
-### For Home Assistant Addon (Addon Mode)
+### For Home Assistant (Addon-Mode)
 
 ```bash
-# Tools automatically detect remote mode when no local container found
+# Tools automatically detect Addon-Mode when no test container found
 ./s1_quick-ssh-test.sh      # ✅ Tests SSH to homeassistant.local
 ./s2_extract-configs.sh     # ✅ Extracts via SSH from HA addon  
 ./s3_compare-configs.sh     # ✅ Compares with git repo
@@ -216,7 +216,7 @@ ssh-extracted-configs/
 
 ## 🎯 Use Cases & Workflows
 
-### Development Workflow (Test Mode)
+### Development Workflow (Test-Mode)
 
 **Scenario**: You're developing locally and want to sync changes between your test container and git repository.
 
@@ -243,7 +243,7 @@ cd sync-tools
 cd .. && ./test/build.sh  # Rebuild with new configs
 ```
 
-### Production Sync Workflow (Addon Mode)
+### Production Sync Workflow (Addon-Mode)
 
 **Scenario**: You've customized your Home Assistant addon and want to save changes to git.
 

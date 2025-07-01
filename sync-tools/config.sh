@@ -73,21 +73,22 @@ set_defaults() {
     
     # Container Settings
     export LOCAL_CONTAINER_NAME="${LOCAL_CONTAINER_NAME:-prometheus-stack-test}"
-    export REMOTE_CONTAINER_NAME="${REMOTE_CONTAINER_NAME:-prometheus}"
+    export REMOTE_CONTAINER_NAME="${REMOTE_CONTAINER_NAME:-addon_local_prometheus_stack}"
     
     # Sync Settings
     export SYNC_BACKUP_DIR="${SYNC_BACKUP_DIR:-./sync-backups}"
     export EXTRACTED_DIR="${EXTRACTED_DIR:-./ssh-extracted-configs}"
-    export VERBOSE="${VERBOSE:-false}"
+    export RUNTIME_DIR="${RUNTIME_DIR:-./prometheus-stack/rootfs/etc}"
+    export VERBOSE="${VERBOSE:-true}"  # Temporarily set to true for debugging
     export DRY_RUN="${DRY_RUN:-false}"
 }
 
 # Function to detect environment mode
 detect_mode() {
     if docker ps --filter "name=$LOCAL_CONTAINER_NAME" --format '{{.Names}}' | grep -q "$LOCAL_CONTAINER_NAME" 2>/dev/null; then
-        echo "test"
+        echo "test"  # Used internally as "test" but displayed as "Test-Mode"
     else
-        echo "addon"
+        echo "addon"  # Used internally as "addon" but displayed as "Addon-Mode"
     fi
 }
 
@@ -95,7 +96,7 @@ detect_mode() {
 get_ssh_prefix() {
     local mode="$1"
     
-    if [ "$mode" = "addon" ]; then
+    if [ "$mode" = "addon" ]; then  # Internal mode name
         local ssh_opts=""
         
         # Add port if not default
@@ -171,7 +172,11 @@ show_config() {
     
     print_status "$BLUE" "🔧 Current Configuration:"
     print_status "$BLUE" "========================="
-    print_status "$BLUE" "Mode: $mode"
+    if [ "$mode" = "test" ]; then
+        print_status "$BLUE" "Mode: Test-Mode"
+    else
+        print_status "$BLUE" "Mode: Addon-Mode"
+    fi
     print_status "$BLUE" "Container: $(get_container_filter "$mode")"
     
     if [ "$mode" = "addon" ]; then
