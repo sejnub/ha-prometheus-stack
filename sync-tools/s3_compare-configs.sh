@@ -430,6 +430,28 @@ echo "================================="
 # Count total comparisons and analyze per-file status
 total_files=0
 
+# Ensure GENERATED_TRACKABLE files have proper source status for change counting
+for file_key in "${!file_status[@]}"; do
+    status="${file_status[$file_key]}"
+    source_status="${status%,*}"
+    runtime_status="${status#*,}"
+    
+    # If source status is empty (from skipped source comparison), set it based on file type
+    if [ -z "$source_status" ]; then
+        filename=$(basename "$file_key")
+        file_config=$(get_file_pattern "$filename" "$file_key")
+        IFS=':' read -r pattern_type runtime_path source_path extracted_path <<< "$file_config"
+        
+        if [ "$pattern_type" = "GENERATED_TRACKABLE" ]; then
+            # For generated trackable files, source is always "different" since no source exists
+            file_status[$file_key]="source_diff,$runtime_status"
+        else
+            # For other files with missing source status, mark as source_same
+            file_status[$file_key]="source_same,$runtime_status"
+        fi
+    fi
+done
+
 for file_key in "${!file_status[@]}"; do
     ((total_files++))
     status="${file_status[$file_key]}"
