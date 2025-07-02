@@ -138,6 +138,7 @@ compare_files() {
     local is_generated="${5:-false}"
     
     local filename=$(basename "$target_file")
+    local file_key="$target_file"  # Use full path as key to avoid conflicts
     local has_diff=false
     
     if [ "$is_runtime" = "true" ]; then
@@ -210,11 +211,11 @@ with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
                     rm -rf "$temp_dir"
                     
                     # Update file status for runtime comparison
-                    local current_status="${file_status[$filename]:-,}"
+                    local current_status="${file_status[$file_key]:-,}"
                     if [ "$has_diff" = "true" ]; then
-                        file_status[$filename]="${current_status%,},runtime_diff"
+                        file_status[$file_key]="${current_status%,},runtime_diff"
                     else
-                        file_status[$filename]="${current_status%,},runtime_same"
+                        file_status[$file_key]="${current_status%,},runtime_same"
                     fi
                     return
                     ;;
@@ -243,11 +244,11 @@ with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
                     rm -rf "$temp_dir"
                     
                     # Update file status for runtime comparison
-                    local current_status="${file_status[$filename]:-,}"
+                    local current_status="${file_status[$file_key]:-,}"
                     if [ "$has_diff" = "true" ]; then
-                        file_status[$filename]="${current_status%,},runtime_diff"
+                        file_status[$file_key]="${current_status%,},runtime_diff"
                     else
-                        file_status[$filename]="${current_status%,},runtime_same"
+                        file_status[$file_key]="${current_status%,},runtime_same"
                     fi
                     return
                     ;;
@@ -272,11 +273,11 @@ with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
                     rm -rf "$temp_dir"
                     
                     # Update file status for runtime comparison
-                    local current_status="${file_status[$filename]:-,}"
+                    local current_status="${file_status[$file_key]:-,}"
                     if [ "$has_diff" = "true" ]; then
-                        file_status[$filename]="${current_status%,},runtime_diff"
+                        file_status[$file_key]="${current_status%,},runtime_diff"
                     else
-                        file_status[$filename]="${current_status%,},runtime_same"
+                        file_status[$file_key]="${current_status%,},runtime_same"
                     fi
                     return
                     ;;
@@ -301,11 +302,11 @@ with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
                     rm -rf "$temp_dir"
                     
                     # Update file status for runtime comparison
-                    local current_status="${file_status[$filename]:-,}"
+                    local current_status="${file_status[$file_key]:-,}"
                     if [ "$has_diff" = "true" ]; then
-                        file_status[$filename]="${current_status%,},runtime_diff"
+                        file_status[$file_key]="${current_status%,},runtime_diff"
                     else
-                        file_status[$filename]="${current_status%,},runtime_same"
+                        file_status[$file_key]="${current_status%,},runtime_same"
                     fi
                     return
                     ;;
@@ -336,17 +337,17 @@ with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
         
         # Update file status
         if [ "$is_runtime" = "true" ]; then
-            local current_status="${file_status[$filename]:-,}"
+            local current_status="${file_status[$file_key]:-,}"
             if [ "$has_diff" = "true" ]; then
-                file_status[$filename]="${current_status%,},runtime_diff"
+                file_status[$file_key]="${current_status%,},runtime_diff"
             else
-                file_status[$filename]="${current_status%,},runtime_same"
+                file_status[$file_key]="${current_status%,},runtime_same"
             fi
         else
             if [ "$has_diff" = "true" ]; then
-                file_status[$filename]="source_diff,${file_status[$filename]#*,}"
+                file_status[$file_key]="source_diff,${file_status[$file_key]#*,}"
             else
-                file_status[$filename]="source_same,${file_status[$filename]#*,}"
+                file_status[$file_key]="source_same,${file_status[$file_key]#*,}"
             fi
         fi
         return 1
@@ -360,10 +361,10 @@ with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
         
         # Update file status
         if [ "$is_runtime" = "true" ]; then
-            local current_status="${file_status[$filename]:-,}"
-            file_status[$filename]="${current_status%,},runtime_diff"
+            local current_status="${file_status[$file_key]:-,}"
+            file_status[$file_key]="${current_status%,},runtime_diff"
         else
-            file_status[$filename]="source_diff,${file_status[$filename]#*,}"
+            file_status[$file_key]="source_diff,${file_status[$file_key]#*,}"
         fi
         return 1
     fi
@@ -388,17 +389,17 @@ with open('${temp_dir}/generated_alertmanager.yml', 'w') as f:
     
     # Update file status
     if [ "$is_runtime" = "true" ]; then
-        local current_status="${file_status[$filename]:-,}"
+        local current_status="${file_status[$file_key]:-,}"
         if [ "$has_diff" = "true" ]; then
-            file_status[$filename]="${current_status%,},runtime_diff"
+            file_status[$file_key]="${current_status%,},runtime_diff"
         else
-            file_status[$filename]="${current_status%,},runtime_same"
+            file_status[$file_key]="${current_status%,},runtime_same"
         fi
     else
         if [ "$has_diff" = "true" ]; then
-            file_status[$filename]="source_diff,${file_status[$filename]#*,}"
+            file_status[$file_key]="source_diff,${file_status[$file_key]#*,}"
         else
-            file_status[$filename]="source_same,${file_status[$filename]#*,}"
+            file_status[$file_key]="source_same,${file_status[$file_key]#*,}"
         fi
     fi
     
@@ -716,9 +717,12 @@ echo "================================="
 
 # Count total comparisons and analyze per-file status
 total_files=0
-for filename in "${!file_status[@]}"; do
+
+
+
+for file_key in "${!file_status[@]}"; do
     ((total_files++))
-    status="${file_status[$filename]}"
+    status="${file_status[$file_key]}"
     source_status="${status%,*}"
     runtime_status="${status#*,}"
     
