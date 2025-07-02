@@ -145,7 +145,7 @@ check_new_files() {
 }
 
 # Initialize counters for different types of changes
-declare -i expected_changes=0    # runtime != extracted (normal workflow)
+declare -i expected_changes=0    # runtime == extracted != source (normal workflow)
 declare -i irregular_changes=0   # any other differences
 declare -i total_files=0
 declare -A file_status  # Track status per file: filename -> "source_diff,runtime_diff"
@@ -708,11 +708,11 @@ for file_key in "${!file_status[@]}"; do
     if [[ "$source_status" == "source_diff" && "$runtime_status" == "runtime_diff" ]]; then
         # Both source and runtime differ from extracted - irregular
         ((irregular_changes++))
-    elif [[ "$source_status" == "source_same" && "$runtime_status" == "runtime_diff" ]]; then
-        # Only runtime differs from extracted - expected workflow
-        ((expected_changes++))
     elif [[ "$source_status" == "source_diff" && "$runtime_status" == "runtime_same" ]]; then
-        # Only source differs from extracted - irregular
+        # Manual changes made in runtime, then extracted - expected workflow
+        ((expected_changes++))
+    elif [[ "$source_status" == "source_same" && "$runtime_status" == "runtime_diff" ]]; then
+        # Source matches extracted but runtime differs - irregular
         ((irregular_changes++))
     fi
     # If both are same, no change to count
@@ -724,8 +724,8 @@ echo "⚠️  Irregular changes: $irregular_changes (unexpected differences that
 
 echo ""
 echo "💡 Change Types:"
-echo "   - Expected: Manual changes made in container, then extracted (normal workflow)"
-echo "   - Irregular: Source ≠ Extracted or other unexpected differences"
+echo "   - Expected: Manual changes made in runtime container, then extracted (runtime == extracted != source)"
+echo "   - Irregular: Source ≠ Extracted, Runtime ≠ Extracted, or other unexpected differences"
 
 echo ""
 echo "💡 File Locations:"
@@ -736,8 +736,11 @@ echo "   - Runtime: Container filesystem (./prometheus-stack/rootfs/etc/...)"
 echo ""
 echo "💡 Workflow:"
 echo "   1. Review differences: Use the 'diff' commands shown above"
-echo "   2. Update source files: Copy desired changes to source location"
-echo "   3. Update runtime files: Copy to runtime location"
+echo "   2. For expected changes (runtime == extracted != source):"
+echo "      - Update source files: Copy extracted config to source location"
+echo "   3. For irregular changes:"
+echo "      - Decide whether to keep runtime changes or revert to source"
+echo "      - Update accordingly: source → runtime or runtime → source"
 echo "   4. Test changes: Run build.sh to verify everything works"
 echo "   5. Commit: Add changes to git when satisfied"
 
