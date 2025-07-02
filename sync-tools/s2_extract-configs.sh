@@ -10,6 +10,10 @@ load_env
 set_defaults
 MODE=$(detect_mode)
 
+# Get extraction directories from centralized config
+EXTRACTION_DIRS=($(get_extraction_dirs))
+EXTRACTION_DIRS_STR=$(IFS=, ; echo "${EXTRACTION_DIRS[*]}")
+
 if [ "$MODE" = "test" ]; then
     echo "🧪 Test-Mode detected (local container)"
     HA_IP="localhost"
@@ -29,10 +33,11 @@ show_config "$MODE"
 
 echo "Extracting ALL configuration files..."
 echo "Target: $HA_IP (container filter: $CONTAINER_FILTER)"
+echo "Directories: ${EXTRACTION_DIRS_STR}"
 echo "==============================================="
 
-# Create local directories
-mkdir -p "$EXTRACTED_DIR"/{dashboards,prometheus,grafana,blackbox,alerting}
+# Create local directories using centralized config
+mkdir -p "$EXTRACTED_DIR"/{${EXTRACTION_DIRS_STR}}
 
 # Execute extraction commands (locally or via SSH)
 $CMD_PREFIX bash << EOF
@@ -47,25 +52,33 @@ fi
 
 echo 'Container found: '\$CONTAINER_ID
 
-# Create temp extraction directory
-mkdir -p /tmp/extracted-configs/{dashboards,prometheus,grafana,blackbox,alerting}
+# Create temp extraction directory using centralized config
+mkdir -p /tmp/extracted-configs/{${EXTRACTION_DIRS_STR}}
 
-echo 'Extracting Grafana dashboards...'
+echo 'Extracting configuration files...'
+# Dashboard files
 docker cp "\$CONTAINER_ID:/etc/grafana/provisioning/dashboards/" "/tmp/extracted-configs/dashboards/" 2>/dev/null || echo '   Dashboards not accessible'
 
-echo 'Extracting Prometheus config...'
+# Prometheus files
 docker cp "\$CONTAINER_ID:/etc/prometheus/prometheus.yml" "/tmp/extracted-configs/prometheus/" 2>/dev/null || echo '   prometheus.yml not accessible'
 docker cp "\$CONTAINER_ID:/etc/prometheus/rules/" "/tmp/extracted-configs/prometheus/" 2>/dev/null || echo '   Alert rules not accessible'
 
-echo 'Extracting Grafana config...'
+# Grafana files
 docker cp "\$CONTAINER_ID:/etc/grafana/grafana.ini" "/tmp/extracted-configs/grafana/" 2>/dev/null || echo '   grafana.ini not accessible'
 docker cp "\$CONTAINER_ID:/etc/grafana/provisioning/" "/tmp/extracted-configs/grafana/" 2>/dev/null || echo '   Grafana provisioning not accessible'
 
-echo 'Extracting Blackbox exporter config...'
+# Blackbox files
 docker cp "\$CONTAINER_ID:/etc/blackbox_exporter/blackbox.yml" "/tmp/extracted-configs/blackbox/" 2>/dev/null || echo '   blackbox.yml not accessible'
 
-echo 'Extracting Alertmanager config...'
+# Alertmanager files
 docker cp "\$CONTAINER_ID:/etc/alertmanager/alertmanager.yml" "/tmp/extracted-configs/alerting/" 2>/dev/null || echo '   alertmanager.yml not accessible'
+
+# Karma files
+docker cp "\$CONTAINER_ID:/etc/karma/karma.yml" "/tmp/extracted-configs/karma/" 2>/dev/null || echo '   karma.yml not accessible'
+
+# NGINX files
+docker cp "\$CONTAINER_ID:/etc/nginx/nginx.conf" "/tmp/extracted-configs/nginx/" 2>/dev/null || echo '   nginx.conf not accessible'
+docker cp "\$CONTAINER_ID:/etc/nginx/servers/ingress.conf" "/tmp/extracted-configs/nginx/" 2>/dev/null || echo '   ingress.conf not accessible'
 
 echo 'Extracted files summary:'
 find /tmp/extracted-configs -type f 2>/dev/null | head -10
@@ -89,11 +102,10 @@ echo "✅ Configuration extraction complete!"
 echo "Files saved to: ./$EXTRACTED_DIR/"
 echo ""
 echo "What was extracted:"
-echo "   Dashboards: $(find ./$EXTRACTED_DIR/dashboards -name "*.json" 2>/dev/null | wc -l) files"
-echo "   Prometheus: $(find ./$EXTRACTED_DIR/prometheus -type f 2>/dev/null | wc -l) files"
-echo "   Grafana: $(find ./$EXTRACTED_DIR/grafana -type f 2>/dev/null | wc -l) files"
-echo "   Blackbox: $(find ./$EXTRACTED_DIR/blackbox -type f 2>/dev/null | wc -l) files"
-echo "   Alerting: $(find ./$EXTRACTED_DIR/alerting -type f 2>/dev/null | wc -l) files"
+for dir in "${EXTRACTION_DIRS[@]}"; do
+    count=$(find "./$EXTRACTED_DIR/$dir" -type f 2>/dev/null | wc -l)
+    echo "   $(echo ${dir^}): $count files"  # Capitalize first letter
+done
 
 echo ""
 echo "Compare with current files:"

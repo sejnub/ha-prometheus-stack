@@ -1,0 +1,105 @@
+# =============================================================================
+# CONFIGURATION FILES DEFINITION
+# =============================================================================
+# This YAML file defines all configuration files handled by the sync tools
+# 
+# Structure:
+#   filename_pattern:
+#     type: TEMPLATE_FILE | STATIC_FILE | GENERATED_FILE
+#     runtime_path: path within /etc/ in container (runtime location)
+#     source_path: path in git repository (source location) 
+#     extracted_path: directory path for extraction (extracted location)
+#     description: human-readable description
+#
+# File Types:
+#   TEMPLATE_FILE:  Has source template (compare against ./prometheus-stack/filename)
+#   STATIC_FILE:    Static file copied from rootfs (compare against ./prometheus-stack/rootfs/etc/runtime_path/filename)  
+#   GENERATED_FILE: Generated at runtime (no source comparison, only runtime)
+# =============================================================================
+
+# Dashboard Files
+"*.json":
+  type: STATIC_FILE
+  runtime_path: grafana/provisioning/dashboards
+  source_path: prometheus-stack/rootfs/etc/grafana/provisioning/dashboards
+  extracted_path: dashboards
+  description: Grafana dashboard JSON files
+
+"dashboard-provider.yml":
+  type: STATIC_FILE
+  runtime_path: grafana/provisioning/dashboards
+  source_path: prometheus-stack/rootfs/etc/grafana/provisioning/dashboards
+  extracted_path: dashboards
+  description: Grafana dashboard provider configuration
+
+# Prometheus Files
+"prometheus.yml":
+  type: TEMPLATE_FILE
+  runtime_path: prometheus
+  source_path: prometheus-stack
+  extracted_path: prometheus
+  description: Main Prometheus configuration (has template)
+
+"*.yml":
+  type: STATIC_FILE
+  runtime_path: prometheus
+  source_path: prometheus-stack/rootfs/etc/prometheus
+  extracted_path: prometheus
+  description: Prometheus alert rules and other YAML files
+  priority: 2  # Lower priority than specific prometheus.yml match
+
+# Grafana Files
+"grafana.ini":
+  type: GENERATED_FILE
+  runtime_path: grafana
+  source_path: ""
+  extracted_path: grafana
+  description: Grafana main configuration (generated from options.json)
+
+# Grafana Datasource Files (special case - different runtime_path)
+"prometheus.yml@datasources":
+  type: STATIC_FILE
+  runtime_path: grafana/provisioning/datasources
+  source_path: prometheus-stack/rootfs/etc/grafana/provisioning/datasources
+  extracted_path: grafana
+  description: Grafana Prometheus datasource configuration
+  match_path: "*/provisioning/datasources/*"
+
+# Blackbox Files
+"blackbox.yml":
+  type: TEMPLATE_FILE
+  runtime_path: blackbox_exporter
+  source_path: prometheus-stack
+  extracted_path: blackbox
+  description: Blackbox Exporter configuration (has template)
+
+# Alertmanager Files
+"alertmanager.yml":
+  type: GENERATED_FILE
+  runtime_path: alertmanager
+  source_path: ""
+  extracted_path: alerting
+  description: Alertmanager configuration (generated from options.json)
+
+# Karma Files
+"karma.yml":
+  type: GENERATED_FILE
+  runtime_path: karma
+  source_path: ""
+  extracted_path: karma
+  description: Karma dashboard configuration (generated from options.json)
+
+# NGINX Files
+"nginx.conf":
+  type: STATIC_FILE
+  runtime_path: nginx
+  source_path: prometheus-stack/rootfs/etc/nginx
+  extracted_path: nginx
+  description: NGINX main configuration
+
+"ingress.conf":
+  type: STATIC_FILE
+  runtime_path: nginx/servers
+  source_path: prometheus-stack/rootfs/etc/nginx/servers
+  extracted_path: nginx
+  description: NGINX ingress routing configuration 

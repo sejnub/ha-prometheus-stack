@@ -19,25 +19,45 @@ resolve_path() {
 # Source configuration
 source "$SCRIPT_DIR/config.sh"
 
+# Declare global arrays for file tracking
+declare -A file_status
+declare -a dashboard_files=()
+declare -a prometheus_files=()
+declare -a grafana_files=()
+declare -a blackbox_files=()
+declare -a alerting_files=()
+declare -a karma_files=()
+declare -a nginx_files=()
+
 # Function definitions
 find_config_files() {
     local extracted_dir="$1"
     
-    # Find dashboard files
-    mapfile -t dashboard_files < <(find "$extracted_dir/dashboards/dashboards" -type f -name "*.json" 2>/dev/null)
+    # Get extraction directories from centralized config and find files
+    local extraction_dirs=($(get_extraction_dirs))
     
-    # Find prometheus files
-    mapfile -t prometheus_files < <(find "$extracted_dir/prometheus" -type f -name "*.yml" 2>/dev/null)
-    
-    # Find grafana files
-    mapfile -t grafana_files < <(find "$extracted_dir/grafana" -type f \( -name "*.yml" -o -name "*.ini" \) ! -path "*/dashboards/*" 2>/dev/null)
-    
-    # Find blackbox files
-    mapfile -t blackbox_files < <(find "$extracted_dir/blackbox" -type f -name "*.yml" 2>/dev/null)
-    
-    # Find alerting files
-    mapfile -t alerting_files < <(find "$extracted_dir/alerting" -type f -name "*.yml" 2>/dev/null)
+    for dir in "${extraction_dirs[@]}"; do
+        local dir_path="$extracted_dir/$dir"
+        if [ -d "$dir_path" ]; then
+            # Find all config files in this directory
+            local files=()
+            mapfile -t files < <(find "$dir_path" -type f \( -name "*.yml" -o -name "*.yaml" -o -name "*.ini" -o -name "*.json" -o -name "*.conf" \) 2>/dev/null)
+            
+            # Store files in appropriate arrays for compatibility
+            case "$dir" in
+                "dashboards") dashboard_files=("${files[@]}") ;;
+                "prometheus") prometheus_files=("${files[@]}") ;;
+                "grafana") grafana_files=("${files[@]}") ;;
+                "blackbox") blackbox_files=("${files[@]}") ;;
+                "alerting") alerting_files=("${files[@]}") ;;
+                "karma") karma_files=("${files[@]}") ;;
+                "nginx") nginx_files=("${files[@]}") ;;
+            esac
+        fi
+    done
 }
+
+# compare_config_file function is now defined in config.sh
 
 check_new_files() {
     local found_new=false
@@ -582,189 +602,89 @@ echo "$MODE_INFO"
 echo "================================================================"
 
 # Check if extraction has been done
-EXTRACTED_DIR_PATH="$(resolve_path "./$EXTRACTED_DIR")"
+EXTRACTED_DIR_PATH="$EXTRACTED_DIR"
 if [ ! -d "$EXTRACTED_DIR_PATH" ]; then
-    print_status "$RED" "❌ No extracted files found!"
-    print_status "$RED" "📥 Run ./s2_extract-configs.sh first"
+    print_status "$RED" "❌ Extracted directory not found: $EXTRACTED_DIR_PATH"
     exit 1
 fi
 
 echo "📊 Configuration File Comparison:"
 echo ""
 
-# Initialize arrays
-declare -a dashboard_files=()
-declare -a prometheus_files=()
-declare -a grafana_files=()
-declare -a blackbox_files=()
-declare -a alerting_files=()
-
 # Find all configuration files
 find_config_files "$EXTRACTED_DIR_PATH"
 
-# Compare dashboard files
+# Compare all configuration files using centralized patterns
+echo -e "\n🔸 Configuration File Comparison:"
+echo "Using centralized file patterns from config.sh"
+echo "=============================================="
+
+# Process each extracted directory and find all config files
+total_files_found=0
+
+# Dashboard files (special case - nested in dashboards/dashboards/)
 echo -e "\n🔸 Dashboard Files:"
-if [ ${#dashboard_files[@]} -gt 0 ]; then
-    echo "   Extracted: ${#dashboard_files[@]} dashboard files"
-    for file in "${dashboard_files[@]}"; do
-        filename=$(basename "$file")
-        echo "   🔍 Dashboard: $filename:"
-        compare_files \
-            "./prometheus-stack/rootfs/etc/grafana/provisioning/dashboards/$filename" \
-            "$file" \
-            "Source → Extracted" \
-            false \
-            false
-        compare_files \
-            "/etc/grafana/provisioning/dashboards/$filename" \
-            "$file" \
-            "Runtime → Extracted" \
-            true \
-            false
-        echo ""
-    done
+dashboard_dir="$EXTRACTED_DIR_PATH/dashboards"
+if [ -d "$dashboard_dir" ]; then
+    # Find all JSON files in the dashboards directory structure
+    files=()
+    mapfile -t files < <(find "$dashboard_dir" -type f -name "*.json" 2>/dev/null)
+    mapfile -t -O ${#files[@]} files < <(find "$dashboard_dir" -type f -name "*.yml" 2>/dev/null)
+    
+    if [ ${#files[@]} -gt 0 ]; then
+        echo "   Extracted: ${#files[@]} files"
+        total_files_found=$((total_files_found + ${#files[@]}))
+        
+        for file in "${files[@]}"; do
+            filename=$(basename "$file")
+            compare_config_file "$file" "$filename" "dashboards"
+        done
+    else
+        echo "   ❌ No dashboard files found"
+    fi
 else
-    echo "   ❌ No dashboard files found in extracted configs"
+    echo "   ❌ Extracted dashboards directory not found"
 fi
 
-# Compare prometheus configuration
-echo -e "\n🔸 Prometheus Configuration:"
-if [ ${#prometheus_files[@]} -gt 0 ]; then
-    echo "   Extracted: ${#prometheus_files[@]} prometheus files"
-    for file in "${prometheus_files[@]}"; do
-        filename=$(basename "$file")
-        echo "   🔍 $filename:"
-        if [[ "$filename" == "prometheus.yml" ]]; then
-            # prometheus.yml has a source template
-            compare_files \
-                "./prometheus-stack/prometheus.yml" \
-                "$file" \
-                "Source → Extracted" \
-                false \
-                false
+# Process other config directories
+for dir in prometheus grafana blackbox alerting karma nginx; do
+    dir_path="$EXTRACTED_DIR_PATH/$dir"
+    
+    # Map directory to service name for display
+    case "$dir" in
+        "prometheus") service_name="Prometheus Configuration" ;;
+        "grafana") service_name="Grafana Configuration" ;;
+        "blackbox") service_name="Blackbox Exporter Configuration" ;;
+        "alerting") service_name="Alertmanager Configuration" ;;
+        "karma") service_name="Karma Configuration" ;;
+        "nginx") service_name="NGINX Configuration" ;;
+        *) service_name="$(echo ${dir^}) Configuration" ;;
+    esac
+    
+    echo -e "\n🔸 $service_name:"
+    
+    if [ -d "$dir_path" ]; then
+        # Find all config files in this directory
+        files=()
+        mapfile -t files < <(find "$dir_path" -type f \( -name "*.yml" -o -name "*.yaml" -o -name "*.ini" -o -name "*.json" -o -name "*.conf" \) 2>/dev/null)
+        
+        if [ ${#files[@]} -gt 0 ]; then
+            echo "   Extracted: ${#files[@]} files"
+            total_files_found=$((total_files_found + ${#files[@]}))
+            
+            for file in "${files[@]}"; do
+                filename=$(basename "$file")
+                compare_config_file "$file" "$filename" "$dir"
+            done
         else
-            # Other prometheus files (like alert rules) don't have source templates
-            compare_files \
-                "./prometheus-stack/rootfs/etc/prometheus/$filename" \
-                "$file" \
-                "Source → Extracted" \
-                false \
-                true
+            echo "   ❌ No config files found in extracted $dir directory"
         fi
-        compare_files \
-            "/etc/prometheus/$filename" \
-            "$file" \
-            "Runtime → Extracted" \
-            true \
-            false
-        echo ""
-    done
-else
-    echo "   ❌ No prometheus files found in extracted configs"
-fi
+    else
+        echo "   ❌ Extracted $dir directory not found"
+    fi
+done
 
-# Compare grafana configuration
-echo -e "\n🔸 Grafana Configuration:"
-if [ ${#grafana_files[@]} -gt 0 ]; then
-    echo "   Extracted: ${#grafana_files[@]} grafana files"
-    for file in "${grafana_files[@]}"; do
-        filename=$(basename "$file")
-        if [[ "$filename" == "grafana.ini" ]]; then
-            echo "   🔍 $filename:"
-            compare_files \
-                "./prometheus-stack/rootfs/etc/grafana/$filename" \
-                "$file" \
-                "Source → Extracted" \
-                false \
-                true
-            compare_files \
-                "/etc/grafana/$filename" \
-                "$file" \
-                "Runtime → Extracted" \
-                true \
-                true
-            echo ""
-        elif [[ "$filename" == "prometheus.yml" ]]; then
-            echo "   🔍 Datasource: $filename:"
-            compare_files \
-                "./prometheus-stack/rootfs/etc/grafana/provisioning/datasources/$filename" \
-                "$file" \
-                "Source → Extracted" \
-                false \
-                false
-            compare_files \
-                "/etc/grafana/provisioning/datasources/$filename" \
-                "$file" \
-                "Runtime → Extracted" \
-                true \
-                false
-            echo ""
-        fi
-    done
-else
-    echo "   ❌ No grafana files found in extracted configs"
-fi
-
-# Compare blackbox configuration
-echo -e "\n🔸 Blackbox Exporter Configuration:"
-if [ ${#blackbox_files[@]} -gt 0 ]; then
-    echo "   Extracted: ${#blackbox_files[@]} blackbox files"
-    for file in "${blackbox_files[@]}"; do
-        filename=$(basename "$file")
-        echo "   🔍 $filename:"
-        if [[ "$filename" == "blackbox.yml" ]]; then
-            # blackbox.yml has a source template
-            compare_files \
-                "./prometheus-stack/blackbox.yml" \
-                "$file" \
-                "Source → Extracted" \
-                false \
-                false
-        else
-            # Other blackbox files don't have source templates
-            compare_files \
-                "./prometheus-stack/rootfs/etc/blackbox_exporter/$filename" \
-                "$file" \
-                "Source → Extracted" \
-                false \
-                true
-        fi
-        compare_files \
-            "/etc/blackbox_exporter/$filename" \
-            "$file" \
-            "Runtime → Extracted" \
-            true \
-            false
-        echo ""
-    done
-else
-    echo "   ❌ No blackbox files found in extracted configs"
-fi
-
-# Compare alertmanager configuration
-echo -e "\n🔸 Alertmanager Configuration:"
-if [ ${#alerting_files[@]} -gt 0 ]; then
-    echo "   Extracted: ${#alerting_files[@]} alerting files"
-    for file in "${alerting_files[@]}"; do
-        filename=$(basename "$file")
-        echo "   🔍 $filename:"
-        compare_files \
-            "./prometheus-stack/rootfs/etc/alertmanager/$filename" \
-            "$file" \
-            "Source → Extracted" \
-            false \
-            true
-        compare_files \
-            "/etc/alertmanager/$filename" \
-            "$file" \
-            "Runtime → Extracted" \
-            true \
-            true
-        echo ""
-    done
-else
-    echo "   ❌ No alerting files found in extracted configs"
-fi
+echo -e "\n📊 Total files processed: $total_files_found"
 
 # Check for new files
 echo -e "\n🆕 New Files (only in extracted):"
@@ -777,8 +697,6 @@ echo "================================="
 
 # Count total comparisons and analyze per-file status
 total_files=0
-
-
 
 for file_key in "${!file_status[@]}"; do
     ((total_files++))
