@@ -309,6 +309,7 @@ get_file_pattern() {
         local runtime_var="${var_prefix}_RUNTIME_PATH"
         local source_var="${var_prefix}_SOURCE_PATH"
         local extract_var="${var_prefix}_EXTRACTED_PATH"
+        local baseline_var="${var_prefix}_BASELINE_PATH"
         local match_var="${var_prefix}_MATCH_PATH"
         
         # Check if this pattern has configuration
@@ -342,7 +343,7 @@ get_file_pattern() {
             fi
             
             if [ "$matches" = true ]; then
-                echo "${!type_var}:${!runtime_var}:${!source_var}:${!extract_var}"
+                echo "${!type_var}:${!runtime_var}:${!source_var}:${!extract_var}:${!baseline_var}"
                 return 0
             fi
         fi
@@ -450,35 +451,64 @@ compare_config_file() {
     
     echo "   🔍 $filename:"
     
-    # Get source path using centralized function
-    local source_file_path=""
-    if [ "$pattern_type" = "TEMPLATE_FILE" ]; then
-        source_file_path="$SOURCE_TEMPLATES/$filename"
-    elif [ "$pattern_type" = "STATIC_FILE" ] && [ -n "$source_path" ]; then
-        source_file_path="$source_path/$filename"
-    fi
+    # Handle source comparison based on file type
+    case "$pattern_type" in
+        "TEMPLATE_FILE"|"STATIC_FILE")
+            # Has source file - compare it
+            local source_file_path=""
+            if [ "$pattern_type" = "TEMPLATE_FILE" ]; then
+                source_file_path="$SOURCE_TEMPLATES/$filename"
+            elif [ "$pattern_type" = "STATIC_FILE" ] && [ -n "$source_path" ]; then
+                source_file_path="$source_path/$filename"
+            fi
+            
+            if [ -n "$source_file_path" ]; then
+                compare_files \
+                    "$source_file_path" \
+                    "$extracted_file" \
+                    "Source → Extracted" \
+                    false \
+                    false
+            else
+                echo "      📋 Source → Extracted: SKIPPED (no source file)"
+            fi
+            ;;
+        "GENERATED_TRACKABLE")
+            # Generated file but we want to track manual changes
+            echo "      📋 Source → Extracted: SKIPPED (generated file, tracking manual changes)"
+            ;;
+        "GENERATED_FILE")
+            # Pure generated file - skip source comparison
+            echo "      📋 Source → Extracted: SKIPPED (generated file)"
+            ;;
+        *)
+            echo "      📋 Source → Extracted: SKIPPED (unknown file type: $pattern_type)"
+            ;;
+    esac
     
-    if [ -n "$source_file_path" ]; then
-        # Has source file - compare it
-        compare_files \
-            "$source_file_path" \
-            "$extracted_file" \
-            "Source → Extracted" \
-            false \
-            false
-    else
-        # Generated file - skip source comparison
-        echo "      📋 Source → Extracted: SKIPPED (generated file)"
-    fi
-    
-    # All files get runtime comparison using centralized path
+    # Handle runtime comparison based on file type
     local container_path="$CONTAINER_ETC/$runtime_path/$filename"
-    compare_files \
-        "$container_path" \
-        "$extracted_file" \
-        "Runtime → Extracted" \
-        true \
-        $([ "$pattern_type" = "GENERATED_FILE" ] && echo "true" || echo "false")
+    case "$pattern_type" in
+        "GENERATED_TRACKABLE")
+            # For trackable generated files, compare extracted vs runtime with filtering
+            # This will detect manual changes while ignoring expected generated differences
+            compare_files \
+                "$container_path" \
+                "$extracted_file" \
+                "Runtime → Extracted (tracking manual changes)" \
+                true \
+                true
+            ;;
+        *)
+            # Standard runtime comparison
+            compare_files \
+                "$container_path" \
+                "$extracted_file" \
+                "Runtime → Extracted" \
+                true \
+                $([ "$pattern_type" = "GENERATED_FILE" ] && echo "true" || echo "false")
+            ;;
+    esac
     
     echo ""
 }
