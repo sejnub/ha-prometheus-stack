@@ -24,14 +24,14 @@
   runtime_path: grafana/provisioning/dashboards
   source_path: prometheus-stack/rootfs/etc/grafana/provisioning/dashboards
   extracted_path: dashboards
-  description: Grafana dashboard JSON files
+  description: "DEPLOYMENT: Copied during Docker build from rootfs/etc/grafana/provisioning/dashboards/ → /etc/grafana/provisioning/dashboards/ - Grafana dashboard JSON definitions"
 
 "dashboard-provider.yml":
   type: STATIC_FILE
   runtime_path: grafana/provisioning/dashboards
   source_path: prometheus-stack/rootfs/etc/grafana/provisioning/dashboards
   extracted_path: dashboards
-  description: Grafana dashboard provider configuration
+  description: "DEPLOYMENT: Copied during Docker build from rootfs/etc/grafana/provisioning/dashboards/ → /etc/grafana/provisioning/dashboards/ - Grafana dashboard provider config"
 
 # Prometheus Files
 "prometheus.yml":
@@ -39,14 +39,14 @@
   runtime_path: prometheus
   source_path: prometheus-stack
   extracted_path: prometheus
-  description: Main Prometheus configuration (has template)
+  description: "DEPLOYMENT: Copied during Docker build from prometheus-stack/prometheus.yml → /etc/prometheus/prometheus.yml via Dockerfile COPY command - Main Prometheus configuration template"
 
 "*.yml":
   type: STATIC_FILE
   runtime_path: prometheus
   source_path: prometheus-stack/rootfs/etc/prometheus
   extracted_path: prometheus
-  description: Prometheus alert rules and other YAML files
+  description: "DEPLOYMENT: Copied during Docker build from rootfs/etc/prometheus/ → /etc/prometheus/ - Prometheus alerting and recording rule files"
   priority: 2  # Lower priority than specific prometheus.yml match
 
 # Grafana Files
@@ -55,7 +55,7 @@
   runtime_path: grafana
   source_path: prometheus-stack
   extracted_path: grafana
-  description: Grafana main configuration (has template)
+  description: "DEPLOYMENT: Copied during Docker build from prometheus-stack/grafana.ini → /etc/grafana/grafana.ini via Dockerfile COPY command - Grafana server configuration template"
 
 # Grafana Datasource Files (special case - different runtime_path)
 "prometheus.yml@datasources":
@@ -63,7 +63,7 @@
   runtime_path: grafana/provisioning/datasources
   source_path: prometheus-stack/rootfs/etc/grafana/provisioning/datasources
   extracted_path: grafana
-  description: Grafana Prometheus datasource configuration
+  description: "DEPLOYMENT: Copied during Docker build from rootfs/etc/grafana/provisioning/datasources/ → /etc/grafana/provisioning/datasources/ - Grafana Prometheus datasource configuration"
   match_path: "*/provisioning/datasources/*"
 
 # Blackbox Files
@@ -72,7 +72,7 @@
   runtime_path: blackbox_exporter
   source_path: prometheus-stack
   extracted_path: blackbox
-  description: Blackbox Exporter configuration (has template)
+  description: "DEPLOYMENT: Copied during Docker build from prometheus-stack/blackbox.yml → /etc/blackbox_exporter/blackbox.yml via Dockerfile COPY command - Blackbox Exporter configuration template"
 
 # Alertmanager Files
 "alertmanager.yml":
@@ -80,7 +80,7 @@
   runtime_path: alertmanager
   source_path: ""
   extracted_path: alerting
-  description: Alertmanager configuration (generated from options.json, tracks manual changes)
+  description: "DEPLOYMENT: Generated at container startup by /etc/cont-init.d/00-init.sh from /data/options.json → /etc/alertmanager/alertmanager.yml - Alertmanager routing and notification config"
 
 # Karma Files
 "karma.yml":
@@ -88,7 +88,7 @@
   runtime_path: karma
   source_path: ""
   extracted_path: karma
-  description: Karma dashboard configuration (generated from options.json, tracks manual changes)
+  description: "DEPLOYMENT: Generated at container startup by /etc/cont-init.d/00-init.sh (static template) → /etc/karma/karma.yml - Karma alert dashboard configuration"
 
 # NGINX Files
 "nginx.conf":
@@ -96,11 +96,11 @@
   runtime_path: nginx
   source_path: prometheus-stack/rootfs/etc/nginx
   extracted_path: nginx
-  description: NGINX main configuration
+  description: "DEPLOYMENT: Copied during Docker build from rootfs/etc/nginx/ → /etc/nginx/ - NGINX main server configuration"
 
 "ingress.conf":
   type: STATIC_FILE
   runtime_path: nginx/servers
   source_path: prometheus-stack/rootfs/etc/nginx/servers
   extracted_path: nginx
-  description: NGINX ingress routing configuration 
+  description: "DEPLOYMENT: Copied during Docker build from rootfs/etc/nginx/servers/ → /etc/nginx/servers/ - NGINX ingress routing configuration" 
