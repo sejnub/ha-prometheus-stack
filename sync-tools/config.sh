@@ -491,13 +491,14 @@ compare_config_file() {
     case "$pattern_type" in
         "GENERATED_TRACKABLE")
             # For trackable generated files, compare extracted vs runtime with filtering
-            # This will detect manual changes while ignoring expected generated differences
+            # Use is_generated=false to avoid the complex regeneration logic in compare_files
+            # This will do simple runtime vs extracted comparison with filtering
             compare_files \
                 "$container_path" \
                 "$extracted_file" \
                 "Runtime → Extracted (tracking manual changes)" \
                 true \
-                true
+                false
             ;;
         *)
             # Standard runtime comparison

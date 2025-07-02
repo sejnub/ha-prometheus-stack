@@ -166,268 +166,39 @@ compare_files() {
         local temp_dir=$(mktemp -d)
         local temp_file="${temp_dir}/$(basename "$target_file")"
         
-        if [ "$is_generated" = "true" ]; then
-            # For generated files, compare with what would be generated from options.json
-            case "$(basename "$target_file")" in
-                alertmanager.yml)
-                    # Get current options.json and generate alertmanager config from it
-                    if [[ "$MODE" == "Test-Mode" ]]; then
-                        cp "./test-data/options.json" "${temp_dir}/options.json" 2>/dev/null
-                    else
-                        docker cp "${container_id}:/data/options.json" "${temp_dir}/options.json" 2>/dev/null
-                    fi
-                    
-                    # Generate alertmanager.yml from options.json (simplified version)
-                    TEMP_DIR="$temp_dir" python3 -c "
-import json
-import yaml
-import os
-
-temp_dir = os.environ['TEMP_DIR']
-
-with open(f'{temp_dir}/options.json', 'r') as f:
-    options = json.load(f)
-
-config = {
-    'global': {
-        'resolve_timeout': '5m',
-        'smtp_smarthost': f\"{options.get('smtp_host', 'localhost')}:{options.get('smtp_port', 25)}\",
-        'smtp_from': 'alertmanager@localhost'
-    },
-    'route': {
-        'receiver': options.get('alertmanager_receiver', 'default')
-    },
-    'receivers': [
-        {
-            'name': options.get('alertmanager_receiver', 'default'),
-            'email_configs': [
-                {'to': options.get('alertmanager_to_email', 'example@example.com')}
-            ]
-        }
-    ]
-}
-
-with open(f'{temp_dir}/generated_alertmanager.yml', 'w') as f:
-    yaml.dump(config, f, default_flow_style=False, sort_keys=False)
-"
-                    
-                    # Compare with generated config
-                    if [ -f "${temp_dir}/generated_alertmanager.yml" ]; then
-                        if diff -u <(filter_known_differences "$target_file") <(filter_known_differences "${temp_dir}/generated_alertmanager.yml") >/dev/null 2>&1; then
-                            echo "      ✅ $description: Identical (after filtering placeholders)"
-                        else
-                            echo "      ❌ $description: Configuration differs from what would be generated from options.json"
-                            echo "      📋 Differences:"
-                            diff -u <(filter_known_differences "${temp_dir}/generated_alertmanager.yml") <(filter_known_differences "$target_file") | sed 's/^/         /'
-                            has_diff=true
-                        fi
-                    else
-                        echo "      ❌ $description: Could not generate config from options.json"
-                        has_diff=true
-                    fi
-                    rm -rf "$temp_dir"
-                    
-                    # Update file status for runtime comparison
-                    local current_status="${file_status[$file_key]:-,}"
-                    if [ "$has_diff" = "true" ]; then
-                        file_status[$file_key]="${current_status%,},runtime_diff"
-                    else
-                        file_status[$file_key]="${current_status%,},runtime_same"
-                    fi
-                    return
-                    ;;
-                grafana.ini)
-                    # Generate grafana.ini from current options.json for comparison
-                    if [[ "$MODE" == "Test-Mode" ]]; then
-                        cp "./test-data/options.json" "${temp_dir}/options.json" 2>/dev/null
-                    else
-                        docker cp "${container_id}:/data/options.json" "${temp_dir}/options.json" 2>/dev/null
-                    fi
-                    
-                    # For now, just copy the current runtime file as the "generated" baseline
-                    # since grafana.ini generation logic is complex and may depend on many options
-                    docker cp "${container_id}:/etc/grafana/grafana.ini" "${temp_dir}/generated_grafana.ini" 2>/dev/null
-                    
-                    # Compare with generated config
-                    if [ -f "${temp_dir}/generated_grafana.ini" ]; then
-                        if diff -u <(filter_known_differences "${temp_dir}/generated_grafana.ini") <(filter_known_differences "$target_file") >/dev/null 2>&1; then
-                            echo "      ✅ $description: Identical (after filtering placeholders)"
-                        else
-                            echo "      ❌ $description: Configuration differs from what would be generated from options.json"
-                            echo "      📋 Differences:"
-                            diff -u <(filter_known_differences "${temp_dir}/generated_grafana.ini") <(filter_known_differences "$target_file") | sed 's/^/         /'
-                            has_diff=true
-                        fi
-                    else
-                        echo "      ❌ $description: Could not generate config from options.json"
-                        has_diff=true
-                    fi
-                    rm -rf "$temp_dir"
-                    
-                    # Update file status for runtime comparison
-                    local current_status="${file_status[$file_key]:-,}"
-                    if [ "$has_diff" = "true" ]; then
-                        file_status[$file_key]="${current_status%,},runtime_diff"
-                    else
-                        file_status[$file_key]="${current_status%,},runtime_same"
-                    fi
-                    return
-                    ;;
-            esac
-        else
-            # For normal runtime files, copy from container and compare
-            local container_path="$source_file"
+        # For normal runtime files, copy from container and compare
+        local container_path="$source_file"
+        
+        if ! docker cp "${container_id}:$container_path" "$temp_file" 2>/dev/null; then
+            echo "      ❌ $description: File not found in container"
+            has_diff=true
+            rm -rf "$temp_dir"
             
-            if ! docker cp "${container_id}:$container_path" "$temp_file" 2>/dev/null; then
-                echo "      ❌ $description: File not found in container"
-                has_diff=true
-                rm -rf "$temp_dir"
-            else
-                source_file="$temp_file"
-            fi
+            # Update file status for runtime comparison
+            local current_status="${file_status[$file_key]:-,}"
+            file_status[$file_key]="${current_status%,},runtime_diff"
+            return
+        else
+            source_file="$temp_file"
         fi
     fi
     
     # For source files, check if they exist in the repository
     if [ ! -f "$source_file" ]; then
-        if [ "$is_generated" = "true" ] && [ "$is_runtime" = "false" ]; then
-            # Special handling for generated files in source comparison
-            local temp_dir=$(mktemp -d)
-            local filename=$(basename "$target_file")
-            case "$filename" in
-                alertmanager.yml)
-                    # Generate alertmanager.yml from current options.json for comparison
-                    if [[ "$MODE" == "Test-Mode" ]]; then
-                        cp "./test-data/options.json" "${temp_dir}/options.json" 2>/dev/null
-                    else
-                        docker cp "${container_id}:/data/options.json" "${temp_dir}/options.json" 2>/dev/null
-                    fi
-                    
-                    TEMP_DIR="$temp_dir" python3 -c "
-import yaml
-import json
-import sys
-import os
-
-temp_dir = os.environ['TEMP_DIR']
-
-# Read options.json
-with open(f'{temp_dir}/options.json', 'r') as f:
-    options = json.load(f)
-
-# Generate alertmanager config to match the actual container generation logic
-config = {
-    'global': {
-        'resolve_timeout': '5m',
-        'smtp_smarthost': f\"{options.get('smtp_host', 'localhost')}:{options.get('smtp_port', 25)}\",
-        'smtp_from': 'alertmanager@localhost'
-    },
-    'route': {
-        'receiver': options.get('alertmanager_receiver', 'default')
-    },
-    'receivers': [
-        {
-            'name': options.get('alertmanager_receiver', 'default'),
-            'email_configs': [
-                {'to': options.get('alertmanager_to_email', 'example@example.com')}
-            ]
-        }
-    ]
-}
-
-with open(f'{temp_dir}/generated_alertmanager.yml', 'w') as f:
-    yaml.dump(config, f, default_flow_style=False, sort_keys=False)
-"
-                    
-                    # Compare with generated config
-                    if [ -f "${temp_dir}/generated_alertmanager.yml" ]; then
-                        if diff -u <(filter_known_differences "${temp_dir}/generated_alertmanager.yml") <(filter_known_differences "$target_file") >/dev/null 2>&1; then
-                            echo "      ✅ $description: Identical to what would be generated from options.json"
-                        else
-                            echo "      ❌ $description: Configuration differs from what would be generated from options.json"
-                            echo "      📋 Differences:"
-                            diff -u <(filter_known_differences "${temp_dir}/generated_alertmanager.yml") <(filter_known_differences "$target_file") | sed 's/^/         /'
-                            has_diff=true
-                        fi
-                    else
-                        echo "      ❌ $description: Could not generate config from options.json"
-                        has_diff=true
-                    fi
-                    ;;
-                grafana.ini)
-                    # Generate grafana.ini from current options.json for comparison
-                    if [[ "$MODE" == "Test-Mode" ]]; then
-                        cp "./test-data/options.json" "${temp_dir}/options.json" 2>/dev/null
-                    else
-                        docker cp "${container_id}:/data/options.json" "${temp_dir}/options.json" 2>/dev/null
-                    fi
-                    
-                    # For now, just copy the current runtime file as the "generated" baseline
-                    # since grafana.ini generation logic is complex and may depend on many options
-                    docker cp "${container_id}:/etc/grafana/grafana.ini" "${temp_dir}/generated_grafana.ini" 2>/dev/null
-                    
-                    # Compare with generated config
-                    if [ -f "${temp_dir}/generated_grafana.ini" ]; then
-                        if diff -u <(filter_known_differences "${temp_dir}/generated_grafana.ini") <(filter_known_differences "$target_file") >/dev/null 2>&1; then
-                            echo "      ✅ $description: Identical to what would be generated from options.json"
-                        else
-                            echo "      ❌ $description: Configuration differs from what would be generated from options.json"
-                            echo "      📋 Differences:"
-                            diff -u <(filter_known_differences "${temp_dir}/generated_grafana.ini") <(filter_known_differences "$target_file") | sed 's/^/         /'
-                            has_diff=true
-                        fi
-                    else
-                        echo "      ❌ $description: Could not generate config from options.json"
-                        has_diff=true
-                    fi
-                    ;;
-                *)
-                    echo "      ✅ $description: Generated at runtime"
-                    ;;
-            esac
-        elif [ "$is_generated" = "true" ]; then
-            echo "      ✅ $description: Generated at runtime"
-        else
-            echo "      ❌ $description: Source file missing (not in repository)"
-            has_diff=true
-        fi
-        [ -d "$temp_dir" ] && rm -rf "$temp_dir"
-        
-        # Update file status
-        if [ "$is_runtime" = "true" ]; then
-            local current_status="${file_status[$file_key]:-,}"
-            if [ "$has_diff" = "true" ]; then
-                file_status[$file_key]="${current_status%,},runtime_diff"
-            else
-                file_status[$file_key]="${current_status%,},runtime_same"
-            fi
-        else
-            if [ "$has_diff" = "true" ]; then
-                file_status[$file_key]="source_diff,${file_status[$file_key]#*,}"
-            else
-                file_status[$file_key]="source_same,${file_status[$file_key]#*,}"
-            fi
-        fi
-        return 1
-    fi
-    
-    # For target files, check if they exist in the extracted directory
-    if [ ! -f "$target_file" ]; then
-        echo "      ❌ $description: Target file missing"
+        echo "      ❌ $description: Source file missing (not in repository)"
         has_diff=true
-        [ -d "$temp_dir" ] && rm -rf "$temp_dir"
         
-        # Update file status
-        if [ "$is_runtime" = "true" ]; then
+        # Update file status for source comparison
+        if [ "$is_runtime" = "false" ]; then
+            file_status[$file_key]="source_diff,${file_status[$file_key]#*,}"
+        else
             local current_status="${file_status[$file_key]:-,}"
             file_status[$file_key]="${current_status%,},runtime_diff"
-        else
-            file_status[$file_key]="source_diff,${file_status[$file_key]#*,}"
         fi
-        return 1
+        return
     fi
     
-    # Create temporary files with filtered content
+    # Compare files using filtering
     local compare_temp_dir=$(mktemp -d)
     local temp_source="${compare_temp_dir}/source"
     local temp_target="${compare_temp_dir}/target"
@@ -435,8 +206,7 @@ with open(f'{temp_dir}/generated_alertmanager.yml', 'w') as f:
     filter_known_differences "$source_file" > "$temp_source"
     filter_known_differences "$target_file" > "$temp_target"
     
-    # Compare the filtered files
-    if diff -q "$temp_source" "$temp_target" >/dev/null; then
+    if diff -u "$temp_source" "$temp_target" >/dev/null 2>&1; then
         echo "      ✅ $description: Identical (after filtering placeholders)"
     else
         echo "      ❌ $description: Files differ"
@@ -525,45 +295,7 @@ except Exception as e:
     fi
 }
 
-compare_alertmanager() {
-    local extracted_file="$1"
-    local runtime_file="$2"
-    local container_id="$3"
-
-    # Generate a fresh alertmanager.yml from current options.json for comparison
-    local temp_dir=$(mktemp -d)
-    local fresh_config="${temp_dir}/alertmanager.yml"
-    
-    # Extract current options.json from container
-    if [[ "$MODE" == "Test-Mode" ]]; then
-        cp "./test-data/options.json" "${temp_dir}/options.json"
-    else
-        docker cp "${container_id}:/data/options.json" "${temp_dir}/options.json"
-    fi
-
-    # Generate fresh alertmanager.yml from current options
-    "${SCRIPT_DIR}/generate_alertmanager_config.py" "${temp_dir}/options.json" "$fresh_config"
-
-    if [[ ! -f "$fresh_config" ]]; then
-        echo "      ❌ Failed to generate fresh alertmanager.yml from options.json"
-        return 1
-    fi
-
-    # Compare extracted vs fresh generated
-    if diff -u <(filter_known_differences "$fresh_config") <(filter_known_differences "$extracted_file") >/dev/null 2>&1; then
-        echo "      ✅ Configuration matches what would be generated from current options.json"
-        local comparison_status=0
-    else
-        echo "      ❌ Configuration differs from what would be generated from options.json"
-        echo "      📋 Differences:"
-        diff -u <(filter_known_differences "$fresh_config") <(filter_known_differences "$extracted_file") | sed 's/^/         /'
-        local comparison_status=1
-    fi
-
-    # Cleanup
-    rm -rf "$temp_dir"
-    return $comparison_status
-}
+# compare_alertmanager function removed - all logic now centralized in YAML configuration
 
 # Load configuration and detect mode
 load_env
