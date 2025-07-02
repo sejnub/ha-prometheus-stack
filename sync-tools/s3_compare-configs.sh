@@ -430,6 +430,90 @@ echo "================================="
 # Count total comparisons and analyze per-file status
 total_files=0
 
+# Function to generate baseline version of GENERATED_TRACKABLE files
+generate_baseline_config() {
+    local filename="$1"
+    local container_id="$2"
+    local temp_dir="$3"
+    
+    case "$filename" in
+        "alertmanager.yml")
+            # Generate baseline alertmanager.yml from options.json
+            local baseline_file="$temp_dir/baseline_alertmanager.yml"
+            
+            # Regenerate alertmanager.yml using the same logic as 00-init.sh
+            docker exec "$container_id" sh -c '
+                CONFIG_PATH=/data/options.json
+                if [ -f $CONFIG_PATH ]; then
+                    ALERTMANAGER_RECEIVER=$(jq --raw-output ".alertmanager_receiver" $CONFIG_PATH)
+                    ALERTMANAGER_TO_EMAIL=$(jq --raw-output ".alertmanager_to_email" $CONFIG_PATH)
+                    SMTP_HOST=$(jq --raw-output ".smtp_host" $CONFIG_PATH)
+                    SMTP_PORT=$(jq --raw-output ".smtp_port" $CONFIG_PATH)
+                else
+                    ALERTMANAGER_RECEIVER="default"
+                    ALERTMANAGER_TO_EMAIL="example@example.com"
+                    SMTP_HOST="localhost"
+                    SMTP_PORT="25"
+                fi
+                
+                cat > /tmp/baseline_alertmanager.yml <<EOF
+global:
+  resolve_timeout: 5m
+  smtp_smarthost: "${SMTP_HOST:-localhost}:${SMTP_PORT:-25}"
+  smtp_from: "alertmanager@localhost"
+
+route:
+  receiver: "${ALERTMANAGER_RECEIVER}"
+
+receivers:
+  - name: "${ALERTMANAGER_RECEIVER}"
+    email_configs:
+      - to: "${ALERTMANAGER_TO_EMAIL}"
+EOF
+            ' 2>/dev/null
+            
+            docker cp "$container_id:/tmp/baseline_alertmanager.yml" "$baseline_file" 2>/dev/null
+            echo "$baseline_file"
+            ;;
+        "karma.yml")
+            # Generate baseline karma.yml (this is static, so just copy current)
+            local baseline_file="$temp_dir/baseline_karma.yml"
+            
+            # Karma config is mostly static, regenerate the baseline
+            docker exec "$container_id" sh -c '
+                cat > /tmp/baseline_karma.yml <<EOF
+alertmanager:
+  servers:
+    - name: "default"
+      uri: "http://localhost:9093"
+      timeout: 10s
+      proxy: false
+      readonly: false
+
+listen:
+  address: "0.0.0.0"
+  port: 8080
+
+log:
+  level: info
+  format: text
+
+labels:
+  color:
+    static:
+      - "@alertmanager=default"
+EOF
+            ' 2>/dev/null
+            
+            docker cp "$container_id:/tmp/baseline_karma.yml" "$baseline_file" 2>/dev/null
+            echo "$baseline_file"
+            ;;
+        *)
+            echo ""
+            ;;
+    esac
+}
+
 # Ensure GENERATED_TRACKABLE files have proper source status for change counting
 for file_key in "${!file_status[@]}"; do
     status="${file_status[$file_key]}"
@@ -443,8 +527,46 @@ for file_key in "${!file_status[@]}"; do
         IFS=':' read -r pattern_type runtime_path source_path extracted_path <<< "$file_config"
         
         if [ "$pattern_type" = "GENERATED_TRACKABLE" ]; then
-            # For generated trackable files, source is always "different" since no source exists
-            file_status[$file_key]="source_diff,$runtime_status"
+            # For GENERATED_TRACKABLE files, we need to determine if manual changes exist
+            # Generate baseline and compare extracted vs baseline
+            temp_baseline_dir=$(mktemp -d)
+            baseline_file=$(generate_baseline_config "$filename" "$container_id" "$temp_baseline_dir")
+            
+            if [ -n "$baseline_file" ] && [ -f "$baseline_file" ]; then
+                # Compare extracted vs baseline to detect manual changes
+                compare_temp_dir=$(mktemp -d)
+                temp_extracted="${compare_temp_dir}/extracted"
+                temp_baseline="${compare_temp_dir}/baseline"
+                
+                filter_known_differences "$file_key" > "$temp_extracted"
+                filter_known_differences "$baseline_file" > "$temp_baseline"
+                
+                if diff -u "$temp_baseline" "$temp_extracted" >/dev/null 2>&1; then
+                    # No manual changes detected - no change to count
+                    file_status[$file_key]="source_same,$runtime_status"
+                else
+                    # Manual changes detected
+                    if [ "$runtime_status" = "runtime_same" ]; then
+                        # Manual changes were made and extracted - expected change
+                        file_status[$file_key]="source_diff,$runtime_status"
+                    else
+                        # Manual changes exist but runtime differs - irregular
+                        file_status[$file_key]="source_diff,$runtime_status"
+                    fi
+                fi
+                
+                rm -rf "$compare_temp_dir"
+            else
+                # Fallback: if we can't generate baseline, use simple logic
+                # If runtime is same, assume manual changes were made and extracted
+                if [ "$runtime_status" = "runtime_same" ]; then
+                    file_status[$file_key]="source_diff,$runtime_status"
+                else
+                    file_status[$file_key]="source_same,$runtime_status"
+                fi
+            fi
+            
+            rm -rf "$temp_baseline_dir"
         else
             # For other files with missing source status, mark as source_same
             file_status[$file_key]="source_same,$runtime_status"
