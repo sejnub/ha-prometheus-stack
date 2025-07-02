@@ -31,3 +31,4 @@ Thumbs.db
 # Docker volumes
 test-data/
 ssh-extracted-configs/*
+sync-tools/ssh-extracted-configs/
