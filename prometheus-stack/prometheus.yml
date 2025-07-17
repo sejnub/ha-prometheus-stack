@@ -11,16 +11,16 @@ scrape_configs:
   # When running as standalone #
   ##############################
 
-  # Home Assistant Core
-  - job_name: 'test_home_assistant'
-    static_configs:
-      - targets: ['${HOME_ASSISTANT_IP:-your-home-assistant-ip}:${HOME_ASSISTANT_PORT:-8123}']
-    metrics_path: '/api/prometheus'
-    scrape_interval: 30s
-    scrape_timeout: 10s
-    authorization:
-      type: Bearer
-      credentials: "${HOME_ASSISTANT_TOKEN:-your-long-lived-access-token-here}"
+  # Home Assistant Core (standalone mode) - DISABLED in addon mode
+  # - job_name: 'hass_core_standalone'
+  #   static_configs:
+  #     - targets: ['${HOME_ASSISTANT_IP:-your-home-assistant-ip}:${HOME_ASSISTANT_PORT:-8123}']
+  #   metrics_path: '/api/prometheus'
+  #   scrape_interval: 30s
+  #   scrape_timeout: 10s
+  #   authorization:
+  #     type: Bearer
+  #     credentials: "${HOME_ASSISTANT_TOKEN:-your-long-lived-access-token-here}"
 
 
   #########################
@@ -39,7 +39,7 @@ scrape_configs:
         - 'http://a0d7b954-homeassistant:8123/'
         labels:
           group: 'home_assistant'
-          service: 'home_assistant'
+          service: 'core_api'
       # Common add-ons HTTP endpoints
       - targets:
         - 'http://a0d7b954-zigbee2mqtt:8080/'
@@ -152,17 +152,23 @@ scrape_configs:
         replacement: localhost:9115
 
   # Home Assistant Core
-  - job_name: 'home_assistant'
+  - job_name: 'hass_core'
     static_configs:
       - targets: ['a0d7b954-homeassistant:8123']
+        labels:
+          group: 'home_assistant'
+          service: 'core'
     metrics_path: '/api/prometheus'
     scrape_interval: 30s
     scrape_timeout: 10s
 
   # Home Assistant Supervisor
-  - job_name: 'supervisor'
+  - job_name: 'hass_supervisor'
     static_configs:
       - targets: ['supervisor:80']
+        labels:
+          group: 'home_assistant'
+          service: 'supervisor'
     metrics_path: '/metrics'
     scrape_interval: 30s
     scrape_timeout: 10s
@@ -171,24 +177,36 @@ scrape_configs:
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
+        labels:
+          group: 'stack'
+          service: 'prometheus'
     scrape_interval: 15s
 
   # Alertmanager
   - job_name: 'alertmanager'
     static_configs:
       - targets: ['localhost:9093']
+        labels:
+          group: 'stack'
+          service: 'alertmanager'
     scrape_interval: 15s
 
   # Blackbox Exporter
   - job_name: 'blackbox_exporter'
     static_configs:
       - targets: ['localhost:9115']
+        labels:
+          group: 'stack'
+          service: 'blackbox_exporter'
     scrape_interval: 15s
 
   # Grafana metrics
   - job_name: 'grafana'
     static_configs:
       - targets: ['localhost:3000']
+        labels:
+          group: 'stack'
+          service: 'grafana'
     metrics_path: '/metrics'
     scrape_interval: 15s
 
@@ -196,6 +214,9 @@ scrape_configs:
   - job_name: 'loki'
     static_configs:
       - targets: ['localhost:3100']
+        labels:
+          group: 'stack'
+          service: 'loki'
     metrics_path: '/metrics'
     scrape_interval: 15s
 
@@ -203,6 +224,9 @@ scrape_configs:
   - job_name: 'karma'
     static_configs:
       - targets: ['localhost:8080']
+        labels:
+          group: 'stack'
+          service: 'karma'
     metrics_path: '/metrics'
     scrape_interval: 15s
 
@@ -212,13 +236,18 @@ scrape_configs:
     params:
       module: [http_2xx]
     static_configs:
-      - targets:
-        - 'http://localhost:8080/'  # Karma UI
-        - 'http://localhost:8443/'  # VS Code
-        - 'http://localhost:80/nginx_status'  # NGINX status
+      - targets: ['localhost:8080']  # Karma UI
         labels:
-          group: 'addon_internal'
-          service: 'http'
+          group: 'stack'
+          service: 'karma_ui'
+      - targets: ['localhost:8443']  # VS Code
+        labels:
+          group: 'stack'
+          service: 'vscode'
+      - targets: ['localhost:80']    # NGINX status
+        labels:
+          group: 'stack'
+          service: 'nginx'
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
