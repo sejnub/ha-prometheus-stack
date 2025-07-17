@@ -338,18 +338,45 @@ print_final_status() {
 
 # Function to check if all core services are ready
 wait_for_services() {
-    local max_attempts=30
+    local max_attempts=60  # Increased from 30 to 60
     local attempt=1
     
     echo -n "⏳ Checking service readiness..."
     
+    # Define all services to check
+    declare -A services=(
+        ["Prometheus"]="http://localhost:9090/-/ready"
+        ["Alertmanager"]="http://localhost:9093/-/ready"
+        ["Blackbox Exporter"]="http://localhost:9115/metrics"
+        ["Karma"]="http://localhost:8080/"
+        ["Loki"]="http://localhost:3100/ready"
+        ["Grafana"]="http://localhost:3000/api/health"
+        ["NGINX"]="http://localhost:80/nginx_status"
+        ["VS Code"]="http://localhost:8443/"
+    )
+    
+    # Track which services are ready
+    declare -A ready_services
+    local total_services=${#services[@]}
+    local ready_count=0
+    
     while [ $attempt -le $max_attempts ]; do
-        # Try to reach core services (exclude Grafana/VS Code due to environment differences)
-        if curl -sf http://localhost:9090/-/ready >/dev/null 2>&1 && \
-           curl -sf http://localhost:9093/-/ready >/dev/null 2>&1 && \
-           curl -sf http://localhost:9115/metrics >/dev/null 2>&1 && \
-           curl -sf http://localhost:8080/ >/dev/null 2>&1 && \
-           curl -sf http://localhost:3100/ready >/dev/null 2>&1; then
+        ready_count=0
+        
+        # Check each service individually
+        for service_name in "${!services[@]}"; do
+            if [ "${ready_services[$service_name]}" != "ready" ]; then
+                if curl -sf "${services[$service_name]}" >/dev/null 2>&1; then
+                    ready_services[$service_name]="ready"
+                    ready_count=$((ready_count + 1))
+                fi
+            else
+                ready_count=$((ready_count + 1))
+            fi
+        done
+        
+        # If all services are ready, we're done
+        if [ $ready_count -eq $total_services ]; then
             echo " ready!"
             return 0
         fi
@@ -360,6 +387,16 @@ wait_for_services() {
     done
     
     echo " timeout!"
+    
+    # Show which services failed to start
+    echo ""
+    echo "❌ Services that failed to start within timeout:"
+    for service_name in "${!services[@]}"; do
+        if [ "${ready_services[$service_name]}" != "ready" ]; then
+            echo "  - $service_name (${services[$service_name]})"
+        fi
+    done
+    
     return 1
 }
 

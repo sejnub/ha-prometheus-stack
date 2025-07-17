@@ -110,6 +110,15 @@ main() {
         print_status "ERROR" "❌ Full test failed during health check step"
         print_status "INFO" "Container logs might help diagnose the issue:"
         print_status "INFO" "  docker logs prometheus-stack-test"
+        print_status "INFO" ""
+        print_status "INFO" "Individual service debugging:"
+        print_status "INFO" "  curl -v http://localhost:9090/-/ready    # Prometheus"
+        print_status "INFO" "  curl -v http://localhost:9093/-/ready    # Alertmanager"
+        print_status "INFO" "  curl -v http://localhost:9115/metrics    # Blackbox"
+        print_status "INFO" "  curl -v http://localhost:8080/           # Karma"
+        print_status "INFO" "  curl -v http://localhost:3100/ready      # Loki"
+        print_status "INFO" "  curl -v http://localhost:3000/api/health # Grafana"
+        print_status "INFO" "  curl -v http://localhost:80/nginx_status # NGINX"
         exit 1
     fi
     echo
@@ -127,6 +136,7 @@ main() {
     print_status "INFO" "  - Karma: http://localhost:8080"
     print_status "INFO" "  - Grafana: http://localhost:3000"
     print_status "INFO" "  - VS Code: http://localhost:8443"
+    print_status "INFO" "  - Loki: http://localhost:3100"
     echo
     print_status "INFO" "To stop the test container, run: ./test/cleanup.sh"
     echo "=============================================================================="
