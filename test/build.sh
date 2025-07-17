@@ -118,6 +118,7 @@ docker run -d \
   -p 8080:8080 \
   -p 8443:8443 \
   -p 3000:3000 \
+  -p 3100:3100 \
   -p 80:80 \
   -v "$PROJECT_ROOT/test-data:/data" \
   -e SUPERVISOR_TOKEN="test-supervisor-token" \
@@ -146,6 +147,7 @@ echo "   Karma UI:          http://localhost:8080"
 echo "   Grafana:           http://localhost:3000"
 echo "   VS Code:           http://localhost:8443"
 echo "   NGINX (Ingress):   http://localhost:80"
+echo "   Loki:              http://localhost:3100"
 echo ""
 echo "🔍 Health Check URLs:"
 echo "   Prometheus:        http://localhost:9090/-/healthy"
@@ -155,6 +157,7 @@ echo "   Karma:             http://localhost:8080/"
 echo "   Grafana:           http://localhost:3000/api/health"
 echo "   VS Code:           http://localhost:8443/"
 echo "   NGINX:             http://localhost:80/nginx_status"
+echo "   Loki:              http://localhost:3100/ready"
 echo ""
 echo "🌐 Ingress Paths:"
 echo "   - Karma:           http://localhost:80/"
@@ -163,6 +166,7 @@ echo "   - Alertmanager:    http://localhost:80/alertmanager/"
 echo "   - Blackbox:        http://localhost:80/blackbox/"
 echo "   - Grafana:         http://localhost:80/grafana/"
 echo "   - VS Code:         http://localhost:80/vscode/"
+echo "   - Loki:            http://localhost:80/loki/"
 echo ""
 echo "💻 VS Code Access:"
 echo "   - Direct:          http://localhost:8443"

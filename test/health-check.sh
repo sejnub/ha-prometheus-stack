@@ -313,6 +313,15 @@ test_service() {
                 return 1
             fi
             ;;
+        "Loki")
+            if curl -s "http://localhost:3100/ready" > /dev/null; then
+                print_success "✅ $expected_status"
+                return 0
+            else
+                print_error "❌ Loki is not ready"
+                return 1
+            fi
+            ;;
     esac
 }
 
@@ -339,7 +348,8 @@ wait_for_services() {
         if curl -sf http://localhost:9090/-/ready >/dev/null 2>&1 && \
            curl -sf http://localhost:9093/-/ready >/dev/null 2>&1 && \
            curl -sf http://localhost:9115/metrics >/dev/null 2>&1 && \
-           curl -sf http://localhost:8080/ >/dev/null 2>&1; then
+           curl -sf http://localhost:8080/ >/dev/null 2>&1 && \
+           curl -sf http://localhost:3100/ready >/dev/null 2>&1; then
             echo " ready!"
             return 0
         fi
@@ -395,6 +405,7 @@ main() {
     check_service "Prometheus" "http://localhost:9090/-/ready"
     check_service "Blackbox Exporter" "http://localhost:9115/metrics"
     check_service "Alertmanager" "http://localhost:9093/-/ready"
+    check_service "Loki" "http://localhost:3100/ready"
     check_service "Grafana" "http://localhost:3000/api/health"
     check_service "VS Code" "http://localhost:8443/"
     check_service "NGINX" "http://localhost:80/nginx_status"
@@ -413,6 +424,7 @@ main() {
     check_directory "/data/prometheus"
     check_directory "/data/alertmanager"
     check_directory "/data/grafana"
+    check_directory "/data/loki"
     
     echo ""
     echo "🔬 Testing service functionality..."
@@ -432,6 +444,7 @@ main() {
     test_service "VS Code" "Server responding"
     test_service "NGINX" "All paths working"
     test_service "NGINX Proxy Paths" "All proxy redirects working"
+    test_service "Loki" "Loki is ready"
     
     # If we got here, all checks passed
     print_final_status true
