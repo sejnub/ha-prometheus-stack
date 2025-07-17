@@ -41,15 +41,6 @@ scrape_configs:
           job: prometheus
           service: prometheus
           __path__: /var/log/prometheus/prometheus.log
-    pipeline_stages:
-      - regex:
-          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+Z) (?P<level>\w+) (?P<component>\w+)=(?P<component_value>[^ ]+) (?P<message>.*)$'
-      - timestamp:
-          source: timestamp
-          format: RFC3339Nano
-      - labels:
-          level:
-          component:
 
   # Alertmanager logs
   - job_name: alertmanager
@@ -60,15 +51,6 @@ scrape_configs:
           job: alertmanager
           service: alertmanager
           __path__: /var/log/alertmanager/alertmanager.log
-    pipeline_stages:
-      - regex:
-          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+Z) (?P<level>\w+) (?P<component>\w+)=(?P<component_value>[^ ]+) (?P<message>.*)$'
-      - timestamp:
-          source: timestamp
-          format: RFC3339Nano
-      - labels:
-          level:
-          component:
 
   # Grafana logs
   - job_name: grafana
@@ -79,15 +61,6 @@ scrape_configs:
           job: grafana
           service: grafana
           __path__: /var/log/grafana/grafana.log
-    pipeline_stages:
-      - regex:
-          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+Z) (?P<level>\w+) (?P<logger>\w+) (?P<message>.*)$'
-      - timestamp:
-          source: timestamp
-          format: RFC3339Nano
-      - labels:
-          level:
-          logger:
 
   # Blackbox Exporter logs
   - job_name: blackbox
@@ -98,15 +71,6 @@ scrape_configs:
           job: blackbox
           service: blackbox
           __path__: /var/log/blackbox/blackbox.log
-    pipeline_stages:
-      - regex:
-          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+Z) (?P<level>\w+) (?P<component>\w+)=(?P<component_value>[^ ]+) (?P<message>.*)$'
-      - timestamp:
-          source: timestamp
-          format: RFC3339Nano
-      - labels:
-          level:
-          component:
 
   # Karma logs
   - job_name: karma
@@ -117,14 +81,6 @@ scrape_configs:
           job: karma
           service: karma
           __path__: /var/log/karma/karma.log
-    pipeline_stages:
-      - regex:
-          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+Z) (?P<level>\w+) (?P<message>.*)$'
-      - timestamp:
-          source: timestamp
-          format: RFC3339Nano
-      - labels:
-          level:
 
   # Loki logs
   - job_name: loki
@@ -135,15 +91,6 @@ scrape_configs:
           job: loki
           service: loki
           __path__: /var/log/loki/loki.log
-    pipeline_stages:
-      - regex:
-          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+Z) (?P<level>\w+) (?P<component>\w+)=(?P<component_value>[^ ]+) (?P<message>.*)$'
-      - timestamp:
-          source: timestamp
-          format: RFC3339Nano
-      - labels:
-          level:
-          component:
 
   # VS Code logs
   - job_name: vscode
@@ -154,12 +101,4 @@ scrape_configs:
           job: vscode
           service: vscode
           __path__: /var/log/vscode/vscode.log
-    pipeline_stages:
-      - regex:
-          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+Z) (?P<level>\w+) (?P<message>.*)$'
-      - timestamp:
-          source: timestamp
-          format: RFC3339Nano
-      - labels:
-          level:
     
