@@ -192,6 +192,20 @@ scrape_configs:
     metrics_path: '/metrics'
     scrape_interval: 15s
 
+  # Loki metrics
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['localhost:3100']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Karma metrics
+  - job_name: 'karma'
+    static_configs:
+      - targets: ['localhost:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
   # Internal addon services HTTP health checks
   - job_name: 'addon_services'
     metrics_path: /probe
