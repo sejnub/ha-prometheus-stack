@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- markdownlint-disable MD024 -->
 
+## 2.8 - 2025-01-27
+
+### Changed
+
+- **Version Update**: Bumped version to 2.8 for new release
+
 ## 2.7.13 - 2025-07-01
 
 ### Changed
