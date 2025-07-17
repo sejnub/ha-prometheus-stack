@@ -16,7 +16,8 @@ done
 # Start karma
 echo "Starting Karma..."
 exec s6-setuidgid root /usr/local/bin/karma \
-    --config.file=/etc/karma/karma.yml 
+    --config.file=/etc/karma/karma.yml \
+    >> /var/log/karma/karma.log 2>&1
 
 # Check Prometheus health
 if [ "$service_name" = "Prometheus" ]; then

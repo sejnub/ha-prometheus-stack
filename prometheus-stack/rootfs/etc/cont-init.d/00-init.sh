@@ -3,6 +3,47 @@
 # Initialize configuration and directories
 CONFIG_PATH=/data/options.json
 
+# Create log directories for all services
+echo "Creating log directories for stack services..."
+mkdir -p /var/log/prometheus
+mkdir -p /var/log/alertmanager
+mkdir -p /var/log/grafana
+mkdir -p /var/log/blackbox
+mkdir -p /var/log/karma
+mkdir -p /var/log/loki
+mkdir -p /var/log/vscode
+mkdir -p /var/log/nginx
+
+# Set proper permissions
+chmod 755 /var/log/prometheus
+chmod 755 /var/log/alertmanager
+chmod 755 /var/log/grafana
+chmod 755 /var/log/blackbox
+chmod 755 /var/log/karma
+chmod 755 /var/log/loki
+chmod 755 /var/log/vscode
+chmod 755 /var/log/nginx
+
+# Create log files if they don't exist
+touch /var/log/prometheus/prometheus.log
+touch /var/log/alertmanager/alertmanager.log
+touch /var/log/grafana/grafana.log
+touch /var/log/blackbox/blackbox.log
+touch /var/log/karma/karma.log
+touch /var/log/loki/loki.log
+touch /var/log/vscode/vscode.log
+
+# Set proper permissions for log files
+chmod 644 /var/log/prometheus/prometheus.log
+chmod 644 /var/log/alertmanager/alertmanager.log
+chmod 644 /var/log/grafana/grafana.log
+chmod 644 /var/log/blackbox/blackbox.log
+chmod 644 /var/log/karma/karma.log
+chmod 644 /var/log/loki/loki.log
+chmod 644 /var/log/vscode/vscode.log
+
+echo "Log directories and files created successfully"
+
 # Read configuration from options.json
 if [ -f $CONFIG_PATH ]; then
     echo "Loading configuration from options.json..."

@@ -3,4 +3,5 @@
 echo "Starting Blackbox Exporter..."
 exec s6-setuidgid root /opt/blackbox_exporter/blackbox_exporter \
     --config.file=/etc/blackbox_exporter/blackbox.yml \
-    --web.listen-address=:9115 
+    --web.listen-address=:9115 \
+    >> /var/log/blackbox/blackbox.log 2>&1 

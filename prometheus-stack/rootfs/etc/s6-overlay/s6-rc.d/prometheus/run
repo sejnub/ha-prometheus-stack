@@ -6,4 +6,5 @@ exec s6-setuidgid root /opt/prometheus/prometheus \
     --storage.tsdb.path=/data/prometheus \
     --web.listen-address=:9090 \
     --web.enable-lifecycle \
-    --web.enable-admin-api 
+    --web.enable-admin-api \
+    >> /var/log/prometheus/prometheus.log 2>&1 

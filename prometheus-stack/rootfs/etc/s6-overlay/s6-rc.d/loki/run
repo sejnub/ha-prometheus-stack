@@ -7,4 +7,5 @@ sleep 2
 
 exec /usr/local/bin/loki \
     -config.file=/etc/loki/loki.yml \
-    -log.level=info 
+    -log.level=info \
+    >> /var/log/loki/loki.log 2>&1 

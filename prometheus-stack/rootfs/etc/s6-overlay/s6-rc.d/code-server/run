@@ -36,4 +36,5 @@ exec s6-setuidgid root /opt/code-server/bin/code-server \
     --auth none \
     --disable-telemetry \
     --disable-update-check \
-    "$WORKSPACE" 
+    "$WORKSPACE" \
+    >> /var/log/vscode/vscode.log 2>&1 

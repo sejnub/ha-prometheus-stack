@@ -4,21 +4,35 @@ server:
 
 positions:
   filename: /tmp/positions.yaml
+  sync_period: 10s
 
 clients:
   - url: http://localhost:3100/loki/api/v1/push
+    batchwait: 1s
+    batchsize: 1024
+    timeout: 10s
 
 scrape_configs:
-  # System logs
-  - job_name: system
+  # NGINX error logs (available in container)
+  - job_name: nginx
     static_configs:
       - targets:
           - localhost
         labels:
-          job: system
-          __path__: /var/log/*log
+          job: nginx
+          service: nginx
+          __path__: /var/log/nginx/error.log
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<timestamp>\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}) \[(?P<level>\w+)\] (?P<pid>\d+)#(?P<tid>\d+): \*(?P<connection>\d+) (?P<message>.*)$'
+      - timestamp:
+          source: timestamp
+          format: "2006/01/02 15:04:05"
+      - labels:
+          level:
+          connection:
 
-  # Application logs from stack services
+  # Prometheus logs
   - job_name: prometheus
     static_configs:
       - targets:
@@ -26,17 +40,18 @@ scrape_configs:
         labels:
           job: prometheus
           service: prometheus
-          __path__: /var/log/prometheus/*.log
+          __path__: /var/log/prometheus/prometheus.log
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+Z) (?P<level>\w+) (?P<component>\w+)=(?P<component_value>[^ ]+) (?P<message>.*)$'
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+      - labels:
+          level:
+          component:
 
-  - job_name: grafana
-    static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: grafana
-          service: grafana
-          __path__: /var/log/grafana/*.log
-
+  # Alertmanager logs
   - job_name: alertmanager
     static_configs:
       - targets:
@@ -44,8 +59,37 @@ scrape_configs:
         labels:
           job: alertmanager
           service: alertmanager
-          __path__: /var/log/alertmanager/*.log
+          __path__: /var/log/alertmanager/alertmanager.log
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+Z) (?P<level>\w+) (?P<component>\w+)=(?P<component_value>[^ ]+) (?P<message>.*)$'
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+      - labels:
+          level:
+          component:
 
+  # Grafana logs
+  - job_name: grafana
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: grafana
+          service: grafana
+          __path__: /var/log/grafana/grafana.log
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+Z) (?P<level>\w+) (?P<logger>\w+) (?P<message>.*)$'
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+      - labels:
+          level:
+          logger:
+
+  # Blackbox Exporter logs
   - job_name: blackbox
     static_configs:
       - targets:
@@ -53,8 +97,18 @@ scrape_configs:
         labels:
           job: blackbox
           service: blackbox
-          __path__: /var/log/blackbox/*.log
+          __path__: /var/log/blackbox/blackbox.log
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+Z) (?P<level>\w+) (?P<component>\w+)=(?P<component_value>[^ ]+) (?P<message>.*)$'
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+      - labels:
+          level:
+          component:
 
+  # Karma logs
   - job_name: karma
     static_configs:
       - targets:
@@ -62,8 +116,17 @@ scrape_configs:
         labels:
           job: karma
           service: karma
-          __path__: /var/log/karma/*.log
+          __path__: /var/log/karma/karma.log
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+Z) (?P<level>\w+) (?P<message>.*)$'
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+      - labels:
+          level:
 
+  # Loki logs
   - job_name: loki
     static_configs:
       - targets:
@@ -71,8 +134,18 @@ scrape_configs:
         labels:
           job: loki
           service: loki
-          __path__: /var/log/loki/*.log
+          __path__: /var/log/loki/loki.log
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+Z) (?P<level>\w+) (?P<component>\w+)=(?P<component_value>[^ ]+) (?P<message>.*)$'
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+      - labels:
+          level:
+          component:
 
+  # VS Code logs
   - job_name: vscode
     static_configs:
       - targets:
@@ -80,57 +153,13 @@ scrape_configs:
         labels:
           job: vscode
           service: vscode
-          __path__: /var/log/vscode/*.log
-
-  # Docker container logs (if available)
-  - job_name: docker
-    static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: docker
-          service: docker
-          __path__: /var/lib/docker/containers/*/*-json.log
-
-  # Journal logs (systemd)
-  - job_name: journal
-    journal:
-      json: false
-      max_age: 12h
-      path: /var/log/journal
-      labels:
-        job: systemd-journal
-    relabel_configs:
-      - source_labels: ['__journal__systemd_unit']
-        target_label: 'unit'
-      - source_labels: ['__journal__hostname']
-        target_label: 'hostname'
-
-  # Generic catch-all for any other logs
-  - job_name: catchall
-    static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: catchall
-          __path__: /var/log/**/*.log
-
-  # Home Assistant specific logs (if accessible)
-  - job_name: homeassistant
-    static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: homeassistant
-          service: homeassistant
-          __path__: /var/log/homeassistant/*.log
-
-  # Supervisor logs (if accessible)
-  - job_name: supervisor
-    static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: supervisor
-          service: supervisor
-          __path__: /var/log/supervisor/*.log 
+          __path__: /var/log/vscode/vscode.log
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+Z) (?P<level>\w+) (?P<message>.*)$'
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+      - labels:
+          level:
+    

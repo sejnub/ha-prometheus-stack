@@ -4,4 +4,5 @@ echo "Starting Grafana..."
 exec s6-setuidgid root /opt/grafana/bin/grafana server \
     --config=/etc/grafana/grafana.ini \
     --homepath=/opt/grafana \
-    --pidfile=/data/grafana/grafana.pid 
+    --pidfile=/data/grafana/grafana.pid \
+    >> /var/log/grafana/grafana.log 2>&1 

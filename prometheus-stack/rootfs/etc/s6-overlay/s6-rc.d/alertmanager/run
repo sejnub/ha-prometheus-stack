@@ -4,4 +4,5 @@ echo "Starting Alertmanager..."
 exec s6-setuidgid root /opt/alertmanager/alertmanager \
     --config.file=/etc/alertmanager/alertmanager.yml \
     --storage.path=/data/alertmanager \
-    --web.listen-address=:9093 
+    --web.listen-address=:9093 \
+    >> /var/log/alertmanager/alertmanager.log 2>&1 
