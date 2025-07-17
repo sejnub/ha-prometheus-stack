@@ -26,7 +26,8 @@
     "8080/tcp": null,
     "3100/tcp": null,
     "8443/tcp": null,
-    "3000/tcp": 3000
+    "3000/tcp": 3000,
+    "9080/tcp": 9080
   },
   "ports_description": {
     "9090/tcp": "Prometheus (enabled for direct UI access)",
@@ -35,7 +36,8 @@
     "8080/tcp": "Karma (disabled by default, use ingress)",
     "3100/tcp": "Loki (disabled by default, use ingress)",
     "8443/tcp": "VS Code (disabled by default, use ingress)",
-    "3000/tcp": "Grafana (enabled for direct access due to ingress limitations)"
+    "3000/tcp": "Grafana (enabled for direct access due to ingress limitations)",
+    "9080/tcp": "Promtail (enabled for direct access)"
   },
   "webui": "http://[HOST]:[PORT:80]/",
   "host_network": false,

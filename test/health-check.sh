@@ -47,6 +47,7 @@ declare -A SERVICES=(
     ["Karma"]="http://localhost:8080/health"
     ["Blackbox Exporter"]="http://localhost:9115/health"
     ["Loki"]="http://localhost:3100/ready"
+    ["Promtail"]="http://localhost:9080/ready"
     ["VS Code"]="http://localhost:8443/"
     ["NGINX"]="http://localhost:80/nginx_status"
 )
@@ -58,6 +59,7 @@ CONFIG_FILES=(
     "/etc/blackbox_exporter/blackbox.yml"
     "/etc/karma/karma.yml"
     "/etc/loki/loki.yml"
+    "/etc/promtail/promtail.yml"
     "/etc/nginx/servers/ingress.conf"
 )
 

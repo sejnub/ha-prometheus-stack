@@ -1,0 +1,8 @@
+#!/command/with-contenv bashio
+# ==============================================================================
+# Start Promtail
+# ==============================================================================
+
+bashio::log.info "Starting Promtail..."
+
+exec s6-setuidgid promtail promtail -config.file=/etc/promtail/promtail.yml 

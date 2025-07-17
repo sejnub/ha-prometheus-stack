@@ -117,6 +117,7 @@ main() {
         print_status "INFO" "  curl -v http://localhost:9115/metrics    # Blackbox"
         print_status "INFO" "  curl -v http://localhost:8080/           # Karma"
         print_status "INFO" "  curl -v http://localhost:3100/ready      # Loki"
+        print_status "INFO" "  curl -v http://localhost:9080/ready      # Promtail"
         print_status "INFO" "  curl -v http://localhost:3000/api/health # Grafana"
         print_status "INFO" "  curl -v http://localhost:80/nginx_status # NGINX"
         exit 1
@@ -137,6 +138,7 @@ main() {
     print_status "INFO" "  - Grafana: http://localhost:3000"
     print_status "INFO" "  - VS Code: http://localhost:8443"
     print_status "INFO" "  - Loki: http://localhost:3100"
+    print_status "INFO" "  - Promtail: http://localhost:9080"
     echo
     print_status "INFO" "To stop the test container, run: ./test/cleanup.sh"
     echo "=============================================================================="

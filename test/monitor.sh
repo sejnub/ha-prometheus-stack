@@ -114,6 +114,8 @@ check_service_performance() {
         "Alertmanager:http://localhost:9093/-/healthy"
         "Blackbox Exporter:http://localhost:9115/metrics"
         "Karma:http://localhost:8080/"
+        "Loki:http://localhost:3100/ready"
+        "Promtail:http://localhost:9080/ready"
     )
     
     for service in "${services[@]}"; do

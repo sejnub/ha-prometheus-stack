@@ -133,6 +133,9 @@ For testing with real Home Assistant instance:
   - Alertmanager: <http://localhost:9093>
   - Blackbox Exporter: <http://localhost:9115>
   - Karma: <http://localhost:8080>
+  - Grafana: <http://localhost:3000>
+  - Loki: <http://localhost:3100>
+  - Promtail: <http://localhost:9080>
 
 ### 3.3. `health-check.sh` - Health Verification
 
@@ -143,6 +146,9 @@ For testing with real Home Assistant instance:
   - Alertmanager: `/-/healthy` endpoint
   - Blackbox Exporter: `/metrics` endpoint
   - Karma: Web interface availability
+  - Loki: `/ready` endpoint
+  - Promtail: `/ready` endpoint
+  - Grafana: `/api/health` endpoint
 - **Return codes**:
   - `0`: All services healthy
   - `1`: One or more services unhealthy

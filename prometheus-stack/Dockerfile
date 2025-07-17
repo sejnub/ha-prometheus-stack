@@ -45,6 +45,10 @@ RUN apk add --no-cache \
     unzip loki-linux-${ARCH}.zip && \
     mv loki-linux-${ARCH} /usr/local/bin/loki && \
     chmod +x /usr/local/bin/loki && \
+    wget https://github.com/grafana/loki/releases/download/v${LOKI_VERSION}/promtail-linux-${ARCH}.zip && \
+    unzip promtail-linux-${ARCH}.zip && \
+    mv promtail-linux-${ARCH} /usr/local/bin/promtail && \
+    chmod +x /usr/local/bin/promtail && \
     wget https://github.com/coder/code-server/releases/download/v${CODESERVER_VERSION}/code-server-${CODESERVER_VERSION}-linux-${ARCH}.tar.gz && \
     tar -xzf code-server-${CODESERVER_VERSION}-linux-${ARCH}.tar.gz && \
     mv code-server-${CODESERVER_VERSION}-linux-${ARCH} /opt/code-server && \
@@ -59,10 +63,11 @@ RUN apk add --no-cache \
 COPY prometheus.yml /etc/prometheus/
 COPY blackbox.yml /etc/blackbox_exporter/
 COPY loki.yml /etc/loki/
+COPY promtail.yml /etc/promtail/
 COPY grafana.ini /etc/grafana/
 
 # Create required directories
-RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /etc/loki /etc/grafana /etc/grafana/provisioning/datasources /etc/grafana/provisioning/dashboards /data/prometheus /data/alertmanager /data/grafana /data/loki && \
+RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /etc/loki /etc/promtail /etc/grafana /etc/grafana/provisioning/datasources /etc/grafana/provisioning/dashboards /data/prometheus /data/alertmanager /data/grafana /data/loki && \
     mkdir -p /etc/nginx/http.d && \
     mkdir -p /opt/code-server/data /opt/code-server/extensions /opt/code-server/data/logs && \
     mkdir -p /etc/.vscode && \

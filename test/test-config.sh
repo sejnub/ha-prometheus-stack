@@ -86,7 +86,9 @@ wait_for_services() {
         if curl -sf http://localhost:9090/-/ready >/dev/null 2>&1 && \
            curl -sf http://localhost:9093/-/ready >/dev/null 2>&1 && \
            curl -sf http://localhost:9115/metrics >/dev/null 2>&1 && \
-           curl -sf http://localhost:8080/ >/dev/null 2>&1; then
+           curl -sf http://localhost:8080/ >/dev/null 2>&1 && \
+           curl -sf http://localhost:3100/ready >/dev/null 2>&1 && \
+           curl -sf http://localhost:9080/ready >/dev/null 2>&1; then
             echo " ready!"
             return 0
         fi
