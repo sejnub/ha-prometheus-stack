@@ -46,6 +46,7 @@ declare -A SERVICES=(
     ["Alertmanager"]="http://localhost:9093/-/ready"
     ["Karma"]="http://localhost:8080/health"
     ["Blackbox Exporter"]="http://localhost:9115/health"
+    ["Loki"]="http://localhost:3100/ready"
     ["VS Code"]="http://localhost:8443/"
     ["NGINX"]="http://localhost:80/nginx_status"
 )
@@ -56,6 +57,7 @@ CONFIG_FILES=(
     "/etc/alertmanager/alertmanager.yml"
     "/etc/blackbox_exporter/blackbox.yml"
     "/etc/karma/karma.yml"
+    "/etc/loki/loki.yml"
     "/etc/nginx/servers/ingress.conf"
 )
 
@@ -63,6 +65,7 @@ CONFIG_FILES=(
 DATA_DIRS=(
     "/data/prometheus"
     "/data/alertmanager"
+    "/data/loki"
 )
 
 # Color definitions

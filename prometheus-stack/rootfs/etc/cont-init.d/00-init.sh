@@ -13,6 +13,8 @@ if [ -f $CONFIG_PATH ]; then
     HOME_ASSISTANT_TOKEN=$(jq --raw-output '.home_assistant_long_lived_token' $CONFIG_PATH)
     SMTP_HOST=$(jq --raw-output '.smtp_host' $CONFIG_PATH)
     SMTP_PORT=$(jq --raw-output '.smtp_port' $CONFIG_PATH)
+    LOKI_RETENTION_PERIOD=$(jq --raw-output '.loki_retention_period // "168h"' $CONFIG_PATH)
+    LOKI_INGESTION_RATE_MB=$(jq --raw-output '.loki_ingestion_rate_mb // 4' $CONFIG_PATH)
 else
     echo "No options.json found, using defaults..."
     # Set defaults if file doesn't exist
@@ -23,6 +25,8 @@ else
     HOME_ASSISTANT_TOKEN=""
     SMTP_HOST="localhost"
     SMTP_PORT="25"
+    LOKI_RETENTION_PERIOD="168h"
+    LOKI_INGESTION_RATE_MB="4"
 fi
 
 # Create alertmanager.yml
@@ -40,6 +44,14 @@ receivers:
     email_configs:
       - to: '${ALERTMANAGER_TO_EMAIL}'
 EOF
+
+# Update Loki configuration with user options
+if [ -f /etc/loki/loki.yml ]; then
+    # Update retention period and ingestion rate in loki.yml
+    sed -i "s/retention_period: 0s/retention_period: ${LOKI_RETENTION_PERIOD}/" /etc/loki/loki.yml
+    sed -i "s/ingestion_rate_mb: 4/ingestion_rate_mb: ${LOKI_INGESTION_RATE_MB}/" /etc/loki/loki.yml
+    echo "Loki configuration updated with retention period: ${LOKI_RETENTION_PERIOD}, ingestion rate: ${LOKI_INGESTION_RATE_MB}MB"
+fi
 
 # Create karma.yml configuration
 cat > /etc/karma/karma.yml <<EOF

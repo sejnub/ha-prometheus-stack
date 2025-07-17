@@ -1,0 +1,17 @@
+#!/usr/bin/with-contenv bashio
+
+bashio::log.info "Waiting for Loki to be ready..."
+
+# Wait for Loki to start
+timeout=30
+while [ $timeout -gt 0 ]; do
+    if curl -s http://localhost:3100/ready >/dev/null 2>&1; then
+        bashio::log.info "Loki is ready!"
+        exit 0
+    fi
+    sleep 1
+    timeout=$((timeout - 1))
+done
+
+bashio::log.error "Loki failed to start within 30 seconds"
+exit 1 

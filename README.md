@@ -31,6 +31,7 @@ This add-on provides a complete monitoring solution for your Home Assistant envi
 - **Alertmanager**: Alert routing and notification management
 - **Karma**: Modern web UI for alert management and visualization
 - **Blackbox Exporter**: External service monitoring via HTTP and TCP probes
+- **Loki**: Log aggregation system for centralized log collection and querying
 - **VS Code**: Full-featured code editor for configuration editing and development
 
 ## 2. Key Features

@@ -5,6 +5,7 @@ ENV PROM_VERSION=2.52.0
 ENV ALERTMANAGER_VERSION=0.27.0
 ENV KARMA_VERSION=v0.116
 ENV BLACKBOX_VERSION=0.25.0
+ENV LOKI_VERSION=3.0.0
 ENV CODESERVER_VERSION=4.19.1
 ENV GRAFANA_VERSION=11.3.1
 
@@ -14,6 +15,7 @@ RUN apk add --no-cache \
         curl \
         tar \
         wget \
+        unzip \
         jq \
         nginx \
         nodejs \
@@ -39,23 +41,28 @@ RUN apk add --no-cache \
     wget https://github.com/prometheus/blackbox_exporter/releases/download/v${BLACKBOX_VERSION}/blackbox_exporter-${BLACKBOX_VERSION}.linux-${ARCH}.tar.gz && \
     tar -xzf blackbox_exporter-${BLACKBOX_VERSION}.linux-${ARCH}.tar.gz && \
     mv blackbox_exporter-${BLACKBOX_VERSION}.linux-${ARCH} /opt/blackbox_exporter && \
+    wget https://github.com/grafana/loki/releases/download/v${LOKI_VERSION}/loki-linux-${ARCH}.zip && \
+    unzip loki-linux-${ARCH}.zip && \
+    mv loki-linux-${ARCH} /usr/local/bin/loki && \
+    chmod +x /usr/local/bin/loki && \
     wget https://github.com/coder/code-server/releases/download/v${CODESERVER_VERSION}/code-server-${CODESERVER_VERSION}-linux-${ARCH}.tar.gz && \
     tar -xzf code-server-${CODESERVER_VERSION}-linux-${ARCH}.tar.gz && \
     mv code-server-${CODESERVER_VERSION}-linux-${ARCH} /opt/code-server && \
     wget https://dl.grafana.com/oss/release/grafana-${GRAFANA_VERSION}.linux-${ARCH}.tar.gz && \
     tar -xzf grafana-${GRAFANA_VERSION}.linux-${ARCH}.tar.gz && \
     mv grafana-v${GRAFANA_VERSION} /opt/grafana && \
-    rm -rf *.tar.gz && \
+    rm -rf *.tar.gz *.zip && \
     apk del wget tar && \
     rm -rf /var/cache/apk/*
 
 # Copy configuration files
 COPY prometheus.yml /etc/prometheus/
 COPY blackbox.yml /etc/blackbox_exporter/
+COPY loki.yml /etc/loki/
 COPY grafana.ini /etc/grafana/
 
 # Create required directories
-RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /etc/grafana /etc/grafana/provisioning/datasources /etc/grafana/provisioning/dashboards /data/prometheus /data/alertmanager /data/grafana && \
+RUN mkdir -p /etc/alertmanager /etc/karma /etc/blackbox_exporter /etc/loki /etc/grafana /etc/grafana/provisioning/datasources /etc/grafana/provisioning/dashboards /data/prometheus /data/alertmanager /data/grafana /data/loki && \
     mkdir -p /etc/nginx/http.d && \
     mkdir -p /opt/code-server/data /opt/code-server/extensions /opt/code-server/data/logs && \
     mkdir -p /etc/.vscode && \

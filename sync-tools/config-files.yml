@@ -74,6 +74,14 @@
   extracted_path: blackbox
   description: "DEPLOYMENT: Copied during Docker build from prometheus-stack/blackbox.yml → /etc/blackbox_exporter/blackbox.yml via Dockerfile COPY command - Blackbox Exporter configuration template"
 
+# Loki Files
+"loki.yml":
+  type: TEMPLATE_FILE
+  runtime_path: loki
+  source_path: prometheus-stack
+  extracted_path: loki
+  description: "DEPLOYMENT: Copied during Docker build from prometheus-stack/loki.yml → /etc/loki/loki.yml via Dockerfile COPY command - Loki log aggregation configuration template"
+
 # Alertmanager Files
 "alertmanager.yml":
   type: GENERATED_TRACKABLE

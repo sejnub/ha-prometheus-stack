@@ -2,7 +2,7 @@
   "name": "Prometheus Stack",
   "version": "2.7.13",
   "slug": "prometheus-stack",
-  "description": "Complete monitoring stack: Prometheus, Grafana, Alertmanager, Karma and VS Code in one add-on",
+  "description": "Complete monitoring stack: Prometheus, Grafana, Alertmanager, Karma, Loki and VS Code in one add-on",
   "arch": [
     "aarch64",
     "amd64"
@@ -24,6 +24,7 @@
     "9093/tcp": null,
     "9115/tcp": null,
     "8080/tcp": null,
+    "3100/tcp": null,
     "8443/tcp": null,
     "3000/tcp": 3000
   },
@@ -31,6 +32,8 @@
     "9090/tcp": "Prometheus (enabled for direct UI access)",
     "9093/tcp": "Alertmanager (disabled by default, use ingress)",
     "9115/tcp": "Blackbox Exporter (disabled by default, use ingress)",
+    "8080/tcp": "Karma (disabled by default, use ingress)",
+    "3100/tcp": "Loki (disabled by default, use ingress)",
     "8443/tcp": "VS Code (disabled by default, use ingress)",
     "3000/tcp": "Grafana (enabled for direct access due to ingress limitations)"
   },
@@ -49,6 +52,8 @@
         "url": "http://supervisor/core"
       }
     ],
+    "loki_retention_period": "168h",
+    "loki_ingestion_rate_mb": 4,
     "enable_vscode": false,
     "vscode_password": "",
     "vscode_workspace": "/config",
@@ -65,6 +70,8 @@
         "url": "str"
       }
     ],
+    "loki_retention_period": "str",
+    "loki_ingestion_rate_mb": "int(1,16)",
     "enable_vscode": "bool",
     "vscode_password": "str",
     "vscode_workspace": "str",

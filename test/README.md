@@ -10,11 +10,10 @@ This directory contains all testing tools and comprehensive guides for the Prome
 - [3. Detailed Script Documentation](#3-detailed-script-documentation)
   - [3.1. `full-test.sh` - Complete Test Cycle](#31-full-testsh---complete-test-cycle)
   - [3.2. `build.sh` - Build Script](#32-buildsh---build-script)
-  - [3.3. `docker-compose.dev.yml` - Development Configuration](#33-docker-composedevyml---development-configuration)
-  - [3.4. `health-check.sh` - Health Verification](#34-health-checksh---health-verification)
-  - [3.5. `test-config.sh` - Configuration Testing](#35-test-configsh---configuration-testing)
-  - [3.6. `monitor.sh` - Resource Monitoring](#36-monitorsh---resource-monitoring)
-  - [3.7. `cleanup.sh` - Environment Cleanup](#37-cleanupsh---environment-cleanup)
+  - [3.3. `health-check.sh` - Health Verification](#33-health-checksh---health-verification)
+  - [3.4. `test-config.sh` - Configuration Testing](#34-test-configsh---configuration-testing)
+  - [3.5. `monitor.sh` - Resource Monitoring](#35-monitorsh---resource-monitoring)
+  - [3.6. `cleanup.sh` - Cleanup Script](#36-cleanupsh---cleanup-script)
 - [4. Testing Workflows](#4-testing-workflows)
   - [4.1. Development Testing](#41-development-testing)
   - [4.2. Quick Validation](#42-quick-validation)
@@ -39,11 +38,11 @@ test/
 ├── README.md              # This file - comprehensive testing guide
 ├── full-test.sh           # Complete test cycle (cleanup → build → health check)
 ├── build.sh               # Build and run add-on for testing
-├── docker-compose.dev.yml # Docker Compose for development
 ├── health-check.sh        # Verify all services are healthy
 ├── test-config.sh         # Test different configurations
 ├── monitor.sh             # Monitor resource usage
-└── cleanup.sh             # Clean up test environment
+├── cleanup.sh             # Clean up test containers and data
+└── test-data/             # Test configuration and data directory
 ```
 
 ## 2. Quick Start Testing
@@ -135,17 +134,7 @@ For testing with real Home Assistant instance:
   - Blackbox Exporter: <http://localhost:9115>
   - Karma: <http://localhost:8080>
 
-### 3.3. `docker-compose.dev.yml` - Development Configuration
-
-- **Purpose**: Alternative way to run the add-on for development
-- **Usage**: `docker-compose -f test/docker-compose.dev.yml up -d`
-- **Advantages over build.sh**:
-  - Better for long-term development
-  - Automatic restart on container failure
-  - Easier to modify configuration
-  - Better for team development
-
-### 3.4. `health-check.sh` - Health Verification
+### 3.3. `health-check.sh` - Health Verification
 
 - **Purpose**: Verify that all services are running and healthy
 - **Usage**: `./test/health-check.sh`
@@ -158,7 +147,7 @@ For testing with real Home Assistant instance:
   - `0`: All services healthy
   - `1`: One or more services unhealthy
 
-### 3.5. `test-config.sh` - Configuration Testing
+### 3.4. `test-config.sh` - Configuration Testing
 
 - **Purpose**: Test the add-on with different configuration scenarios
 - **Usage**: `./test/test-config.sh`
@@ -174,7 +163,7 @@ For testing with real Home Assistant instance:
   - Multiple: `{"alertmanager_receiver":"team","alertmanager_to_email":"team@company.com"}`
   - Special chars: `{"alertmanager_receiver":"test-receiver-123","alertmanager_to_email":"test+tag@example.com"}`
 
-### 3.6. `monitor.sh` - Resource Monitoring
+### 3.5. `monitor.sh` - Resource Monitoring
 
 - **Purpose**: Monitor resource usage and performance
 - **Usage**: `./test/monitor.sh [continuous]`
@@ -188,7 +177,7 @@ For testing with real Home Assistant instance:
   - Single snapshot: `./test/monitor.sh`
   - Continuous monitoring: `./test/monitor.sh continuous`
 
-### 3.7. `cleanup.sh` - Environment Cleanup
+### 3.6. `cleanup.sh` - Environment Cleanup
 
 - **Purpose**: Clean up test containers, images, and data
 - **Usage**: `./test/cleanup.sh [--all] [--force]`

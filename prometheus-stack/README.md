@@ -21,6 +21,7 @@ The add-on uses s6-overlay for service management. Each component runs as a sepa
 ├── alertmanager/
 ├── blackbox-exporter/
 ├── karma/
+├── loki/
 ├── nginx/
 ├── prometheus/
 └── user/

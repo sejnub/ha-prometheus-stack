@@ -1,0 +1,10 @@
+#!/usr/bin/with-contenv bashio
+
+bashio::log.info "Starting Loki..."
+
+# Wait for filesystem to be ready
+sleep 2
+
+exec /usr/local/bin/loki \
+    -config.file=/etc/loki/loki.yml \
+    -log.level=info 
