@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 2.8 - 2025-01-27
 
+### Added
+
+- **Loki Integration**: Added Loki log aggregation system to the monitoring stack
+- **Log Management**: Centralized log collection and querying capabilities
+- **Enhanced Observability**: Complete observability stack with metrics (Prometheus) and logs (Loki)
+
 ### Changed
 
 - **Version Update**: Bumped version to 2.8 for new release
