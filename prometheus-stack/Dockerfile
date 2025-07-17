@@ -1,3 +1,12 @@
+# Multi-stage build for Promtail - Build from source for Alpine compatibility
+FROM golang:1.24-alpine AS promtail-builder
+RUN apk add --no-cache git ca-certificates tzdata
+WORKDIR /go/src/github.com/grafana/loki
+RUN git clone --depth 1 --branch v3.5.2 https://github.com/grafana/loki.git .
+WORKDIR /go/src/github.com/grafana/loki/clients/cmd/promtail
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o promtail .
+
+# Main application stage
 ARG BUILD_FROM
 FROM ${BUILD_FROM:-ghcr.io/hassio-addons/base:14.2.2}
 
@@ -45,10 +54,6 @@ RUN apk add --no-cache \
     unzip loki-linux-${ARCH}.zip && \
     mv loki-linux-${ARCH} /usr/local/bin/loki && \
     chmod +x /usr/local/bin/loki && \
-    wget https://github.com/grafana/loki/releases/download/v${LOKI_VERSION}/promtail-linux-${ARCH}.zip && \
-    unzip promtail-linux-${ARCH}.zip && \
-    mv promtail-linux-${ARCH} /usr/local/bin/promtail && \
-    chmod +x /usr/local/bin/promtail && \
     wget https://github.com/coder/code-server/releases/download/v${CODESERVER_VERSION}/code-server-${CODESERVER_VERSION}-linux-${ARCH}.tar.gz && \
     tar -xzf code-server-${CODESERVER_VERSION}-linux-${ARCH}.tar.gz && \
     mv code-server-${CODESERVER_VERSION}-linux-${ARCH} /opt/code-server && \
@@ -58,6 +63,10 @@ RUN apk add --no-cache \
     rm -rf *.tar.gz *.zip && \
     apk del wget tar && \
     rm -rf /var/cache/apk/*
+
+# Copy the compiled Promtail binary from the builder stage
+COPY --from=promtail-builder /go/src/github.com/grafana/loki/clients/cmd/promtail/promtail /usr/local/bin/promtail
+RUN chmod +x /usr/local/bin/promtail
 
 # Copy configuration files
 COPY prometheus.yml /etc/prometheus/
@@ -91,3 +100,9 @@ RUN chmod +x /etc/cont-init.d/00-init.sh && \
     chmod +x /usr/local/bin/vscode-toggle && \
     chmod +x /usr/local/bin/vscode-api-server && \
     chmod +x /usr/local/bin/grafana-api-server
+
+# After installing required packages, add the promtail user
+RUN adduser -D -H -s /bin/false promtail
+
+# Ensure /etc/promtail is owned by promtail
+RUN chown -R promtail:promtail /etc/promtail

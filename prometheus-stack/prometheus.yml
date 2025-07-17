@@ -236,6 +236,16 @@ scrape_configs:
     metrics_path: '/metrics'
     scrape_interval: 15s
 
+  # Promtail metrics
+  - job_name: 'promtail'
+    static_configs:
+      - targets: ['localhost:9080']
+        labels:
+          group: 'stack'
+          service: 'promtail'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
   # Internal addon services HTTP health checks
   - job_name: 'addon_services'
     metrics_path: /probe
