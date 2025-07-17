@@ -1,0 +1,64 @@
+{
+  "name": "InfluxDB Stack",
+  "version": "3.0.0",
+  "slug": "influxdb-stack",
+  "description": "Complete time-series monitoring stack: InfluxDB 2.x, Grafana with Alerting, and VS Code in one add-on",
+  "arch": [
+    "aarch64",
+    "amd64"
+  ],
+  "startup": "services",
+  "init": false,
+  "boot": "auto",
+  "ingress": true,
+  "ingress_port": 80,
+  "panel_icon": "mdi:chart-timeline-variant",
+  "panel_title": "InfluxDB Stack",
+  "panel_admin": true,
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": []
+  },
+  "ports": {
+    "8086/tcp": 8086,
+    "3000/tcp": 3000,
+    "8443/tcp": null,
+    "80/tcp": null
+  },
+  "ports_description": {
+    "8086/tcp": "InfluxDB (enabled for direct UI access)",
+    "3000/tcp": "Grafana (enabled for direct access due to ingress limitations)",
+    "8443/tcp": "VS Code (disabled by default, use ingress)",
+    "80/tcp": "NGINX ingress (disabled by default, use Home Assistant ingress)"
+  },
+  "webui": "http://[HOST]:[PORT:80]/",
+  "host_network": false,
+  "hassio_api": true,
+  "hassio_role": "admin",
+  "options": {
+    "influxdb_org": "my-org",
+    "influxdb_bucket": "my-bucket",
+    "influxdb_username": "admin",
+    "influxdb_password": "admin123",
+    "influxdb_token": "",
+    "home_assistant_url": "http://supervisor/core",
+    "home_assistant_token": "",
+    "enable_vscode": false,
+    "vscode_password": "",
+    "vscode_workspace": "/config",
+    "grafana_admin_password": "admin"
+  },
+  "schema": {
+    "influxdb_org": "str",
+    "influxdb_bucket": "str",
+    "influxdb_username": "str",
+    "influxdb_password": "str",
+    "influxdb_token": "str",
+    "home_assistant_url": "str",
+    "home_assistant_token": "str",
+    "enable_vscode": "bool",
+    "vscode_password": "str",
+    "vscode_workspace": "str",
+    "grafana_admin_password": "str"
+  }
+}

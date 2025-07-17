@@ -1,0 +1,14 @@
+#!/command/with-contenv bashio
+
+# Wait for InfluxDB to be ready
+for i in $(seq 1 30); do
+    if curl -s "http://localhost:8086/health" > /dev/null; then
+        echo "InfluxDB is ready"
+        exit 0
+    fi
+    echo "Waiting for InfluxDB... (attempt $i/30)"
+    sleep 1
+done
+
+echo "InfluxDB failed to become ready after 30 seconds"
+exit 1 

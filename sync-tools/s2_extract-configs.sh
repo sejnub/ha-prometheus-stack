@@ -1,131 +1,169 @@
-#!/bin/bash
-# extract-configs.sh - Extract ALL configuration files (works in both test and addon mode)
+#!/usr/bin/with-contenv bashio
+
+# =============================================================================
+# INFLUXDB STACK SYNC TOOLS - CONFIGURATION EXTRACTION
+# =============================================================================
+# PURPOSE: Extract configuration files from running InfluxDB Stack container
+# USAGE:   ./sync-tools/s2_extract-configs.sh
+# 
+# This script extracts configuration files from either:
+# 1. Test-Mode: Local influxdb-stack-test container
+# 2. Addon-Mode: Remote Home Assistant addon container via SSH
+#
+# EXTRACTED FILES:
+# - Grafana configuration (grafana.ini, datasources, dashboards)
+# - InfluxDB configuration (if any config files exist)
+# - NGINX configuration (nginx.conf, ingress.conf)
+# - Dashboard files (JSON files from Grafana)
+#
+# OUTPUT: Files are organized in ./ssh-extracted-configs/ directory
+# =============================================================================
 
 # Source configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/config.sh"
 
-# Load configuration and detect mode
+# Load environment and set defaults
 load_env
 set_defaults
+
+# Detect mode
 MODE=$(detect_mode)
 
-# Get extraction directories from centralized config
-EXTRACTION_DIRS=($(get_extraction_dirs))
-EXTRACTION_DIRS_STR=$(IFS=, ; echo "${EXTRACTION_DIRS[*]}")
+print_status() {
+    local status="$1"
+    local message="$2"
+    case $status in
+        "OK") echo -e "\033[0;32m✅ $message\033[0m" ;;
+        "WARN") echo -e "\033[1;33m⚠️  $message\033[0m" ;;
+        "ERROR") echo -e "\033[0;31m❌ $message\033[0m" ;;
+        "INFO") echo -e "\033[0;34mℹ️  $message\033[0m" ;;
+    esac
+}
+
+echo "📥 InfluxDB Stack Sync Tools - Configuration Extraction"
+echo "======================================================"
+echo "Mode: $MODE"
+echo "Container: $(get_container_name "$MODE")"
+echo ""
+
+# Test container access
+CONTAINER_NAME=$(get_container_name "$MODE")
 
 if [ "$MODE" = "test" ]; then
-    echo "🧪 Test-Mode detected (local container)"
-    HA_IP="localhost"
-    CONTAINER_FILTER="$LOCAL_CONTAINER_NAME"
+    CONTAINER_ID="$CONTAINER_NAME"
     CMD_PREFIX=""
-    COPY_METHOD="local"
 else
-    echo "🏠 Addon-Mode detected (remote Home Assistant)"
-    HA_IP="$HA_HOSTNAME"
-    CONTAINER_FILTER="$REMOTE_CONTAINER_NAME"
-    CMD_PREFIX=$(get_ssh_prefix "addon")
-    COPY_METHOD="scp"
+    SSH_CMD=$(get_ssh_connection "$MODE")
+    CONTAINER_ID=$($SSH_CMD "docker ps -q --filter name=$CONTAINER_NAME" 2>/dev/null)
+    CMD_PREFIX="$SSH_CMD"
 fi
 
-# Show configuration
-show_config "$MODE"
-
-echo "Extracting ALL configuration files..."
-echo "Target: $HA_IP (container filter: $CONTAINER_FILTER)"
-echo "Directories: ${EXTRACTION_DIRS_STR}"
-echo "==============================================="
-
-# Create local directories using centralized config
-mkdir -p "$EXTRACTED_DIR"/{${EXTRACTION_DIRS_STR}}
-
-# Execute extraction commands (locally or via SSH)
-$CMD_PREFIX bash << EOF
-echo 'Finding prometheus container...'
-CONTAINER_ID=\$(docker ps --filter 'name=$CONTAINER_FILTER' --format '{{.ID}}' | head -1)
-
-if [ -z "\$CONTAINER_ID" ]; then
-    echo '❌ No prometheus container found!'
-    [ "$CONTAINER_FILTER" = "prometheus-stack-test" ] && echo 'Run ./test/build.sh first to start the test container'
+if [ -z "$CONTAINER_ID" ]; then
+    print_status "ERROR" "Container $CONTAINER_NAME not found or not running"
     exit 1
 fi
 
-echo 'Container found: '\$CONTAINER_ID
+print_status "OK" "Container $CONTAINER_NAME is accessible"
 
-# Create temp extraction directory using centralized config
-mkdir -p /tmp/extracted-configs/{${EXTRACTION_DIRS_STR}}
+# Create extraction directories
+create_directories
 
-echo 'Extracting configuration files...'
-# Dashboard files
-docker cp "\$CONTAINER_ID:/etc/grafana/provisioning/dashboards/" "/tmp/extracted-configs/dashboards/" 2>/dev/null || echo '   Dashboards not accessible'
+# Create temporary extraction directory
+TEMP_EXTRACT_DIR="$EXTRACTED_DIR/temp"
+mkdir -p "$TEMP_EXTRACT_DIR"
 
-# Prometheus files
-docker cp "\$CONTAINER_ID:/etc/prometheus/prometheus.yml" "/tmp/extracted-configs/prometheus/" 2>/dev/null || echo '   prometheus.yml not accessible'
-docker cp "\$CONTAINER_ID:/etc/prometheus/rules/" "/tmp/extracted-configs/prometheus/" 2>/dev/null || echo '   Alert rules not accessible'
+print_status "INFO" "Extracting configuration files..."
 
-# Grafana files
-docker cp "\$CONTAINER_ID:/etc/grafana/grafana.ini" "/tmp/extracted-configs/grafana/" 2>/dev/null || echo '   grafana.ini not accessible'
-docker cp "\$CONTAINER_ID:/etc/grafana/provisioning/" "/tmp/extracted-configs/grafana/" 2>/dev/null || echo '   Grafana provisioning not accessible'
-
-# Blackbox files
-docker cp "\$CONTAINER_ID:/etc/blackbox_exporter/blackbox.yml" "/tmp/extracted-configs/blackbox/" 2>/dev/null || echo '   blackbox.yml not accessible'
-
-# Alertmanager files
-docker cp "\$CONTAINER_ID:/etc/alertmanager/alertmanager.yml" "/tmp/extracted-configs/alerting/" 2>/dev/null || echo '   alertmanager.yml not accessible'
-
-# Karma files
-docker cp "\$CONTAINER_ID:/etc/karma/karma.yml" "/tmp/extracted-configs/karma/" 2>/dev/null || echo '   karma.yml not accessible'
-
-# NGINX files
-docker cp "\$CONTAINER_ID:/etc/nginx/nginx.conf" "/tmp/extracted-configs/nginx/" 2>/dev/null || echo '   nginx.conf not accessible'
-docker cp "\$CONTAINER_ID:/etc/nginx/servers/ingress.conf" "/tmp/extracted-configs/nginx/" 2>/dev/null || echo '   ingress.conf not accessible'
-
-echo 'Extracted files summary:'
-find /tmp/extracted-configs -type f 2>/dev/null | head -10
-echo '   ... (showing first 10 files)'
-EOF
-
-# Copy files to local directory (method depends on local vs remote)
-echo "Copying to local directory..."
-if [ "$COPY_METHOD" = "local" ]; then
-    cp -r /tmp/extracted-configs/* "./$EXTRACTED_DIR/" 2>/dev/null
-    rm -rf /tmp/extracted-configs
+# Execute extraction commands
+if [ "$MODE" = "test" ]; then
+    EXEC_CMD="docker exec $CONTAINER_ID"
 else
-    local scp_cmd=$(get_scp_prefix "addon")
-    $scp_cmd -r "$HA_SSH_USER@$HA_IP:/tmp/extracted-configs/*" "./$EXTRACTED_DIR/" 2>/dev/null
-    $CMD_PREFIX "rm -rf /tmp/extracted-configs"
+    EXEC_CMD="$CMD_PREFIX docker exec $CONTAINER_ID"
 fi
 
-# Show results
+# Create extraction script to run in container
+$EXEC_CMD bash << 'EOF'
+# Create temporary directory in container
+mkdir -p /tmp/extracted-configs/grafana/provisioning/dashboards
+mkdir -p /tmp/extracted-configs/grafana/provisioning/datasources
+mkdir -p /tmp/extracted-configs/nginx/servers
+mkdir -p /tmp/extracted-configs/influxdb
+
+echo "Extracting InfluxDB Stack configuration files..."
+
+# Grafana files
+echo "  Extracting Grafana configuration..."
+cp /etc/grafana/grafana.ini /tmp/extracted-configs/grafana/ 2>/dev/null || echo '   grafana.ini not accessible'
+cp /etc/grafana/provisioning/datasources/influxdb.yml /tmp/extracted-configs/grafana/provisioning/datasources/ 2>/dev/null || echo '   influxdb.yml not accessible'
+
+# Dashboard files
+echo "  Extracting dashboard files..."
+cp /etc/grafana/provisioning/dashboards/*.json /tmp/extracted-configs/grafana/provisioning/dashboards/ 2>/dev/null || echo '   dashboard files not accessible'
+cp /etc/grafana/provisioning/dashboards/*.yml /tmp/extracted-configs/grafana/provisioning/dashboards/ 2>/dev/null || echo '   dashboard provider files not accessible'
+
+# NGINX files
+echo "  Extracting NGINX configuration..."
+cp /etc/nginx/nginx.conf /tmp/extracted-configs/nginx/ 2>/dev/null || echo '   nginx.conf not accessible'
+cp /etc/nginx/servers/ingress.conf /tmp/extracted-configs/nginx/servers/ 2>/dev/null || echo '   ingress.conf not accessible'
+
+# InfluxDB files (if any configuration files exist)
+echo "  Extracting InfluxDB configuration..."
+if [ -d /etc/influxdb ]; then
+    cp /etc/influxdb/*.conf /tmp/extracted-configs/influxdb/ 2>/dev/null || echo '   No InfluxDB config files found'
+    cp /etc/influxdb/*.yml /tmp/extracted-configs/influxdb/ 2>/dev/null || echo '   No InfluxDB YAML files found'
+else
+    echo '   No InfluxDB configuration directory found'
+fi
+
+echo "Extraction completed in container"
+EOF
+
+# Copy files from container to local filesystem
+print_status "INFO" "Copying extracted files to local filesystem..."
+
+# Copy Grafana files
+if [ "$MODE" = "test" ]; then
+    docker cp "$CONTAINER_ID:/tmp/extracted-configs/grafana/." "$EXTRACTED_DIR/grafana/" 2>/dev/null || print_status "WARN" "Could not copy some Grafana files"
+    docker cp "$CONTAINER_ID:/tmp/extracted-configs/grafana/provisioning/dashboards/." "$EXTRACTED_DIR/dashboards/dashboards/" 2>/dev/null || print_status "WARN" "Could not copy dashboard files"
+    docker cp "$CONTAINER_ID:/tmp/extracted-configs/grafana/provisioning/datasources/." "$EXTRACTED_DIR/grafana/datasources/" 2>/dev/null || print_status "WARN" "Could not copy datasource files"
+    docker cp "$CONTAINER_ID:/tmp/extracted-configs/nginx/." "$EXTRACTED_DIR/nginx/" 2>/dev/null || print_status "WARN" "Could not copy NGINX files"
+    docker cp "$CONTAINER_ID:/tmp/extracted-configs/influxdb/." "$EXTRACTED_DIR/influxdb/" 2>/dev/null || print_status "WARN" "Could not copy InfluxDB files"
+else
+    # For SSH mode, we need to copy files through SSH
+    $SSH_CMD "docker cp $CONTAINER_ID:/tmp/extracted-configs/grafana/. /tmp/sync-grafana/" 2>/dev/null || print_status "WARN" "Could not copy Grafana files"
+    $SSH_CMD "docker cp $CONTAINER_ID:/tmp/extracted-configs/nginx/. /tmp/sync-nginx/" 2>/dev/null || print_status "WARN" "Could not copy NGINX files"
+    $SSH_CMD "docker cp $CONTAINER_ID:/tmp/extracted-configs/influxdb/. /tmp/sync-influxdb/" 2>/dev/null || print_status "WARN" "Could not copy InfluxDB files"
+    
+    # Copy from remote host to local
+    scp -r "$HA_SSH_USER@$HA_HOSTNAME:/tmp/sync-grafana/*" "$EXTRACTED_DIR/grafana/" 2>/dev/null || print_status "WARN" "Could not transfer Grafana files"
+    scp -r "$HA_SSH_USER@$HA_HOSTNAME:/tmp/sync-nginx/*" "$EXTRACTED_DIR/nginx/" 2>/dev/null || print_status "WARN" "Could not transfer NGINX files"
+    scp -r "$HA_SSH_USER@$HA_HOSTNAME:/tmp/sync-influxdb/*" "$EXTRACTED_DIR/influxdb/" 2>/dev/null || print_status "WARN" "Could not transfer InfluxDB files"
+fi
+
+# Clean up temporary files in container
+$EXEC_CMD rm -rf /tmp/extracted-configs/ 2>/dev/null || true
+
+# Show extraction results
 echo ""
-echo "✅ Configuration extraction complete!"
-echo "Files saved to: ./$EXTRACTED_DIR/"
+print_status "INFO" "Extraction completed. Files saved to: $EXTRACTED_DIR"
 echo ""
-echo "What was extracted:"
-for dir in "${EXTRACTION_DIRS[@]}"; do
-    count=$(find "./$EXTRACTED_DIR/$dir" -type f 2>/dev/null | wc -l)
-    echo "   $(echo ${dir^}): $count files"  # Capitalize first letter
+echo "📁 Extracted files:"
+
+for dir in grafana nginx influxdb dashboards; do
+    if [ -d "$EXTRACTED_DIR/$dir" ]; then
+        file_count=$(find "$EXTRACTED_DIR/$dir" -type f 2>/dev/null | wc -l)
+        if [ $file_count -gt 0 ]; then
+            echo "  📂 $dir/: $file_count files"
+            find "$EXTRACTED_DIR/$dir" -type f -exec basename {} \; | sort | sed 's/^/    - /'
+        else
+            echo "  📂 $dir/: (empty)"
+        fi
+    fi
 done
 
 echo ""
-echo "Compare with current files:"
-echo "   Source files: ./dashboards/, ./prometheus-stack/rootfs/etc/"
-echo "   Runtime files: ./prometheus-stack/rootfs/etc/{prometheus,grafana,blackbox_exporter}/"
-echo "   Extracted files: ./$EXTRACTED_DIR/"
-
-if [ "$COPY_METHOD" = "local" ]; then
-    echo ""
-    echo "Test-Mode notes:"
-    echo "   - Container: $CONTAINER_FILTER"
-    echo "   - Config source: ../test-data/options.json"
-    echo "   - To restart with new config: docker restart $CONTAINER_FILTER"
-fi
-
-# Check if extraction was successful and provide summary
-total_files=$(find ./$EXTRACTED_DIR -type f 2>/dev/null | wc -l)
-if [ "$total_files" -gt 0 ]; then
-    print_status_icon "OK" "Configuration extraction completed successfully - $total_files files extracted"
-else
-    print_status_icon "ERROR" "Configuration extraction failed - No files were extracted"
-    exit 1
-fi 
+print_status "OK" "Configuration extraction completed successfully"
+print_status "INFO" "Next steps:"
+print_status "INFO" "  • Run s3_compare-configs.sh to compare with repository"
+print_status "INFO" "  • Run s4_sync-to-repo.sh to sync changes back to repository" 

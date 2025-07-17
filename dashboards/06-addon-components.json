@@ -844,7 +844,7 @@
   "schemaVersion": 37,
   "style": "dark",
   "tags": [
-    "prometheus-stack",
+    "influxdb-stack",
     "addon-components"
   ],
   "templating": {

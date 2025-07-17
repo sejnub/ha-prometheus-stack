@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =============================================================================
-# PROMETHEUS STACK ADD-ON - RESOURCE MONITORING SCRIPT
+# INFLUXDB STACK ADD-ON - RESOURCE MONITORING SCRIPT
 # =============================================================================
 # PURPOSE: Monitor resource usage and performance of the add-on
 # USAGE:   ./monitor.sh [continuous]
@@ -16,7 +16,7 @@
 # MONITORING METRICS:
 # - Container CPU and Memory usage
 # - Disk space usage for /data directory
-# - Service response times (Prometheus, Alertmanager, Karma)
+# - Service response times (InfluxDB, Grafana, VS Code)
 # - Number of running processes
 # - Network connections
 #
@@ -48,198 +48,260 @@ print_status() {
     esac
 }
 
+# Container name
+CONTAINER_NAME="influxdb-stack-test"
+
+# Function to check if container is running
+check_container() {
+    if ! docker ps --format '{{.Names}}' | grep -q "^$CONTAINER_NAME$"; then
+        print_status "ERROR" "Container '$CONTAINER_NAME' is not running"
+        print_status "INFO" "Please run './test/build.sh' first"
+        exit 1
+    fi
+}
+
 # Function to get container stats
 get_container_stats() {
-    echo "📊 Container Resource Usage"
-    echo "============================"
+    docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}\t{{.BlockIO}}" "$CONTAINER_NAME"
+}
+
+# Function to get disk usage
+get_disk_usage() {
+    echo ""
+    print_status "INFO" "📁 Disk Usage:"
+    echo "----------------------------------------"
     
-    if docker ps | grep -q prometheus-stack; then
-        print_status "INFO" "Container is running"
-        
-        # Get container stats (single snapshot)
-        echo ""
-        echo "🔍 Current Resource Usage:"
-        if ! docker stats --no-stream prometheus-stack-test 2>/dev/null && \
-           ! docker stats --no-stream prometheus-stack-dev 2>/dev/null; then
-            echo ""
-            print_status "ERROR" "❌ Monitoring failed: Could not get container stats ❌"
-            exit 1
-        fi
+    # Host disk usage for test-data directory
+    if [ -d "./test-data" ]; then
+        local host_usage=$(du -sh ./test-data 2>/dev/null || echo "0B")
+        echo "Host test-data directory: $host_usage"
+    fi
+    
+    # Container disk usage
+    echo "Container disk usage:"
+    docker exec "$CONTAINER_NAME" df -h /data 2>/dev/null || echo "  /data: Not available"
+    
+    # InfluxDB data directory
+    local influxdb_size=$(docker exec "$CONTAINER_NAME" du -sh /data/influxdb 2>/dev/null || echo "0B")
+    echo "InfluxDB data: $influxdb_size"
+    
+    # Grafana data directory
+    local grafana_size=$(docker exec "$CONTAINER_NAME" du -sh /data/grafana 2>/dev/null || echo "0B")
+    echo "Grafana data: $grafana_size"
+}
+
+# Function to get service response times
+get_service_response_times() {
+    echo ""
+    print_status "INFO" "⏱️  Service Response Times:"
+    echo "----------------------------------------"
+    
+    # InfluxDB health check
+    local influxdb_time=$(curl -o /dev/null -s -w "%{time_total}" "http://localhost:8086/health" 2>/dev/null || echo "N/A")
+    if [ "$influxdb_time" != "N/A" ]; then
+        printf "InfluxDB health:     %.3f seconds\n" "$influxdb_time"
     else
-        echo ""
-        print_status "ERROR" "❌ Monitoring failed: Container is not running ❌"
-        exit 1
+        echo "InfluxDB health:     Not responding"
+    fi
+    
+    # Grafana health check
+    local grafana_time=$(curl -o /dev/null -s -w "%{time_total}" "http://localhost:3000/api/health" 2>/dev/null || echo "N/A")
+    if [ "$grafana_time" != "N/A" ]; then
+        printf "Grafana health:      %.3f seconds\n" "$grafana_time"
+    else
+        echo "Grafana health:      Not responding"
+    fi
+    
+    # VS Code check
+    local vscode_time=$(curl -o /dev/null -s -w "%{time_total}" "http://localhost:8443/" 2>/dev/null || echo "N/A")
+    if [ "$vscode_time" != "N/A" ]; then
+        printf "VS Code:             %.3f seconds\n" "$vscode_time"
+    else
+        echo "VS Code:             Not responding"
+    fi
+    
+    # NGINX status
+    local nginx_time=$(curl -o /dev/null -s -w "%{time_total}" "http://localhost:80/nginx_status" 2>/dev/null || echo "N/A")
+    if [ "$nginx_time" != "N/A" ]; then
+        printf "NGINX status:        %.3f seconds\n" "$nginx_time"
+    else
+        echo "NGINX status:        Not responding"
     fi
 }
 
-# Function to check disk usage
-check_disk_usage() {
+# Function to get process information
+get_process_info() {
     echo ""
-    echo "💾 Disk Usage Analysis"
-    echo "======================"
+    print_status "INFO" "🔄 Process Information:"
+    echo "----------------------------------------"
     
-    # Check host disk usage
-    echo "📁 Host Disk Usage:"
-    if ! df -h . | grep -E "(Filesystem|$(pwd))"; then
-        echo ""
-        print_status "ERROR" "❌ Monitoring failed: Could not get host disk usage ❌"
-        exit 1
-    fi
+    # Get process count
+    local process_count=$(docker exec "$CONTAINER_NAME" ps aux | wc -l)
+    echo "Total processes: $((process_count - 1))"
     
-    # Check container disk usage
+    # Get key processes
     echo ""
-    echo "📦 Container Disk Usage:"
-    if ! docker exec prometheus-stack-test df -h /data 2>/dev/null && \
-       ! docker exec prometheus-stack-dev df -h /data 2>/dev/null; then
-        print_status "WARN" "Could not get container disk usage"
-    fi
-    
-    # Check specific directories
-    echo ""
-    echo "📂 Data Directory Sizes:"
-    if ! docker exec prometheus-stack-test ls -lah /data/ 2>/dev/null && \
-       ! docker exec prometheus-stack-dev ls -lah /data/ 2>/dev/null; then
-        print_status "WARN" "Could not list data directories"
-    fi
-}
-
-# Function to check service response times
-check_service_performance() {
-    echo ""
-    echo "⚡ Service Performance"
-    echo "======================"
-    
-    local services=(
-        "Prometheus:http://localhost:9090/-/healthy"
-        "Alertmanager:http://localhost:9093/-/healthy"
-        "Blackbox Exporter:http://localhost:9115/metrics"
-        "Karma:http://localhost:8080/"
-    )
-    
-    for service in "${services[@]}"; do
-        local name=$(echo "$service" | cut -d: -f1)
-        local url=$(echo "$service" | cut -d: -f2-)
-        
-        echo -n "🔍 $name response time: "
-        
-        # Measure response time
-        local start_time=$(date +%s%N)
-        if curl -f -s --max-time 10 "$url" > /dev/null 2>&1; then
-            local end_time=$(date +%s%N)
-            local duration=$(( (end_time - start_time) / 1000000 ))  # Convert to milliseconds
-            
-            if [ $duration -lt 100 ]; then
-                print_status "OK" "${duration}ms"
-            elif [ $duration -lt 500 ]; then
-                print_status "WARN" "${duration}ms (slow)"
-            else
-                print_status "ERROR" "${duration}ms (very slow)"
-            fi
-        else
-            print_status "ERROR" "unreachable"
-        fi
+    echo "Key processes:"
+    docker exec "$CONTAINER_NAME" ps aux | grep -E "(influxd|grafana|code-server|nginx)" | grep -v grep | while read line; do
+        echo "  $line"
     done
 }
 
-# Function to check process information
-check_processes() {
+# Function to get network information
+get_network_info() {
     echo ""
-    echo "🔄 Process Information"
-    echo "======================"
+    print_status "INFO" "🌐 Network Information:"
+    echo "----------------------------------------"
     
-    echo "📋 Running Processes:"
-    if docker exec prometheus-stack-test ps aux 2>/dev/null || docker exec prometheus-stack-dev ps aux 2>/dev/null; then
-        print_status "OK" "Process list retrieved"
+    # Get listening ports
+    echo "Listening ports:"
+    docker exec "$CONTAINER_NAME" netstat -tlnp 2>/dev/null | grep LISTEN | while read line; do
+        echo "  $line"
+    done
+    
+    # Get network connections
+    echo ""
+    echo "Active connections:"
+    local connection_count=$(docker exec "$CONTAINER_NAME" netstat -tn 2>/dev/null | grep ESTABLISHED | wc -l)
+    echo "  Established connections: $connection_count"
+}
+
+# Function to get service status
+get_service_status() {
+    echo ""
+    print_status "INFO" "🏥 Service Health Status:"
+    echo "----------------------------------------"
+    
+    # InfluxDB status
+    if curl -s "http://localhost:8086/health" | grep -q '"status":"pass"'; then
+        echo "InfluxDB:            ✅ Healthy"
     else
-        print_status "WARN" "Could not get process list"
+        echo "InfluxDB:            ❌ Unhealthy"
     fi
     
-    echo ""
-    echo "🔗 Network Connections:"
-    if docker exec prometheus-stack-test netstat -tuln 2>/dev/null || docker exec prometheus-stack-dev netstat -tuln 2>/dev/null; then
-        print_status "OK" "Network connections retrieved"
+    # Grafana status
+    if curl -s "http://localhost:3000/api/health" | grep -q '"database":"ok"'; then
+        echo "Grafana:             ✅ Healthy"
     else
-        print_status "WARN" "Could not get network connections"
+        echo "Grafana:             ❌ Unhealthy"
+    fi
+    
+    # VS Code status
+    if curl -s "http://localhost:8443/" | grep -q -i "vs code\|code-server"; then
+        echo "VS Code:             ✅ Healthy"
+    else
+        echo "VS Code:             ❌ Unhealthy"
+    fi
+    
+    # NGINX status
+    if curl -s "http://localhost:80/nginx_status" | grep -q "Active connections"; then
+        echo "NGINX:               ✅ Healthy"
+    else
+        echo "NGINX:               ❌ Unhealthy"
     fi
 }
 
-# Function to check log information
-check_logs() {
+# Function to display monitoring header
+show_header() {
     echo ""
-    echo "📝 Recent Log Activity"
-    echo "======================"
+    echo "📊 InfluxDB Stack Add-on - Resource Monitor"
+    echo "==========================================="
+    echo "Container: $CONTAINER_NAME"
+    echo "Timestamp: $(date)"
+    echo ""
+}
+
+# Function to display all monitoring information
+show_monitoring_info() {
+    show_header
     
-    echo "🔄 Last 10 log entries:"
-    if docker logs --tail 10 prometheus-stack-test 2>/dev/null || docker logs --tail 10 prometheus-stack-dev 2>/dev/null; then
-        print_status "OK" "Recent logs retrieved"
-    else
-        print_status "WARN" "Could not get recent logs"
-    fi
+    # Container resource stats
+    print_status "INFO" "🐳 Container Resource Usage:"
+    echo "----------------------------------------"
+    get_container_stats
+    
+    # Disk usage
+    get_disk_usage
+    
+    # Service response times
+    get_service_response_times
+    
+    # Service health status
+    get_service_status
+    
+    # Process information
+    get_process_info
+    
+    # Network information
+    get_network_info
+    
+    echo ""
+    echo "=========================================="
 }
 
 # Function for continuous monitoring
-continuous_monitoring() {
-    echo "🔄 Starting Continuous Monitoring (Press Ctrl+C to stop)"
-    echo "========================================================"
+continuous_monitor() {
+    print_status "INFO" "Starting continuous monitoring (Press Ctrl+C to stop)..."
+    echo ""
     
     while true; do
         clear
-        echo "🕐 $(date)"
-        echo "========================================================"
-        
-        get_container_stats
-        check_disk_usage
-        check_service_performance
-        
+        show_monitoring_info
         echo ""
-        echo "⏳ Next update in 30 seconds..."
-        sleep 30
+        print_status "INFO" "Refreshing in 5 seconds..."
+        sleep 5
     done
 }
 
-# Main script logic
-main() {
+# Function to show usage
+show_usage() {
+    echo "Usage: $0 [continuous]"
     echo ""
+    echo "Options:"
+    echo "  (no args)    Show single monitoring snapshot"
+    echo "  continuous   Start continuous monitoring (refresh every 5 seconds)"
     echo ""
-    echo ""
-    echo "📈  Running Resource Monitoring for Prometheus Stack Add-on"
-    echo "==========================================================="
-    
-    # Check if continuous mode is requested
-    if [ "$1" = "continuous" ]; then
-        if ! continuous_monitoring; then
-            echo ""
-            print_status "ERROR" "❌ Monitoring failed: Continuous monitoring error ❌"
-            exit 1
-        fi
-        exit 0
-    fi
-    
-    # Single snapshot monitoring
-    if ! get_container_stats || ! check_disk_usage || ! check_service_performance || ! check_processes || ! check_logs; then
-        echo ""
-        print_status "ERROR" "❌ Monitoring failed: Could not complete all checks ❌"
-        exit 1
-    fi
-    
-    echo ""
-    echo "📊 Monitoring Summary"
-    echo "====================="
-    print_status "INFO" "Single snapshot monitoring completed"
-    echo ""
-    echo "💡 Usage:"
-    echo "   Single snapshot: ./monitor.sh"
-    echo "   Continuous mode: ./monitor.sh continuous"
-    echo ""
-    echo "🔧 Performance Tips:"
-    echo "   - Monitor memory usage for potential leaks"
-    echo "   - Check disk usage for data growth"
-    echo "   - Watch response times for performance issues"
-    echo "   - Review logs for errors or warnings"
-    echo ""
-    print_status "OK" "✨ Monitoring completed successfully ✨"
-    exit 0
+    echo "Examples:"
+    echo "  $0                 # Single snapshot"
+    echo "  $0 continuous      # Continuous monitoring"
 }
+
+# Main execution
+main() {
+    local mode="${1:-single}"
+    
+    # Check if container is running
+    check_container
+    
+    case "$mode" in
+        "continuous")
+            continuous_monitor
+            ;;
+        "single"|"")
+            show_monitoring_info
+            ;;
+        "help"|"-h"|"--help")
+            show_usage
+            ;;
+        *)
+            print_status "ERROR" "Unknown mode: $mode"
+            show_usage
+            exit 1
+            ;;
+    esac
+}
+
+# Error handler
+handle_error() {
+    print_status "ERROR" "An error occurred during monitoring"
+    exit 1
+}
+
+# Set up error handling
+trap handle_error ERR
+
+# Handle Ctrl+C gracefully in continuous mode
+trap 'echo ""; print_status "INFO" "Monitoring stopped by user"; exit 0' INT
 
 # Run main function
 main "$@" 

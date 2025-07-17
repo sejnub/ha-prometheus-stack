@@ -1,0 +1,8 @@
+#!/command/with-contenv bashio
+
+echo "Starting InfluxDB..."
+exec s6-setuidgid root /opt/influxdb/usr/bin/influxd \
+    --store=disk \
+    --engine-path=/data/influxdb \
+    --http-bind-address=:8086 \
+    --reporting-disabled 

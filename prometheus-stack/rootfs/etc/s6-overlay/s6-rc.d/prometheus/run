@@ -1,9 +1,0 @@
-#!/command/with-contenv bashio
-
-echo "Starting Prometheus..."
-exec s6-setuidgid root /opt/prometheus/prometheus \
-    --config.file=/etc/prometheus/prometheus.yml \
-    --storage.tsdb.path=/data/prometheus \
-    --web.listen-address=:9090 \
-    --web.enable-lifecycle \
-    --web.enable-admin-api 

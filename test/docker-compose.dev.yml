@@ -1,5 +1,5 @@
 # =============================================================================
-# PROMETHEUS STACK ADD-ON - DOCKER COMPOSE DEVELOPMENT CONFIGURATION
+# INFLUXDB STACK ADD-ON - DOCKER COMPOSE DEVELOPMENT CONFIGURATION
 # =============================================================================
 # PURPOSE: Alternative way to run the add-on for development and testing
 # USAGE:   docker-compose -f test/docker-compose.dev.yml up -d
@@ -23,40 +23,39 @@
 version: '3.8'
 
 services:
-  prometheus-stack:
+  influxdb-stack:
     build: 
-      context: ..  # Build from parent directory
+      context: ../influxdb-stack  # Build from influxdb-stack directory
       dockerfile: Dockerfile
-    container_name: prometheus-stack-dev
+    container_name: influxdb-stack-dev
     restart: unless-stopped
-    init: false
+    init: true
     entrypoint: /init
     ports:
-      - "9090:9090"  # Prometheus web interface
-      - "9093:9093"  # Alertmanager web interface
-      - "9115:9115"  # Blackbox Exporter interface
-      - "8080:8080"  # Karma web interface
+      - "8086:8086"  # InfluxDB web interface
+      - "3000:3000"  # Grafana web interface
+      - "8443:8443"  # VS Code interface
       - "80:80"      # NGINX ingress interface
     volumes:
       - ../test-data:/data  # Persistent configuration and data
     environment:
       - TZ=UTC  # Set timezone for consistent logging
     networks:
-      - prometheus-network
+      - influxdb-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9090/-/healthy"]
+      test: ["CMD", "curl", "-f", "http://localhost:8086/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
 networks:
-  prometheus-network:
+  influxdb-network:
     driver: bridge
-    name: prometheus-dev-network
+    name: influxdb-dev-network
 
 volumes:
-  prometheus_data:
+  influxdb_data:
     driver: local
-  alertmanager_data:
+  grafana_data:
     driver: local 

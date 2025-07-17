@@ -1,106 +1,91 @@
 # =============================================================================
-# CONFIGURATION FILES DEFINITION
+# INFLUXDB STACK CONFIGURATION FILES DEFINITION
 # =============================================================================
-# This YAML file defines all configuration files handled by the sync tools
-# 
-# Structure:
-#   filename_pattern:
-#     type: TEMPLATE_FILE | STATIC_FILE | GENERATED_FILE | GENERATED_TRACKABLE
-#     runtime_path: path within /etc/ in container (runtime location)
-#     source_path: path in git repository (source location) 
-#     extracted_path: directory path for extraction (extracted location)
-#     description: human-readable description
+# PURPOSE: Centralized configuration for all config files in the InfluxDB Stack
+# USAGE:   Used by sync-tools scripts for consistent file handling
 #
-# File Types:
-#   TEMPLATE_FILE:      Has source template (compare against ./prometheus-stack/filename)
-#   STATIC_FILE:        Static file copied from rootfs (compare against ./prometheus-stack/rootfs/etc/runtime_path/filename)  
-#   GENERATED_FILE:     Generated at runtime (no source comparison, only runtime)
-#   GENERATED_TRACKABLE: Generated at runtime but track manual changes (compare extracted vs runtime with filtering)
+# This YAML file defines how each configuration file should be handled:
+#
+# FILE TYPES:
+#   TEMPLATE_FILE:      Has source template (compare against ./influxdb-stack/filename)
+#   STATIC_FILE:        Static file copied from rootfs (compare against ./influxdb-stack/rootfs/etc/runtime_path/filename)
+#   GENERATED_TRACKABLE: Generated at runtime but we want to track manual changes
+#
+# PROPERTIES:
+#   type:            File type (see above)
+#   runtime_path:    Path in container (/etc/runtime_path/filename)
+#   source_path:     Path in git repository (for TEMPLATE_FILE and STATIC_FILE)
+#   extracted_path:  Directory name in ssh-extracted-configs/
+#   description:     How this file gets deployed and what it does
+#   priority:        Processing order (1=highest, 5=lowest)
+#   match_path:      Special matching pattern for disambiguation
 # =============================================================================
 
 # Dashboard Files
+"home.json":
+  type: STATIC_FILE
+  runtime_path: grafana/provisioning/dashboards
+  source_path: influxdb-stack/rootfs/etc/grafana/provisioning/dashboards
+  extracted_path: dashboards/dashboards
+  description: "DEPLOYMENT: Copied during Docker build from influxdb-stack/rootfs/etc/grafana/provisioning/dashboards/home.json → /etc/grafana/provisioning/dashboards/home.json - Main InfluxDB Stack overview dashboard"
+  priority: 3
+
 "*.json":
   type: STATIC_FILE
   runtime_path: grafana/provisioning/dashboards
-  source_path: prometheus-stack/rootfs/etc/grafana/provisioning/dashboards
-  extracted_path: dashboards
-  description: "DEPLOYMENT: Copied during Docker build from rootfs/etc/grafana/provisioning/dashboards/ → /etc/grafana/provisioning/dashboards/ - Grafana dashboard JSON definitions"
+  source_path: influxdb-stack/rootfs/etc/grafana/provisioning/dashboards
+  extracted_path: dashboards/dashboards
+  description: "DEPLOYMENT: Copied during Docker build from influxdb-stack/rootfs/etc/grafana/provisioning/dashboards/*.json → /etc/grafana/provisioning/dashboards/*.json - Grafana dashboard definitions"
+  priority: 4
 
-"dashboard-provider.yml":
-  type: STATIC_FILE
-  runtime_path: grafana/provisioning/dashboards
-  source_path: prometheus-stack/rootfs/etc/grafana/provisioning/dashboards
-  extracted_path: dashboards
-  description: "DEPLOYMENT: Copied during Docker build from rootfs/etc/grafana/provisioning/dashboards/ → /etc/grafana/provisioning/dashboards/ - Grafana dashboard provider config"
-
-# Prometheus Files
-"prometheus.yml":
-  type: TEMPLATE_FILE
-  runtime_path: prometheus
-  source_path: prometheus-stack
-  extracted_path: prometheus
-  description: "DEPLOYMENT: Copied during Docker build from prometheus-stack/prometheus.yml → /etc/prometheus/prometheus.yml via Dockerfile COPY command - Main Prometheus configuration template"
-
-"*.yml":
-  type: STATIC_FILE
-  runtime_path: prometheus
-  source_path: prometheus-stack/rootfs/etc/prometheus
-  extracted_path: prometheus
-  description: "DEPLOYMENT: Copied during Docker build from rootfs/etc/prometheus/ → /etc/prometheus/ - Prometheus alerting and recording rule files"
-  priority: 2  # Lower priority than specific prometheus.yml match
-
-# Grafana Files
+# Grafana Configuration Files
 "grafana.ini":
   type: TEMPLATE_FILE
   runtime_path: grafana
-  source_path: prometheus-stack
+  source_path: influxdb-stack
   extracted_path: grafana
-  description: "DEPLOYMENT: Copied during Docker build from prometheus-stack/grafana.ini → /etc/grafana/grafana.ini via Dockerfile COPY command - Grafana server configuration template"
+  description: "DEPLOYMENT: Copied during Docker build from influxdb-stack/grafana.ini → /etc/grafana/grafana.ini via Dockerfile COPY command - Grafana server configuration template"
+  priority: 1
 
-# Grafana Datasource Files (special case - different runtime_path)
-"prometheus.yml@datasources":
+"influxdb.yml":
   type: STATIC_FILE
   runtime_path: grafana/provisioning/datasources
-  source_path: prometheus-stack/rootfs/etc/grafana/provisioning/datasources
-  extracted_path: grafana
-  description: "DEPLOYMENT: Copied during Docker build from rootfs/etc/grafana/provisioning/datasources/ → /etc/grafana/provisioning/datasources/ - Grafana Prometheus datasource configuration"
-  match_path: "*/provisioning/datasources/*"
+  source_path: influxdb-stack/rootfs/etc/grafana/provisioning/datasources
+  extracted_path: grafana/datasources
+  description: "DEPLOYMENT: Copied during Docker build from influxdb-stack/rootfs/etc/grafana/provisioning/datasources/influxdb.yml → /etc/grafana/provisioning/datasources/influxdb.yml - InfluxDB datasource configuration"
+  priority: 2
 
-# Blackbox Files
-"blackbox.yml":
-  type: TEMPLATE_FILE
-  runtime_path: blackbox_exporter
-  source_path: prometheus-stack
-  extracted_path: blackbox
-  description: "DEPLOYMENT: Copied during Docker build from prometheus-stack/blackbox.yml → /etc/blackbox_exporter/blackbox.yml via Dockerfile COPY command - Blackbox Exporter configuration template"
-
-# Alertmanager Files
-"alertmanager.yml":
-  type: GENERATED_TRACKABLE
-  runtime_path: alertmanager
-  source_path: ""
-  extracted_path: alerting
-  description: "DEPLOYMENT: Generated at container startup by /etc/cont-init.d/00-init.sh from /data/options.json → /etc/alertmanager/alertmanager.yml - Alertmanager routing and notification config"
-
-# Karma Files
-"karma.yml":
-  type: GENERATED_TRACKABLE
-  runtime_path: karma
-  source_path: ""
-  extracted_path: karma
-  description: "DEPLOYMENT: Generated at container startup by /etc/cont-init.d/00-init.sh (static template) → /etc/karma/karma.yml - Karma alert dashboard configuration"
-
-# NGINX Files
+# NGINX Configuration Files
 "nginx.conf":
   type: STATIC_FILE
   runtime_path: nginx
-  source_path: prometheus-stack/rootfs/etc/nginx
+  source_path: influxdb-stack/rootfs/etc/nginx
   extracted_path: nginx
-  description: "DEPLOYMENT: Copied during Docker build from rootfs/etc/nginx/ → /etc/nginx/ - NGINX main server configuration"
+  description: "DEPLOYMENT: Copied during Docker build from influxdb-stack/rootfs/etc/nginx/nginx.conf → /etc/nginx/nginx.conf - Main NGINX configuration"
+  priority: 2
 
 "ingress.conf":
   type: STATIC_FILE
   runtime_path: nginx/servers
-  source_path: prometheus-stack/rootfs/etc/nginx/servers
-  extracted_path: nginx
-  description: "DEPLOYMENT: Copied during Docker build from rootfs/etc/nginx/servers/ → /etc/nginx/servers/ - NGINX ingress routing configuration" 
+  source_path: influxdb-stack/rootfs/etc/nginx/servers
+  extracted_path: nginx/servers
+  description: "DEPLOYMENT: Copied during Docker build from influxdb-stack/rootfs/etc/nginx/servers/ingress.conf → /etc/nginx/servers/ingress.conf - NGINX ingress routing configuration"
+  priority: 2
+
+# Dashboard Provider Configuration
+"dashboard-provider.yml":
+  type: STATIC_FILE
+  runtime_path: grafana/provisioning/dashboards
+  source_path: influxdb-stack/rootfs/etc/grafana/provisioning/dashboards
+  extracted_path: dashboards/providers
+  description: "DEPLOYMENT: Copied during Docker build from influxdb-stack/rootfs/etc/grafana/provisioning/dashboards/dashboard-provider.yml → /etc/grafana/provisioning/dashboards/dashboard-provider.yml - Grafana dashboard provider configuration"
+  priority: 2
+
+# Generic YAML files (catch-all for any other .yml files)
+"*.yml":
+  type: STATIC_FILE
+  runtime_path: ""
+  source_path: ""
+  extracted_path: ""
+  description: "DEPLOYMENT: Various YAML configuration files - deployment method varies by location"
+  priority: 5 

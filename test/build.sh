@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =============================================================================
-# PROMETHEUS STACK ADD-ON - LOCAL TESTING SCRIPT (TEST-MODE)
+# INFLUXDB STACK ADD-ON - LOCAL TESTING SCRIPT (TEST-MODE)
 # =============================================================================
 # PURPOSE: Build and run the Home Assistant add-on locally in Test-mode
 # USAGE:   ./test/build.sh (from project root) OR ./build.sh (from test folder)
@@ -51,8 +51,8 @@ fi
 echo ""
 echo ""
 echo ""
-echo "🐳  Running Build and Testing Prometheus Stack Add-on"
-echo "====================================================="
+echo "🐳  Running Build and Testing InfluxDB Stack Add-on"
+echo "=================================================="
 echo " Project root: $PROJECT_ROOT"
 echo "📁 Test directory: $TEST_DIR"
 
@@ -62,124 +62,106 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-# Check if Docker is running
-if ! docker info &> /dev/null; then
-    print_status "ERROR" "❌ Build failed: Docker not running ❌"
+# Variables
+CONTAINER_NAME="influxdb-stack-test"
+IMAGE_NAME="influxdb-stack-test"
+ADDON_DIR="$PROJECT_ROOT/influxdb-stack"
+TEST_DATA_DIR="$TEST_DIR/test-data"
+
+# Check if addon directory exists
+if [ ! -d "$ADDON_DIR" ]; then
+    print_status "ERROR" "❌ Build failed: Add-on directory not found: $ADDON_DIR ❌"
     exit 1
 fi
 
-print_status "OK" "Docker is available and running"
+print_status "INFO" "📦 Building Docker image..."
+print_status "INFO" "📁 Add-on directory: $ADDON_DIR"
 
-# Clean up any existing test container
-echo "🧹 Cleaning up previous test containers..."
-docker stop prometheus-stack-test 2>/dev/null || true
-docker rm prometheus-stack-test 2>/dev/null || true
+# Build the Docker image
+cd "$ADDON_DIR"
+if ! docker build -t "$IMAGE_NAME" .; then
+    print_status "ERROR" "❌ Build failed: Docker build failed ❌"
+    exit 1
+fi
 
-# Build the add-on image
-echo "🔨 Building add-on image..."
-cd "$PROJECT_ROOT/prometheus-stack"
-docker build -t prometheus-stack-test .
+print_status "OK" "✅ Docker image built successfully"
 
-# Create test directories and configuration
-echo "📁 Setting up test environment..."
-mkdir -p "$PROJECT_ROOT/test-data/prometheus"
-mkdir -p "$PROJECT_ROOT/test-data/alertmanager"
+# Create test data directory
+mkdir -p "$TEST_DATA_DIR"
 
-# Create test options.json only if it doesn't exist
-if [ ! -f "$PROJECT_ROOT/test-data/options.json" ]; then
-    echo "📝 Creating default options.json..."
-    cat > "$PROJECT_ROOT/test-data/options.json" <<EOF
+# Create or update test configuration
+OPTIONS_FILE="$TEST_DATA_DIR/options.json"
+if [ ! -f "$OPTIONS_FILE" ]; then
+    print_status "INFO" "📝 Creating test configuration..."
+    cat > "$OPTIONS_FILE" <<EOF
 {
-  "alertmanager_receiver": "test-receiver",
-  "alertmanager_to_email": "test@example.com",
-  "monitor_home_assistant": true,
-  "monitor_supervisor": true,
-  "monitor_addons": true,
-  "custom_targets": [],
-  "home_assistant_ip": "192.168.1.30",
-  "home_assistant_port": 8123,
-  "home_assistant_long_lived_token": "test-token",
-  "smtp_host": "localhost",
-  "smtp_port": 25,
+  "influxdb_org": "test-org",
+  "influxdb_bucket": "test-bucket",
+  "influxdb_username": "admin",
+  "influxdb_password": "testpass123",
+  "influxdb_token": "",
+  "home_assistant_url": "http://supervisor/core",
+  "home_assistant_token": "your-long-lived-access-token-here",
   "enable_vscode": true,
-  "vscode_password": "test123",
-  "vscode_workspace": "/config"
+  "vscode_password": "testpass",
+  "vscode_workspace": "/config",
+  "grafana_admin_password": "testpass"
 }
 EOF
+    print_status "OK" "✅ Test configuration created"
+else
+    print_status "INFO" "📝 Using existing test configuration"
 fi
 
-# Run the container with test configuration (Test-mode simulation)
-echo "🚀 Starting test container in Test-mode..."
-docker run -d \
-  --name prometheus-stack-test \
-  -p 9090:9090 \
-  -p 9093:9093 \
-  -p 9115:9115 \
-  -p 8080:8080 \
-  -p 8443:8443 \
-  -p 3000:3000 \
-  -p 80:80 \
-  -v "$PROJECT_ROOT/test-data:/data" \
-  -e SUPERVISOR_TOKEN="test-supervisor-token" \
-  -e HASSIO_TOKEN="test-hassio-token" \
-  --entrypoint "/init" \
-  prometheus-stack-test
+# Stop and remove existing container if it exists
+if docker ps -a --filter "name=$CONTAINER_NAME" | grep -q "$CONTAINER_NAME"; then
+    print_status "INFO" "🛑 Stopping existing container..."
+    docker stop "$CONTAINER_NAME" >/dev/null 2>&1 || true
+    docker rm "$CONTAINER_NAME" >/dev/null 2>&1 || true
+fi
 
-# Check if container started successfully
-if ! docker ps --format '{{.Names}}' | grep -q '^prometheus-stack-test$'; then
-    echo "📋 Container logs:"
-    docker logs prometheus-stack-test
-    echo ""
-    print_status "ERROR" "❌ Build failed: Container failed to start ❌"
+# Run the container
+print_status "INFO" "🚀 Starting container..."
+docker run -d \
+    --name "$CONTAINER_NAME" \
+     \
+    -p 8086:8086 \
+    -p 3000:3000 \
+    -p 8443:8443 \
+    -p 80:80 \
+    -v "$TEST_DATA_DIR:/data" \
+    -e "TZ=UTC" \
+    "$IMAGE_NAME"
+
+# Wait for container to start
+sleep 5
+
+# Check if container is running
+if ! docker ps --filter "name=$CONTAINER_NAME" | grep -q "$CONTAINER_NAME"; then
+    print_status "ERROR" "❌ Container failed to start"
+    docker logs "$CONTAINER_NAME"
     exit 1
 fi
-print_status "OK" "Container started successfully"
+
+print_status "OK" "✅ Container started successfully"
 
 echo ""
-echo "🎉 Add-on is ready for testing!"
-echo "============================================="
-echo "📊 Service URLs:"
-echo "   Prometheus:        http://localhost:9090"
-echo "   Alertmanager:      http://localhost:9093"
-echo "   Blackbox Exporter: http://localhost:9115"
-echo "   Karma UI:          http://localhost:8080"
-echo "   Grafana:           http://localhost:3000"
-echo "   VS Code:           http://localhost:8443"
-echo "   NGINX (Ingress):   http://localhost:80"
+echo "🎉 InfluxDB Stack Add-on is now running!"
+echo "========================================="
 echo ""
-echo "🔍 Health Check URLs:"
-echo "   Prometheus:        http://localhost:9090/-/healthy"
-echo "   Alertmanager:      http://localhost:9093/-/healthy"
-echo "   Blackbox Exporter: http://localhost:9115/metrics"
-echo "   Karma:             http://localhost:8080/"
-echo "   Grafana:           http://localhost:3000/api/health"
-echo "   VS Code:           http://localhost:8443/"
-echo "   NGINX:             http://localhost:80/nginx_status"
+echo "📊 Access URLs:"
+echo "  • InfluxDB UI:    http://localhost:8086"
+echo "  • Grafana:        http://localhost:3000"
+echo "  • VS Code:        http://localhost:8443"
+echo "  • Main Interface: http://localhost:80"
 echo ""
-echo "🌐 Ingress Paths:"
-echo "   - Karma:           http://localhost:80/"
-echo "   - Prometheus:      http://localhost:80/prometheus/"
-echo "   - Alertmanager:    http://localhost:80/alertmanager/"
-echo "   - Blackbox:        http://localhost:80/blackbox/"
-echo "   - Grafana:         http://localhost:80/grafana/"
-echo "   - VS Code:         http://localhost:80/vscode/"
+echo "🔧 Management:"
+echo "  • View logs:      docker logs $CONTAINER_NAME"
+echo "  • Stop container: docker stop $CONTAINER_NAME"
+echo "  • Restart:        docker restart $CONTAINER_NAME"
 echo ""
-echo "💻 VS Code Access:"
-echo "   - Direct:          http://localhost:8443"
-echo "   - Ingress:         http://localhost:80/vscode/"
-echo "   - Workspace:       /etc"
+echo "📁 Test data directory: $TEST_DATA_DIR"
+echo "📝 Configuration file: $OPTIONS_FILE"
 echo ""
-echo "🔍 Blackbox Exporter Endpoints:"
-echo "   - Metrics:         http://localhost:9115/metrics"
-echo "   - Probe Example:   http://localhost:9115/probe?target=google.com&module=http_2xx"
-echo "   - Status:          http://localhost:9115/-/healthy"
-echo ""
-echo "📋 Useful Commands:"
-echo "   View logs:      docker logs -f prometheus-stack-test"
-echo "   Stop container: docker stop prometheus-stack-test"
-echo "   Remove container: docker rm prometheus-stack-test"
-echo "   Health check:   $TEST_DIR/health-check.sh"
-echo "   Monitor resources: $TEST_DIR/monitor.sh"
-echo "   Cleanup:        $TEST_DIR/cleanup.sh"
-echo ""
-print_status "OK" "✨ Build and test setup completed successfully ✨" 
+echo "🏥 Health check: Run ./test/health-check.sh to verify all services"
+echo "" 

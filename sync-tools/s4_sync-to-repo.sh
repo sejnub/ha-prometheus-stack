@@ -1,383 +1,261 @@
-#!/bin/bash
-# sync-to-repo.sh - Automatically sync changes from running instance to git repository
+#!/usr/bin/with-contenv bashio
 
-set -e  # Exit on any error
+# =============================================================================
+# INFLUXDB STACK SYNC TOOLS - REPOSITORY SYNCHRONIZATION
+# =============================================================================
+# PURPOSE: Sync extracted configurations back to repository
+# USAGE:   ./sync-tools/s4_sync-to-repo.sh [--dry-run]
+# 
+# This script:
+# 1. Compares extracted runtime configurations with repository files
+# 2. Identifies files that need to be updated
+# 3. Creates backups of existing files
+# 4. Copies updated configurations to repository
+# 5. Provides git commit suggestions
+#
+# SYNC TYPES:
+# - TEMPLATE_FILE: Sync to repository root (e.g., grafana.ini)
+# - STATIC_FILE: Sync to rootfs/etc/ structure
+# - GENERATED_TRACKABLE: Track changes but don't auto-sync
+#
+# OPTIONS:
+#   --dry-run: Show what would be synced without making changes
+# =============================================================================
 
 # Source configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/config.sh"
 
-# Load configuration and detect mode
+# Load environment and set defaults
 load_env
 set_defaults
-MODE=$(detect_mode)
 
-# Show configuration
-show_config "$MODE"
+# Parse command line arguments
+DRY_RUN_FLAG="$DRY_RUN"
+if [ "$1" = "--dry-run" ]; then
+    DRY_RUN_FLAG="true"
+fi
 
-# Function to backup a file before overwriting
-backup_file() {
-    local file="$1"
-    if [ -f "$file" ]; then
-        local backup="${file}.backup.$(date +%Y%m%d_%H%M%S)"
-        cp "$file" "$backup"
-        print_status "$YELLOW" "   📦 Backed up: $file → $backup"
-    fi
+# Load YAML configuration
+if ! command -v yq >/dev/null 2>&1; then
+    echo "❌ Error: yq is required but not installed."
+    echo "Install with: sudo apt-get install yq"
+    exit 1
+fi
+
+print_status() {
+    local status="$1"
+    local message="$2"
+    case $status in
+        "OK") echo -e "\033[0;32m✅ $message\033[0m" ;;
+        "WARN") echo -e "\033[1;33m⚠️  $message\033[0m" ;;
+        "ERROR") echo -e "\033[0;31m❌ $message\033[0m" ;;
+        "INFO") echo -e "\033[0;34mℹ️  $message\033[0m" ;;
+        "SYNC") echo -e "\033[0;35m🔄 $message\033[0m" ;;
+        "SKIP") echo -e "\033[0;37m⏭️  $message\033[0m" ;;
+    esac
 }
 
-# Function to sync a file with backup and confirmation
+echo "🔄 InfluxDB Stack Sync Tools - Repository Synchronization"
+echo "========================================================"
+if [ "$DRY_RUN_FLAG" = "true" ]; then
+    echo "🧪 DRY RUN MODE - No changes will be made"
+fi
+echo ""
+
+# Check if extraction directory exists
+if [ ! -d "$EXTRACTED_DIR" ]; then
+    print_status "ERROR" "Extracted configurations not found at: $EXTRACTED_DIR"
+    print_status "INFO" "Run s2_extract-configs.sh first to extract configurations"
+    exit 1
+fi
+
+# Check if repository exists
+if [ ! -d "$SOURCE_ROOT" ]; then
+    print_status "ERROR" "Source repository not found at: $SOURCE_ROOT"
+    exit 1
+fi
+
+print_status "INFO" "Syncing extracted configurations to repository..."
+print_status "INFO" "Extracted: $EXTRACTED_DIR"
+print_status "INFO" "Target: $SOURCE_ROOT"
+echo ""
+
+# Create backup directory
+BACKUP_DIR="$SYNC_BACKUP_DIR/$(date +%Y%m%d_%H%M%S)"
+if [ "$DRY_RUN_FLAG" != "true" ]; then
+    mkdir -p "$BACKUP_DIR"
+    print_status "INFO" "Backup directory: $BACKUP_DIR"
+fi
+
+# Load configuration files definition
+CONFIG_FILE="$SCRIPT_DIR/config-files.yml"
+if [ ! -f "$CONFIG_FILE" ]; then
+    print_status "ERROR" "Configuration file not found: $CONFIG_FILE"
+    exit 1
+fi
+
+# Counters for summary
+sync_count=0
+skip_count=0
+error_count=0
+
+# Function to sync files
 sync_file() {
-    local source="$1"
-    local target="$2"
-    local description="$3"
+    local file_pattern="$1"
+    local file_type="$2"
+    local runtime_path="$3"
+    local source_path="$4"
+    local extracted_path="$5"
+    local description="$6"
     
-    if [ ! -f "$source" ]; then
-        print_status "$RED" "   ❌ Source file not found: $source"
-        return 1
+    echo "📄 Processing: $file_pattern ($file_type)"
+    
+    # Find actual files matching pattern
+    local extracted_files
+    if [ -d "$EXTRACTED_DIR/$extracted_path" ]; then
+        extracted_files=$(find "$EXTRACTED_DIR/$extracted_path" -name "$file_pattern" -type f 2>/dev/null)
     fi
     
-    if [ -f "$target" ]; then
-        if diff -q "$source" "$target" > /dev/null; then
-            print_status "$GREEN" "   ✅ $description - IDENTICAL (no sync needed)"
-            return 0
+    if [ -z "$extracted_files" ]; then
+        print_status "SKIP" "No extracted files found matching: $file_pattern"
+        ((skip_count++))
+        echo ""
+        return
+    fi
+    
+    while IFS= read -r extracted_file; do
+        local filename=$(basename "$extracted_file")
+        local target_file=""
+        
+        # Determine target file path based on type
+        case "$file_type" in
+            "TEMPLATE_FILE")
+                target_file="$source_path/$filename"
+                ;;
+            "STATIC_FILE")
+                if [ -n "$runtime_path" ]; then
+                    target_file="$source_path/$runtime_path/$filename"
+                else
+                    # Search for existing file in source tree
+                    local existing_file=$(find "$SOURCE_ROOT" -name "$filename" -type f 2>/dev/null | head -1)
+                    if [ -n "$existing_file" ]; then
+                        target_file="$existing_file"
+                    else
+                        print_status "WARN" "Cannot determine target location for: $filename"
+                        ((error_count++))
+                        continue
+                    fi
+                fi
+                ;;
+            "GENERATED_TRACKABLE")
+                print_status "SKIP" "Generated file (not synced): $filename"
+                ((skip_count++))
+                continue
+                ;;
+        esac
+        
+        # Check if files are different
+        if [ -f "$target_file" ] && diff -q "$target_file" "$extracted_file" >/dev/null 2>&1; then
+            print_status "SKIP" "Files identical: $filename"
+            ((skip_count++))
+            echo ""
+            continue
+        fi
+        
+        # Create target directory if it doesn't exist
+        local target_dir=$(dirname "$target_file")
+        if [ ! -d "$target_dir" ]; then
+            if [ "$DRY_RUN_FLAG" = "true" ]; then
+                print_status "INFO" "Would create directory: $target_dir"
+            else
+                mkdir -p "$target_dir"
+                print_status "INFO" "Created directory: $target_dir"
+            fi
+        fi
+        
+        # Backup existing file if it exists
+        if [ -f "$target_file" ] && [ "$DRY_RUN_FLAG" != "true" ]; then
+            local backup_file="$BACKUP_DIR/$(basename "$target_file").backup"
+            cp "$target_file" "$backup_file"
+            print_status "INFO" "Backed up: $target_file → $backup_file"
+        fi
+        
+        # Sync the file
+        if [ "$DRY_RUN_FLAG" = "true" ]; then
+            print_status "SYNC" "Would sync: $filename"
+            echo "     From: $extracted_file"
+            echo "     To:   $target_file"
         else
-            print_status "$YELLOW" "   🔄 $description - DIFFERENT (will sync)"
-            backup_file "$target"
-        fi
-    else
-        print_status "$BLUE" "   🆕 $description - NEW FILE (will create)"
-        # Create directory if it doesn't exist
-        mkdir -p "$(dirname "$target")"
-    fi
-    
-    # Copy the file
-    cp "$source" "$target"
-    print_status "$GREEN" "   ✅ Synced: $source → $target"
-    return 0
-}
-
-# Function to sync dashboard files
-sync_dashboards() {
-    print_status "$BLUE" "📊 Syncing Dashboard Files..."
-    
-    if [ ! -d "./$EXTRACTED_DIR/dashboards/dashboards" ]; then
-        print_status "$RED" "   ❌ No extracted dashboards found"
-        return 1
-    fi
-    
-    local synced_count=0
-    for dashboard in ./$EXTRACTED_DIR/dashboards/dashboards/*.json; do
-        if [ -f "$dashboard" ]; then
-            local filename=$(basename "$dashboard")
-            local source_dashboards="./dashboards/$filename"
-            local runtime_dashboards="./prometheus-stack/rootfs/etc/grafana/provisioning/dashboards/$filename"
-            
-            # Sync to source dashboards
-            if sync_file "$dashboard" "$source_dashboards" "Dashboard: $filename (source)"; then
-                ((synced_count++))
-            fi
-            
-            # Sync to runtime dashboards
-            if sync_file "$dashboard" "$runtime_dashboards" "Dashboard: $filename (runtime)"; then
-                ((synced_count++))
-            fi
-        fi
-    done
-    
-    print_status "$GREEN" "   📊 Synced $synced_count dashboard operations"
-}
-
-# Function to sync Prometheus configuration
-sync_prometheus() {
-    print_status "$BLUE" "🎯 Syncing Prometheus Configuration..."
-    
-    local prometheus_dir="./$EXTRACTED_DIR/prometheus"
-    if [ ! -d "$prometheus_dir" ]; then
-        print_status "$RED" "   ❌ No extracted prometheus config found"
-        return 1
-    fi
-    
-    local synced_count=0
-    
-    # Sync prometheus.yml
-    if [ -f "$prometheus_dir/prometheus.yml" ]; then
-        # Sync to source
-        if sync_file "$prometheus_dir/prometheus.yml" "./prometheus-stack/prometheus.yml" "prometheus.yml (source)"; then
-            ((synced_count++))
+            cp "$extracted_file" "$target_file"
+            print_status "SYNC" "Synced: $filename"
+            echo "     From: $extracted_file"
+            echo "     To:   $target_file"
         fi
         
-        # Sync to runtime
-        if sync_file "$prometheus_dir/prometheus.yml" "./prometheus-stack/rootfs/etc/prometheus/prometheus.yml" "prometheus.yml (runtime)"; then
-            ((synced_count++))
-        fi
-    fi
-    
-    # Sync alert rules
-    if [ -d "$prometheus_dir/rules" ]; then
-        for rule_file in "$prometheus_dir/rules"/*.yml; do
-            if [ -f "$rule_file" ]; then
-                local filename=$(basename "$rule_file")
-                local target="./prometheus-stack/rootfs/etc/prometheus/rules/$filename"
-                
-                if sync_file "$rule_file" "$target" "Alert rule: $filename"; then
-                    ((synced_count++))
-                fi
-            fi
-        done
-    fi
-    
-    print_status "$GREEN" "   🎯 Synced $synced_count prometheus operations"
-}
-
-# Function to sync Grafana configuration
-sync_grafana() {
-    print_status "$BLUE" "📊 Syncing Grafana Configuration..."
-    
-    local grafana_dir="./$EXTRACTED_DIR/grafana"
-    if [ ! -d "$grafana_dir" ]; then
-        print_status "$RED" "   ❌ No extracted grafana config found"
-        return 1
-    fi
-    
-    local synced_count=0
-    
-    # Sync grafana.ini
-    if [ -f "$grafana_dir/grafana.ini" ]; then
-        # Sync to source
-        if sync_file "$grafana_dir/grafana.ini" "./prometheus-stack/grafana.ini" "grafana.ini (source)"; then
-            ((synced_count++))
-        fi
+        ((sync_count++))
+        echo ""
         
-        # Sync to runtime
-        if sync_file "$grafana_dir/grafana.ini" "./prometheus-stack/rootfs/etc/grafana/grafana.ini" "grafana.ini (runtime)"; then
-            ((synced_count++))
-        fi
-    fi
-    
-    # Sync provisioning files
-    if [ -d "$grafana_dir/provisioning" ]; then
-        for prov_file in "$grafana_dir/provisioning"/*/*.yml; do
-            if [ -f "$prov_file" ]; then
-                local filename=$(basename "$prov_file")
-                local subdir=$(basename "$(dirname "$prov_file")")
-                local target="./prometheus-stack/rootfs/etc/grafana/provisioning/$subdir/$filename"
-                
-                if sync_file "$prov_file" "$target" "Grafana provisioning: $subdir/$filename"; then
-                    ((synced_count++))
-                fi
-            fi
-        done
-    fi
-    
-    print_status "$GREEN" "   📊 Synced $synced_count grafana operations"
+    done <<< "$extracted_files"
 }
 
-# Function to sync Blackbox configuration
-sync_blackbox() {
-    print_status "$BLUE" "🔎 Syncing Blackbox Configuration..."
-    
-    local blackbox_dir="./$EXTRACTED_DIR/blackbox"
-    if [ ! -d "$blackbox_dir" ]; then
-        print_status "$RED" "   ❌ No extracted blackbox config found"
-        return 1
-    fi
-    
-    local synced_count=0
-    
-    # Sync blackbox.yml
-    if [ -f "$blackbox_dir/blackbox.yml" ]; then
-        # Sync to source
-        if sync_file "$blackbox_dir/blackbox.yml" "./prometheus-stack/blackbox.yml" "blackbox.yml (source)"; then
-            ((synced_count++))
-        fi
-        
-        # Sync to runtime
-        if sync_file "$blackbox_dir/blackbox.yml" "./prometheus-stack/rootfs/etc/blackbox_exporter/blackbox.yml" "blackbox.yml (runtime)"; then
-            ((synced_count++))
-        fi
-    fi
-    
-    print_status "$GREEN" "   🔎 Synced $synced_count blackbox operations"
-}
+# Parse YAML and sync each file type
+echo "🔄 Processing configuration files..."
+echo ""
 
-# Function to handle dynamic configurations (like alertmanager)
-handle_dynamic_configs() {
-    print_status "$BLUE" "🚨 Handling Dynamic Configurations..."
-    
-    local alerting_dir="./$EXTRACTED_DIR/alerting"
-    if [ ! -d "$alerting_dir" ]; then
-        print_status "$RED" "   ❌ No extracted alerting config found"
-        return 1
-    fi
-    
-    if [ -f "$alerting_dir/alertmanager.yml" ]; then
-        print_status "$YELLOW" "   📋 alertmanager.yml is dynamically generated from options.json"
-        print_status "$YELLOW" "   💡 To sync alertmanager changes, you need to:"
-        print_status "$YELLOW" "      1. Review the generated config: cat $alerting_dir/alertmanager.yml"
-        print_status "$YELLOW" "      2. Update ../test-data/options.json accordingly"
-        print_status "$YELLOW" "      3. Rebuild the container to regenerate the config"
-    fi
-}
+# Get all file patterns from YAML, sorted by priority
+file_patterns=$(yq eval 'to_entries | sort_by(.value.priority // 5) | .[].key' "$CONFIG_FILE")
 
-# Function to show sync summary
-show_summary() {
-    print_status "$BLUE" ""
-    print_status "$BLUE" "📋 Sync Summary:"
-    print_status "$BLUE" "================"
-    print_status "$GREEN" "✅ Sync completed successfully!"
-    print_status "$BLUE" ""
-    print_status "$BLUE" "📁 Files synced to:"
-    print_status "$BLUE" "   • Source files: ./dashboards/, ./prometheus-stack/"
-    print_status "$BLUE" "   • Runtime files: ./prometheus-stack/rootfs/etc/"
-    print_status "$BLUE" ""
-    print_status "$BLUE" "📦 Backups created:"
-    print_status "$BLUE" "   • Check for .backup.* files in the repository"
-    print_status "$BLUE" ""
-    print_status "$YELLOW" "🚨 Next Steps:"
-    print_status "$YELLOW" "   1. Review the changes: git diff"
-    print_status "$YELLOW" "   2. Test the changes: cd .. && ./test/build.sh"
-    print_status "$YELLOW" "   3. Commit when satisfied: git add . && git commit -m 'Sync changes from running instance'"
-    print_status "$YELLOW" "   4. Clean up backups if everything works: find . -name '*.backup.*' -delete"
-}
+while IFS= read -r pattern; do
+    # Skip empty patterns
+    [ -z "$pattern" ] && continue
+    
+    # Get file configuration
+    file_type=$(yq eval ".\"$pattern\".type" "$CONFIG_FILE")
+    runtime_path=$(yq eval ".\"$pattern\".runtime_path" "$CONFIG_FILE")
+    source_path=$(yq eval ".\"$pattern\".source_path" "$CONFIG_FILE")
+    extracted_path=$(yq eval ".\"$pattern\".extracted_path" "$CONFIG_FILE")
+    description=$(yq eval ".\"$pattern\".description" "$CONFIG_FILE")
+    
+    # Skip if values are null
+    if [ "$file_type" = "null" ]; then
+        continue
+    fi
+    
+    # Sync this file pattern
+    sync_file "$pattern" "$file_type" "$runtime_path" "$source_path" "$extracted_path" "$description"
+    
+done <<< "$file_patterns"
 
-# Main script logic
-main() {
-    print_status "$BLUE" "🔄 Automatic Sync Tool - Copying changes from running instance to repository"
-    print_status "$BLUE" "=================================================================="
-    
-    # Check if extraction has been done
-    if [ ! -d "./$EXTRACTED_DIR" ]; then
-        print_status "$RED" "❌ No extracted files found!"
-        print_status "$RED" "📥 Run ./s2_extract-configs.sh first"
-        exit 1
-    fi
-    
-    # Check if we're in the right directory
-    if [ ! -f "./s2_extract-configs.sh" ]; then
-        print_status "$RED" "❌ Please run this script from the sync-tools directory"
-        exit 1
-    fi
-    
-    # Check if git repository exists
-    if [ ! -d "../.git" ]; then
-        print_status "$RED" "❌ Not in a git repository. Please run from the project root."
-        exit 1
-    fi
-    
-    print_status "$BLUE" "🔍 Starting automatic sync process..."
-    print_status "$BLUE" "📁 Extracted files: ./$EXTRACTED_DIR/"
-    print_status "$BLUE" "📁 Target repository: ../"
-    print_status "$BLUE" ""
-    
-    # Create backup directory
-    local backup_dir="$SYNC_BACKUP_DIR/$(date +%Y%m%d_%H%M%S)"
-    mkdir -p "$backup_dir"
-    print_status "$YELLOW" "📦 Backups will be saved to: $backup_dir"
-    print_status "$BLUE" ""
-    
-    # Sync each component
-    local total_operations=0
-    local components_processed=0
-    
-    # Sync dashboards
-    if sync_dashboards; then
-        ((total_operations++))
-    fi
-    ((components_processed++))
-    
-    # Sync prometheus
-    if sync_prometheus; then
-        ((total_operations++))
-    fi
-    ((components_processed++))
-    
-    # Sync grafana
-    if sync_grafana; then
-        ((total_operations++))
-    fi
-    ((components_processed++))
-    
-    # Sync blackbox
-    if sync_blackbox; then
-        ((total_operations++))
-    fi
-    ((components_processed++))
-    
-    # Handle dynamic configs
-    handle_dynamic_configs
-    
-    print_status "$BLUE" ""
-    print_status "$GREEN" "✅ Sync process completed!"
-    print_status "$BLUE" "📊 Components processed: $components_processed"
-    print_status "$BLUE" "📊 Files synced: $total_operations"
-    
-    # Show summary only if there were actual operations
-    if [ $total_operations -gt 0 ]; then
-        show_summary
-        print_status_icon "OK" "Repository sync completed successfully - $total_operations operations performed"
-    else
-        print_status "$YELLOW" ""
-        print_status "$YELLOW" "💡 No files were synced. This could mean:"
-        print_status "$YELLOW" "   • All files are identical (no changes needed)"
-        print_status "$YELLOW" "   • No extracted files were found in expected locations"
-        print_status "$YELLOW" "   • Run ./s3_compare-configs.sh first to see what changed"
-        print_status_icon "WARN" "Repository sync completed - No files were synced (all files identical)"
-    fi
-}
+# Summary
+echo "📊 Synchronization Summary"
+echo "========================="
+echo "Files synced: $sync_count"
+echo "Files skipped: $skip_count"
+echo "Errors: $error_count"
+echo ""
 
-# Handle command line arguments
-case "${1:-}" in
-    --help|-h)
-        echo "Usage: $0 [OPTIONS]"
-        echo ""
-        echo "Automatically sync changes from running instance to git repository"
-        echo ""
-        echo "Options:"
-        echo "  --help, -h     Show this help message"
-        echo "  --dry-run      Show what would be synced without actually copying"
-        echo ""
-        echo "Prerequisites:"
-        echo "  1. Run ./s2_extract-configs.sh first to extract current configs"
-        echo "  2. Run ./s3_compare-configs.sh to see what changed"
-        echo "  3. Run this script to sync the changes"
-        echo ""
-        echo "Workflow:"
-        echo "  ./s2_extract-configs.sh  # Extract from running instance"
-        echo "  ./s3_compare-configs.sh  # See what changed"
-        echo "  ./s4_sync-to-repo.sh     # This script - sync to repository"
-        echo "  git diff              # Review changes"
-        echo "  ./test/build.sh  # Test changes"
-        echo "  git commit            # Commit when satisfied"
-        exit 0
-        ;;
-    --dry-run)
-        print_status "$YELLOW" "🔍 DRY RUN MODE - No files will be actually copied"
-        print_status "$YELLOW" "This would show what would be synced"
-        # TODO: Implement dry-run mode
-        print_status "$YELLOW" "Dry-run mode not yet implemented. Use --help for usage."
-        exit 0
-        ;;
-    "")
-        # No arguments, run main function
-        main
-        ;;
-    *)
-        print_status "$RED" "❌ Unknown option: $1"
-        print_status "$RED" "Use --help for usage information"
-        exit 1
-        ;;
-esac 
-
-if [ "$MODE" = "test" ]; then
-    echo "🧪 Test-Mode detected (local container)"
-    MODE_INFO="Test-Mode - syncing from local test container"
-    HA_IP="localhost"
-    CONTAINER_FILTER="$LOCAL_CONTAINER_NAME"
-    CMD_PREFIX=""
+if [ "$DRY_RUN_FLAG" = "true" ]; then
+    print_status "INFO" "Dry run completed - no changes were made"
+    print_status "INFO" "Run without --dry-run to apply changes"
 else
-    echo "🏠 Addon-Mode detected (remote Home Assistant)"
-    MODE_INFO="Addon-Mode - syncing from remote Home Assistant addon"
-    HA_IP="$HA_HOSTNAME"
-    CONTAINER_FILTER="$REMOTE_CONTAINER_NAME"
-    CMD_PREFIX=$(get_ssh_prefix "addon")
+    if [ $sync_count -gt 0 ]; then
+        print_status "OK" "Synchronization completed successfully"
+        print_status "INFO" "Backup created: $BACKUP_DIR"
+        
+        # Git suggestions
+        echo ""
+        print_status "INFO" "Suggested git commands:"
+        echo "  git add ."
+        echo "  git status"
+        echo "  git commit -m 'Sync InfluxDB Stack configurations from runtime'"
+        echo "  git push"
+    else
+        print_status "INFO" "No files needed synchronization"
+    fi
+fi
+
+if [ $error_count -gt 0 ]; then
+    print_status "WARN" "Some files had errors during synchronization"
+    exit 1
 fi 

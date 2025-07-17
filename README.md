@@ -1,6 +1,6 @@
-# Prometheus Stack Add-on for Home Assistant
+# InfluxDB Stack Add-on for Home Assistant
 
-A comprehensive monitoring stack for Home Assistant that includes Prometheus, Alertmanager, Karma, Blackbox Exporter, and VS Code in a single add-on.
+A comprehensive time-series monitoring stack for Home Assistant that includes InfluxDB 2.x, Grafana with built-in Alerting, and VS Code in a single add-on.
 
 - [1. What is this?](#1-what-is-this)
 - [2. Key Features](#2-key-features)
@@ -13,9 +13,9 @@ A comprehensive monitoring stack for Home Assistant that includes Prometheus, Al
 - [5. Access](#5-access)
 - [6. Monitoring](#6-monitoring)
   - [6.1. Home Assistant Metrics](#61-home-assistant-metrics)
-  - [6.2. External Service Monitoring](#62-external-service-monitoring)
-- [7. Alert Configuration](#7-alert-configuration)
-  - [7.1. Email Notifications](#71-email-notifications)
+  - [6.2. Time Series Analytics](#62-time-series-analytics)
+- [7. Alerting](#7-alerting)
+  - [7.1. Grafana Alerting](#71-grafana-alerting)
   - [7.2. Custom Alerts](#72-custom-alerts)
 - [8. VS Code Integration](#8-vs-code-integration)
   - [Quick Start](#quick-start)
@@ -25,22 +25,21 @@ A comprehensive monitoring stack for Home Assistant that includes Prometheus, Al
 
 ## 1. What is this?
 
-This add-on provides a complete monitoring solution for your Home Assistant environment:
+This add-on provides a complete time-series monitoring solution for your Home Assistant environment:
 
-- **Prometheus**: Time-series database for metrics collection and storage
-- **Alertmanager**: Alert routing and notification management
-- **Karma**: Modern web UI for alert management and visualization
-- **Blackbox Exporter**: External service monitoring via HTTP and TCP probes
+- **InfluxDB 2.x**: Purpose-built time-series database for metrics, events, and analytics
+- **Grafana**: Beautiful dashboards and advanced visualization with built-in alerting
 - **VS Code**: Full-featured code editor for configuration editing and development
 
 ## 2. Key Features
 
 - **Multi-architecture**: Works on `amd64`, `arm64`, and `armv7`
-- **Email Alerts**: Configurable alert notifications via email
+- **Modern Time-Series Database**: InfluxDB 2.x with high performance and scalability
+- **Integrated Alerting**: Grafana's built-in alerting system replaces traditional Alertmanager
 - **Ingress Support**: Access all UIs directly through Home Assistant
 - **Dynamic Config**: Automatic configuration from add-on settings
 - **Data Persistence**: Survives add-on updates and restarts
-- **HA Integration**: Automatic Home Assistant metrics collection
+- **HA Integration**: Seamless Home Assistant metrics collection
 - **Pre-built Dashboards**: Ready-to-use Grafana dashboards
 - **VS Code Integration**: Full-featured code editor with extensions support
 
@@ -55,8 +54,8 @@ This add-on provides a complete monitoring solution for your Home Assistant envi
 
 1. In Home Assistant, go to **Settings** → **Add-ons** → **Add-on Store**
 2. Click the three dots in the top right and select **Repositories**
-3. Add this repository URL: `https://github.com/sejnub/ha-prometheus-stack`
-4. Find "Prometheus Stack" in the add-on store
+3. Add this repository URL: `https://github.com/sejnub/ha-influxdb-stack`
+4. Find "InfluxDB Stack" in the add-on store
 5. Click **Install**
 
 ## 4. Configuration
@@ -64,44 +63,44 @@ This add-on provides a complete monitoring solution for your Home Assistant envi
 ### 4.1. Add-on Configuration
 
 ```yaml
-alertmanager_receiver: "default"
-alertmanager_to_email: "your@email.com"
+influxdb_org: "my-org"
+influxdb_bucket: "my-bucket"
+influxdb_username: "admin"
+influxdb_password: "admin123"
+influxdb_token: ""
 home_assistant_url: "http://supervisor/core"
 home_assistant_token: "your_long_lived_token"
-blackbox_targets:
-  - name: "Home Assistant"
-    url: "http://supervisor/core"
 enable_vscode: false
 vscode_password: ""
 vscode_workspace: "/config"
+grafana_admin_password: "admin"
 ```
 
 ### 4.2. Option Descriptions
 
-- `alertmanager_receiver`: Name of the default alert receiver
-- `alertmanager_to_email`: Email address for alert notifications
+- `influxdb_org`: InfluxDB organization name
+- `influxdb_bucket`: Default bucket for storing data
+- `influxdb_username`: InfluxDB admin username
+- `influxdb_password`: InfluxDB admin password
+- `influxdb_token`: InfluxDB API token (auto-generated if empty)
 - `home_assistant_url`: URL of your Home Assistant instance
 - `home_assistant_token`: Long-lived access token for Home Assistant
-- `blackbox_targets`: List of endpoints to monitor
-  - `name`: Display name for the target
-  - `url`: URL to monitor
 - `enable_vscode`: Enable or disable VS Code editor
 - `vscode_password`: Password for VS Code access (required if enabled)
 - `vscode_workspace`: Workspace directory for VS Code (default: `/config`)
+- `grafana_admin_password`: Grafana admin password
 
 ## 5. Access
 
 All services are accessible through Home Assistant's ingress feature:
 
-- **Karma UI**: Through Home Assistant Ingress (default interface)
-- **Prometheus**: Through `/prometheus/` path
-- **Alertmanager**: Through `/alertmanager/` path
-- **Blackbox Exporter**: Through `/blackbox/` path
+- **InfluxDB UI**: Through Home Assistant Ingress (main interface)
+- **Grafana**: Through `/grafana/` path for dashboards and alerting
 - **VS Code**: Through `/vscode/` path (when enabled)
 
-No additional port configuration is needed - everything works through Home Assistant's ingress system.
-
-For technical implementation details, see [prometheus-stack/README.md](prometheus-stack/README.md).
+Direct port access is also available:
+- **InfluxDB**: Port 8086
+- **Grafana**: Port 3000
 
 ## 6. Monitoring
 
@@ -113,53 +112,43 @@ The add-on automatically collects:
 - Entity state information
 - Automation execution data
 - Integration status
-- And more...
+- Historical time-series data
 
-### 6.2. External Service Monitoring
+### 6.2. Time Series Analytics
 
-Built-in monitoring for:
+InfluxDB 2.x provides:
 
-- Home Assistant services
-- Media servers and clients
-- Network tools and services
-- Development tools
-- Database systems
-- Network protocols
+- High-performance time-series queries
+- Flux query language for advanced analytics
+- Real-time data processing
+- Efficient data compression
+- Automatic data retention policies
 
-For detailed monitoring capabilities and dashboard setup, see [dashboards/README.md](dashboards/README.md).
+## 7. Alerting
 
-## 7. Alert Configuration
+### 7.1. Grafana Alerting
 
-### 7.1. Email Notifications
+Grafana's built-in alerting system provides:
 
-The add-on automatically configures email notifications:
-
-```yaml
-# Example alertmanager.yml (auto-generated)
-global:
-  resolve_timeout: 5m
-
-route:
-  receiver: 'your-receiver-name'
-
-receivers:
-  - name: 'your-receiver-name'
-    email_configs:
-      - to: 'your-email@example.com'
-```
+- Unified alerting interface
+- Multiple notification channels
+- Alert rules and conditions
+- Silence management
+- Alert history and insights
 
 ### 7.2. Custom Alerts
 
 Create custom alerts through:
 
-- Prometheus configuration
-- Prometheus web interface
+- Grafana alert rules
+- InfluxDB tasks and checks
+- Custom notification channels
 
 ## 8. VS Code Integration
 
 The add-on includes a full-featured VS Code editor powered by code-server, allowing you to:
 
-- **Edit Configuration Files**: Modify all Prometheus Stack configurations directly
+- **Edit Configuration Files**: Modify all InfluxDB Stack configurations directly
 - **Write Scripts**: Create and test monitoring scripts and automation
 - **Install Extensions**: Use VS Code extensions for enhanced functionality
 - **Multi-language Support**: JavaScript, Python, YAML, JSON, and many more
@@ -171,7 +160,7 @@ The add-on includes a full-featured VS Code editor powered by code-server, allow
 3. Access VS Code through the main dashboard
 4. Start editing your configuration files
 
-For detailed VS Code usage instructions, see [prometheus-stack/VSCODE_GUIDE.md](prometheus-stack/VSCODE_GUIDE.md).
+For detailed VS Code usage instructions, see [influxdb-stack/VSCODE_GUIDE.md](influxdb-stack/VSCODE_GUIDE.md).
 
 ## 9. Development and Testing
 
@@ -179,9 +168,9 @@ For development and testing instructions, see [test/README.md](test/README.md).
 
 ## 10. Support
 
-- [Documentation](https://github.com/sejnub/ha-prometheus-stack/wiki)
-- [Issue Tracker](https://github.com/sejnub/ha-prometheus-stack/issues)
+- [Documentation](https://github.com/sejnub/ha-influxdb-stack/wiki)
+- [Issue Tracker](https://github.com/sejnub/ha-influxdb-stack/issues)
 
 ## 11. License
 
-MIT License - see LICENSE file for details
+MIT License - see [LICENSE](LICENSE) file for details

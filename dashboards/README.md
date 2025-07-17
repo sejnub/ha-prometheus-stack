@@ -1,182 +1,172 @@
-# Grafana Dashboards for Prometheus Stack
+# Grafana Dashboards for InfluxDB Stack
 
-This directory contains pre-configured Grafana dashboards for monitoring your Prometheus Stack add-on.
+This directory contains pre-configured Grafana dashboards for monitoring your InfluxDB Stack add-on.
 
-## Table of Contents
+## 📋 Table of Contents
 
-- [Table of Contents](#table-of-contents)
-- [1. Available Dashboards](#1-available-dashboards)
-  - [1.1. Prometheus Stack Overview (`01-overview.json`)](#11-prometheus-stack-overview-01-overviewjson)
+- [1. Dashboard Overview](#1-dashboard-overview)
+  - [1.1. InfluxDB Stack Overview (`01-overview.json`)](#11-influxdb-stack-overview-01-overviewjson)
   - [1.2. Home Assistant Monitoring (`02-home-assistant.json`)](#12-home-assistant-monitoring-02-home-assistantjson)
-  - [1.3. Blackbox Exporter Monitoring (`03-blackbox-exporter.json`)](#13-blackbox-exporter-monitoring-03-blackbox-exporterjson)
-  - [1.4. Alertmanager Monitoring (`04-alertmanager.json`)](#14-alertmanager-monitoring-04-alertmanagerjson)
-  - [1.5. Prometheus Server Monitoring (`05-prometheus.json`)](#15-prometheus-server-monitoring-05-prometheusjson)
+  - [1.3. System Monitoring (`03-system.json`)](#13-system-monitoring-03-systemjson)
+  - [1.4. InfluxDB Monitoring (`04-influxdb.json`)](#14-influxdb-monitoring-04-influxdbjson)
+  - [1.5. Grafana Monitoring (`05-grafana.json`)](#15-grafana-monitoring-05-grafanajson)
 - [2. Installation](#2-installation)
-  - [2.1. Option 1: Manual Import](#21-option-1-manual-import)
-  - [2.2. Option 2: Automatic Provisioning (Recommended)](#22-option-2-automatic-provisioning-recommended)
-  - [2.3. Option 3: Home Assistant Add-on](#23-option-3-home-assistant-add-on)
-- [3. Configuration](#3-configuration)
-  - [3.1. Data Source](#31-data-source)
-  - [3.2. Customization](#32-customization)
-- [4. Troubleshooting](#4-troubleshooting)
-  - [4.1. No Data Showing](#41-no-data-showing)
-  - [4.2. Missing Metrics](#42-missing-metrics)
-  - [4.3. Performance Issues](#43-performance-issues)
-- [5. Metric Sources](#5-metric-sources)
-- [6. Support](#6-support)
-- [7. License](#7-license)
+  - [2.1. Automatic Installation](#21-automatic-installation)
+  - [2.2. Manual Installation](#22-manual-installation)
+- [3. Usage](#3-usage)
+  - [3.1. Viewing Dashboards](#31-viewing-dashboards)
+  - [3.2. Customizing Dashboards](#32-customizing-dashboards)
+- [4. Data Source Configuration](#4-data-source-configuration)
+- [5. Troubleshooting](#5-troubleshooting)
+  - [5.1. Common Issues](#51-common-issues)
+  - [5.2. Metric Requirements](#52-metric-requirements)
+- [6. Customization](#6-customization)
+- [7. Support](#7-support)
+- [8. License](#8-license)
 
-## Home Dashboard
+## 1. Dashboard Overview
 
-The file `home.json` contains the default dashboard that should be set as the home dashboard in Grafana. While the file is named `home.json` to indicate its role as the home dashboard, it is titled "Addon Components Monitoring" to describe its content. This dashboard provides an immediate overview of all add-on component statuses when users first log in to Grafana.
+### 1.1. InfluxDB Stack Overview (`01-overview.json`)
 
-To set this as your home dashboard in Grafana:
-1. Log in to Grafana
-2. Go to the "Addon Components Monitoring" dashboard
-3. Click the star icon to favorite it
-4. Go to Grafana Settings → Preferences
-5. Under "Home Dashboard", select "Addon Components Monitoring"
-
-## 1. Available Dashboards
-
-### 1.1. Prometheus Stack Overview (`01-overview.json`)
-
-- **Purpose**: High-level overview of all monitored services
-- **Features**:
-  - Services status summary
-  - Response times across all probes
-  - Overall uptime percentage
-  - Services grouped by monitoring category
-  - Complete status table
+- **Purpose**: High-level overview of the entire InfluxDB Stack
+- **Key Metrics**:
+  - Service status (InfluxDB, Grafana, VS Code, NGINX)
+  - System resource usage (CPU, Memory, Disk)
+  - Network activity and connections
+  - Data ingestion rates
+- **Use Case**: Main dashboard for monitoring overall system health
 
 ### 1.2. Home Assistant Monitoring (`02-home-assistant.json`)
 
-- **Purpose**: Detailed monitoring of Home Assistant instance
-- **Features**:
-  - Home Assistant service status
-  - CPU and memory usage
-  - Entity states count
-  - Entity states by domain
-  - Detailed entity states table
+- **Purpose**: Monitor Home Assistant integration and metrics
+- **Key Metrics**:
+  - Home Assistant entity states
+  - Integration status
+  - Data flow from Home Assistant to InfluxDB
+  - Automation execution metrics
+- **Use Case**: Track Home Assistant performance and integration health
 
-### 1.3. Blackbox Exporter Monitoring (`03-blackbox-exporter.json`)
+### 1.3. System Monitoring (`03-system.json`)
 
-- **Purpose**: Monitor all HTTP/TCP probes and their performance
-- **Features**:
-  - Probe success rates
-  - Response times for all probes
-  - HTTP status codes
-  - SSL certificate expiry monitoring
-  - Complete probe status table
+- **Purpose**: Monitor system-level metrics and performance
+- **Key Metrics**:
+  - CPU usage and load averages
+  - Memory usage and availability
+  - Disk space and I/O
+  - Network traffic
+- **Use Case**: System administration and performance tuning
 
-### 1.4. Alertmanager Monitoring (`04-alertmanager.json`)
+### 1.4. InfluxDB Monitoring (`04-influxdb.json`)
 
-- **Purpose**: Monitor alert management and notification system
-- **Features**:
-  - Currently firing alerts count
-  - Invalid alerts tracking
-  - Notifications sent/failed
-  - Alert trends over time
-  - Notification rate monitoring
+- **Purpose**: Monitor InfluxDB database performance and health
+- **Key Metrics**:
+  - Database size and growth
+  - Query performance
+  - Data retention and compaction
+  - Connection statistics
+- **Use Case**: Database administration and optimization
 
-### 1.5. Prometheus Server Monitoring (`05-prometheus.json`)
+### 1.5. Grafana Monitoring (`05-grafana.json`)
 
-- **Purpose**: Monitor Prometheus server performance and health
-- **Features**:
-  - Scrape errors and limits
-  - Sample processing metrics
-  - Active series count
-  - Storage performance
-  - Data ingestion rates
+- **Purpose**: Monitor Grafana server performance and usage
+- **Key Metrics**:
+  - Dashboard usage statistics
+  - Alert rule performance
+  - User activity
+  - Plugin status
+- **Use Case**: Grafana administration and user management
 
 ## 2. Installation
 
-### 2.1. Option 1: Manual Import
+### 2.1. Automatic Installation
 
-1. Open Grafana in your browser
+Dashboards are automatically installed when you start the InfluxDB Stack add-on:
+
+1. Start the add-on
+2. Wait for all services to initialize
+3. Access Grafana through the add-on interface
+4. Dashboards will appear automatically in an "InfluxDB Stack" folder
+
+### 2.2. Manual Installation
+
+To manually install or update dashboards:
+
+1. Access Grafana UI
 2. Go to **Dashboards** → **Import**
-3. Upload each JSON file individually
-4. Select your Prometheus data source
-5. Import the dashboard
+3. Upload the JSON files from this directory
+4. Configure the InfluxDB data source if needed
 
-### 2.2. Option 2: Automatic Provisioning (Recommended)
+## 3. Usage
 
-1. Copy the `dashboard-provider.yml` to your Grafana provisioning directory
-2. Copy all JSON files to the same directory
-3. Restart Grafana
-4. Dashboards will appear automatically in a "Prometheus Stack" folder
+### 3.1. Viewing Dashboards
 
-### 2.3. Option 3: Home Assistant Add-on
+1. Open Grafana through the InfluxDB Stack interface
+2. Navigate to **Dashboards**
+3. All dashboards will be available in the "InfluxDB Stack" folder
+4. Click on any dashboard to view it
 
-If using this as a Home Assistant add-on:
+### 3.2. Customizing Dashboards
 
-1. The dashboards will be automatically provisioned
-2. Access Grafana through the add-on interface
-3. All dashboards will be available in the "Prometheus Stack" folder
+You can customize dashboards to fit your needs:
 
-## 3. Configuration
+1. Open the dashboard you want to modify
+2. Click the **Edit** button (pencil icon)
+3. Modify panels, queries, or layout as needed
+4. Save your changes
 
-### 3.1. Data Source
+## 4. Data Source Configuration
 
-All dashboards expect a Prometheus data source with UID `prometheus`. If your data source has a different UID:
+All dashboards expect an InfluxDB data source with UID `influxdb`. If your data source has a different UID:
 
-1. Edit each dashboard JSON file
-2. Replace `"uid": "prometheus"` with your actual data source UID
-3. Save and re-import
+1. Edit the dashboard JSON file
+2. Find and replace all instances of `"uid": "influxdb"`
+3. Replace `"uid": "influxdb"` with your actual data source UID
+4. Re-import the dashboard
 
-### 3.2. Customization
+## 5. Troubleshooting
 
-- **Time Range**: Default is last 1 hour, adjustable via dashboard controls
-- **Refresh Rate**: Default is 30 seconds, can be changed per dashboard
-- **Thresholds**: Color-coded thresholds are set for critical values
-- **Units**: Appropriate units are set for each metric type
+### 5.1. Common Issues
 
-## 4. Troubleshooting
+**No data showing in dashboards:**
+1. Verify InfluxDB data source is configured correctly
+2. Check that metrics are being collected (visit InfluxDB UI)
+3. Ensure time range is appropriate
+4. Verify metric names match your actual InfluxDB metrics
 
-### 4.1. No Data Showing
+**Dashboard import errors:**
+1. Check JSON syntax is valid
+2. Verify Grafana version compatibility
+3. Ensure all required plugins are installed
 
-1. Verify Prometheus data source is configured correctly
-2. Check that metrics are being collected (visit Prometheus targets page)
-3. Ensure time range includes data collection period
-4. Verify metric names match your actual Prometheus metrics
+### 5.2. Metric Requirements
 
-### 4.2. Missing Metrics
+Dashboards expect the following metric sources:
 
-Some metrics may not be available depending on your configuration:
+- **InfluxDB**: `influxdb_*` metrics
+- **Grafana**: `grafana_*` metrics
+- **System**: `node_*` metrics (if node_exporter is enabled)
+- **Home Assistant**: `homeassistant_*` metrics (when integration is enabled)
 
-- Home Assistant metrics require Prometheus integration to be enabled
-- SSL metrics require HTTPS endpoints
-- Alertmanager metrics require alerts to be configured
+## 6. Customization
 
-### 4.3. Performance Issues
+To create custom dashboards:
 
-- Reduce refresh rate for better performance
-- Limit time range for large datasets
-- Consider using recording rules for complex queries
+1. Use the existing dashboards as templates
+2. Modify queries to use your specific metrics
+3. Adjust visualization types and layouts
+4. Test thoroughly before deploying
 
-## 5. Metric Sources
+Query examples:
+- InfluxDB metrics: `from(bucket: "telegraf") |> range(start: -1h)`
+- System metrics: `from(bucket: "system") |> range(start: -5m)`
 
-The dashboards use metrics from:
+## 7. Support
 
-- **Prometheus**: `up`, `prometheus_*` metrics
-- **Blackbox Exporter**: `probe_*` metrics
-- **Alertmanager**: `alertmanager_*` metrics
-- **Home Assistant**: `hass_*` metrics (when Prometheus integration is enabled)
+For dashboard issues:
+- Check the troubleshooting section above
+- Review InfluxDB logs for data collection issues
+- Open an issue on GitHub with dashboard details
 
-## 6. Support
+## 8. License
 
-For issues with the dashboards:
-
-1. Check Grafana logs for errors
-2. Verify Prometheus targets are healthy
-3. Test queries directly in Prometheus UI
-4. Ensure all required exporters are running
-
-For general support:
-
-- [Documentation](https://github.com/sejnub/ha-prometheus-stack/wiki)
-- [Issue Tracker](https://github.com/sejnub/ha-prometheus-stack/issues)
-
-## 7. License
-
-MIT License - see [LICENSE](../LICENSE) file for details
+These dashboards are part of the InfluxDB Stack add-on project and are licensed under the MIT License.

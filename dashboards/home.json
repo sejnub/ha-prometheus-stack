@@ -848,8 +848,9 @@
   "schemaVersion": 37,
   "style": "dark",
   "tags": [
-    "prometheus-stack",
-    "addon-components"
+    "influxdb-stack",
+    "overview",
+    "monitoring"
   ],
   "templating": {
     "list": []
@@ -860,8 +861,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Addon Components Monitoring",
-  "uid": "addon-components-monitoring",
+  "title": "InfluxDB Stack Overview",
+  "uid": "influxdb-stack-overview",
   "version": 1,
   "weekStart": ""
 } 

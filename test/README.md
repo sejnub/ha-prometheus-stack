@@ -1,6 +1,6 @@
-# Testing Guide for Prometheus Stack Add-on
+# Testing Guide for InfluxDB Stack Add-on
 
-This directory contains all testing tools and comprehensive guides for the Prometheus Stack Home Assistant add-on.
+This directory contains all testing tools and comprehensive guides for the InfluxDB Stack Home Assistant add-on.
 
 - [1. Test Directory Structure](#1-test-directory-structure)
 - [2. Quick Start Testing](#2-quick-start-testing)
@@ -32,7 +32,7 @@ This directory contains all testing tools and comprehensive guides for the Prome
 
 ## 1. Test Directory Structure
 
-This directory contains all testing tools and scripts for the Prometheus Stack Home Assistant add-on.
+This directory contains all testing tools and scripts for the InfluxDB Stack Home Assistant add-on.
 
 ```txt
 test/
@@ -50,157 +50,156 @@ test/
 
 ### 2.1. Prerequisites
 
-- Docker Desktop for Windows (with WSL2 backend)
-- WSL2 Ubuntu environment
+- **Docker Desktop** with WSL2 backend enabled
+- **Git** for cloning the repository
+- **Bash shell** (WSL2, Linux, or macOS)
+- **At least 4GB RAM** for smooth operation
+- **Network connectivity** for downloading dependencies
 
 ### 2.2. Configuration
 
-For testing with real Home Assistant instance:
-
-1. Edit the `test-data/options.json` file with your actual values:
-
-   ```json
-   {
-     "alertmanager_receiver": "default",
-     "alertmanager_to_email": "your-email@example.com",
-     "home_assistant_url": "http://supervisor/core",
-     "home_assistant_token": "your-long-lived-access-token",
-     "blackbox_targets": [
-       {
-         "name": "Home Assistant",
-         "url": "http://supervisor/core"
-       }
-     ]
-   }
-   ```
-
-**Note:** The `options.json` file is automatically created with default values when you first run `build.sh`. Your changes to this file will be preserved between test runs, and the file is properly gitignored to keep your credentials safe.
+No additional configuration is required for basic testing. The test scripts use sensible defaults.
 
 ### 2.3. Basic Testing Workflow
 
+The fastest way to test the InfluxDB Stack add-on:
+
 ```bash
-# Full automated test cycle (recommended)
+# Clone the repository
+git clone https://github.com/sejnub/ha-influxdb-stack.git
+cd ha-influxdb-stack
+
+# Run the complete test cycle
 ./test/full-test.sh
-
-# OR run individual steps:
-# 1. Build and start the add-on
-./test/build.sh
-
-# 2. Check if all services are healthy
-./test/health-check.sh
-
-# 3. Test different configurations
-./test/test-config.sh
-
-# 4. Monitor performance
-./test/monitor.sh
-
-# 5. Clean up when done
-./test/cleanup.sh
 ```
+
+This single command will:
+1. Clean up any existing test environment
+2. Build the Docker image
+3. Start the container with test configuration
+4. Verify all services are healthy
+5. Provide access URLs for manual testing
 
 ## 3. Detailed Script Documentation
 
 ### 3.1. `full-test.sh` - Complete Test Cycle
 
-- **Purpose**: Run the complete test cycle automatically
-- **Usage**: `./test/full-test.sh`
-- **What it does**:
-  - Runs cleanup.sh to clean up any existing containers
-  - Runs build.sh to build and start the add-on
-  - Runs health-check.sh to verify all services are healthy
-  - Provides comprehensive status reporting with colored output
-  - Stops at the first failure and provides helpful error messages
-- **Benefits**:
-  - One command to run all testing phases
-  - Consistent testing workflow
-  - Automated error handling and reporting
-  - Saves time during development and CI/CD
-- **Output**: Colored status messages for each phase with final summary
+**Purpose**: Runs the complete test cycle automatically.
+
+**Usage**:
+```bash
+./test/full-test.sh
+```
+
+**What it does**:
+1. Runs `cleanup.sh` to clean up any existing test environment
+2. Runs `build.sh` to build and start the container
+3. Runs `health-check.sh` to verify all services are healthy
+4. Provides a summary of results and access URLs
+
+**Output**: Detailed progress information and final status report.
 
 ### 3.2. `build.sh` - Build Script
 
-- **Purpose**: Build and run the add-on locally for testing
-- **Usage**: `./test/build.sh`
-- **What it does**:
-  - Builds the Docker image with your add-on code
-  - Creates test configuration data (if not exists)
-  - Preserves your existing configuration between runs
-  - Runs the container with proper port mapping
-  - Provides access URLs for testing
-- **Requirements**: Docker Desktop with WSL2 backend enabled
-- **Output**:
-  - Prometheus: <http://localhost:9090>
-  - Alertmanager: <http://localhost:9093>
-  - Blackbox Exporter: <http://localhost:9115>
-  - Karma: <http://localhost:8080>
+**Purpose**: Build the Docker image and start the container for testing.
+
+**Usage**:
+```bash
+./test/build.sh
+```
+
+**What it does**:
+1. Builds the Docker image from the Dockerfile
+2. Creates test configuration (`options.json`)
+3. Starts the container with proper port mappings
+4. Provides service access URLs
+
+**Ports exposed**:
+- `8086` - InfluxDB UI
+- `3000` - Grafana
+- `8443` - VS Code
+- `80` - NGINX ingress
 
 ### 3.3. `docker-compose.dev.yml` - Development Configuration
 
-- **Purpose**: Alternative way to run the add-on for development
-- **Usage**: `docker-compose -f test/docker-compose.dev.yml up -d`
-- **Advantages over build.sh**:
-  - Better for long-term development
-  - Automatic restart on container failure
-  - Easier to modify configuration
-  - Better for team development
+**Purpose**: Alternative development workflow using Docker Compose.
+
+**Usage**:
+```bash
+docker-compose -f test/docker-compose.dev.yml up -d
+```
+
+**Advantages**:
+- Automatic container restart on failure
+- Better for long-term development
+- Easier to modify configuration
+- Better for team development
 
 ### 3.4. `health-check.sh` - Health Verification
 
-- **Purpose**: Verify that all services are running and healthy
-- **Usage**: `./test/health-check.sh`
-- **Health checks performed**:
-  - Prometheus: `/-/healthy` endpoint
-  - Alertmanager: `/-/healthy` endpoint
-  - Blackbox Exporter: `/metrics` endpoint
-  - Karma: Web interface availability
-- **Return codes**:
-  - `0`: All services healthy
-  - `1`: One or more services unhealthy
+**Purpose**: Comprehensive health check of all services.
+
+**Usage**:
+```bash
+./test/health-check.sh
+```
+
+**What it checks**:
+- InfluxDB health endpoint
+- Grafana database connectivity
+- VS Code server availability
+- NGINX status and proxy paths
+- Configuration file presence
+- Data directory structure
 
 ### 3.5. `test-config.sh` - Configuration Testing
 
-- **Purpose**: Test the add-on with different configuration scenarios
-- **Usage**: `./test/test-config.sh`
-- **Test scenarios**:
-  - Basic configuration validation
-  - Email format validation
-  - Receiver name validation
-  - Configuration file syntax checking
-  - Service restart with new configuration
-- **Test configurations**:
-  - Basic: `{"alertmanager_receiver":"default","alertmanager_to_email":"test@example.com"}`
-  - Production: `{"alertmanager_receiver":"prod-alerts","alertmanager_to_email":"admin@company.com"}`
-  - Multiple: `{"alertmanager_receiver":"team","alertmanager_to_email":"team@company.com"}`
-  - Special chars: `{"alertmanager_receiver":"test-receiver-123","alertmanager_to_email":"test+tag@example.com"}`
+**Purpose**: Test different configuration scenarios.
+
+**Usage**:
+```bash
+./test/test-config.sh
+```
+
+**Test scenarios**:
+- InfluxDB organization and bucket configuration
+- Grafana admin password validation
+- Configuration file generation
+- Service restart with new configuration
 
 ### 3.6. `monitor.sh` - Resource Monitoring
 
-- **Purpose**: Monitor resource usage and performance
-- **Usage**: `./test/monitor.sh [continuous]`
-- **Monitoring metrics**:
-  - Container CPU and Memory usage
-  - Disk space usage for `/data` directory
-  - Service response times
-  - Number of running processes
-  - Network connections
-- **Modes**:
-  - Single snapshot: `./test/monitor.sh`
-  - Continuous monitoring: `./test/monitor.sh continuous`
+**Purpose**: Monitor resource usage and performance.
+
+**Usage**:
+```bash
+./test/monitor.sh           # Single snapshot
+./test/monitor.sh continuous # Continuous monitoring
+```
+
+**Monitoring metrics**:
+- Container CPU and memory usage
+- Disk space usage for data directories
+- Service response times
+- Network connections
+- Process information
 
 ### 3.7. `cleanup.sh` - Environment Cleanup
 
-- **Purpose**: Clean up test containers, images, and data
-- **Usage**: `./test/cleanup.sh [--all] [--force]`
-- **Cleanup targets**:
-  - Test containers (prometheus-stack-test, prometheus-stack-dev)
-  - Test images (prometheus-stack-test)
-  - Test data directories (test-data/)
-  - Docker networks (if created)
-  - Docker volumes (if created)
-- **Options**:
-  - `--all`: Clean up everything including images and networks
-  - `--force`: Force stop containers (use with caution)
+**Purpose**: Clean up test containers, images, and data.
+
+**Usage**:
+```bash
+./test/cleanup.sh           # Basic cleanup
+./test/cleanup.sh --all     # Clean everything including images
+./test/cleanup.sh --force   # Force cleanup stuck containers
+```
+
+**Cleanup targets**:
+- Test containers (`influxdb-stack-test`, `influxdb-stack-dev`)
+- Test images (`influxdb-stack-test`)
+- Test data directories (`test-data/`)
+- Docker networks and volumes (with `--all`)
 
 ## 4. Testing Workflows
 
@@ -209,20 +208,24 @@ For testing with real Home Assistant instance:
 For active development with frequent changes:
 
 ```bash
-# Development cycle
-./test/cleanup.sh
+# Initial setup
+./test/full-test.sh
+
+# During development (after code changes)
 ./test/build.sh
 ./test/health-check.sh
-./test/monitor.sh
+
+# Monitor performance
+./test/monitor.sh continuous
 ```
 
 ### 4.2. Quick Validation
 
-For quick validation after small changes:
+For quick validation of changes:
 
 ```bash
 # Quick test cycle
-./test/full-test.sh
+./test/cleanup.sh && ./test/build.sh && ./test/health-check.sh
 ```
 
 ### 4.3. Performance Testing
@@ -230,27 +233,63 @@ For quick validation after small changes:
 For performance analysis:
 
 ```bash
-./test/build.sh
-./test/monitor.sh continuous
-# Let it run for a while, then Ctrl+C
-./test/cleanup.sh
+# Start monitoring in background
+./test/monitor.sh continuous &
+
+# Run test cycle
+./test/full-test.sh
+
+# Stop monitoring
+pkill -f monitor.sh
 ```
 
 ## 5. Troubleshooting
 
 ### 5.1. Common Issues
 
-- **Container won't start**: Check Docker logs with `docker logs prometheus-stack-test`
-- **Services unhealthy**: Use `./test/health-check.sh` for detailed diagnosis
-- **Port conflicts**: Ensure ports 9090, 9093, 9115, 8080, 80 are available
-- **WSL2 issues**: Restart Docker Desktop and WSL2
+**Container fails to start**:
+```bash
+# Check Docker status
+docker info
+
+# View container logs
+docker logs influxdb-stack-test
+
+# Clean up and retry
+./test/cleanup.sh --force
+./test/build.sh
+```
+
+**Services not responding**:
+```bash
+# Check service status
+./test/health-check.sh
+
+# Monitor resource usage
+./test/monitor.sh
+
+# Check individual service logs
+docker exec influxdb-stack-test journalctl -u influxdb
+```
+
+**Port conflicts**:
+```bash
+# Check what's using the ports
+netstat -tulpn | grep :8086
+netstat -tulpn | grep :3000
+
+# Stop conflicting services or use different ports
+```
 
 ### 5.2. Debug Mode
 
-Enable debug mode by setting environment variables:
+Enable verbose logging in any script:
 
 ```bash
-export DEBUG=1
+# Set debug mode
+export DEBUG=true
+
+# Run with verbose output
 ./test/build.sh
 ```
 
@@ -258,43 +297,54 @@ export DEBUG=1
 
 ### 6.1. WSL2 Configuration
 
-Optimize WSL2 for better performance:
+For optimal performance on Windows with WSL2:
 
-- Allocate sufficient memory (4GB+ recommended)
-- Enable Docker Desktop WSL2 integration
-- Use WSL2 file system for better I/O performance
+```bash
+# Increase WSL2 memory limit
+echo '[wsl2]' >> ~/.wslconfig
+echo 'memory=8GB' >> ~/.wslconfig
+echo 'processors=4' >> ~/.wslconfig
+
+# Restart WSL2
+wsl --shutdown
+```
 
 ### 6.2. Docker Configuration
 
-Docker optimization settings:
+Optimize Docker settings:
 
-- Increase memory allocation to 4GB+
-- Enable experimental features
-- Use BuildKit for faster builds
+```bash
+# Increase Docker memory limit (Docker Desktop Settings)
+# - Resources > Advanced > Memory: 4GB+
+# - Resources > Advanced > CPUs: 2+
+
+# Enable BuildKit for faster builds
+export DOCKER_BUILDKIT=1
+```
 
 ## 7. Next Steps
 
 After successful testing:
 
-1. Deploy to Home Assistant as an add-on
-2. Configure production monitoring settings
-3. Set up alerts and notifications
-4. Import Grafana dashboards
+1. **Manual Testing**: Access the services and test functionality
+2. **Integration Testing**: Test with Home Assistant
+3. **Performance Testing**: Monitor resource usage under load
+4. **Security Testing**: Validate security configurations
 
 ## 8. Notes
 
-- Test data is automatically preserved between runs
-- All scripts are designed to be run from project root or test directory
-- Scripts include comprehensive error handling and colored output
-- WSL2 and Docker Desktop are required for full functionality
+- Test scripts are designed to be idempotent (safe to run multiple times)
+- All test data is stored in `test-data/` directory
+- Container names are prefixed with `influxdb-stack-` to avoid conflicts
+- Scripts work in both WSL2 and native Linux environments
 
 ## 9. Support
 
 For testing issues:
-
-- [Documentation](https://github.com/sejnub/ha-prometheus-stack/wiki)
-- [Issue Tracker](https://github.com/sejnub/ha-prometheus-stack/issues)
+- Check the troubleshooting section above
+- Review container logs: `docker logs influxdb-stack-test`
+- Open an issue on GitHub with test output
 
 ## 10. License
 
-MIT License - see [LICENSE](../LICENSE) file for details
+These testing tools are part of the InfluxDB Stack add-on project and are licensed under the MIT License.

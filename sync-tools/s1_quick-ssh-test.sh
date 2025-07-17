@@ -1,116 +1,144 @@
-#!/bin/bash
-# quick-ssh-test.sh - Test access to prometheus files (works in Test-Mode and Addon-Mode)
+#!/usr/bin/with-contenv bashio
 
-# Source configuration
+# =============================================================================
+# INFLUXDB STACK SYNC TOOLS - QUICK SSH TEST
+# =============================================================================
+# PURPOSE: Quick test of SSH connectivity and basic file access
+# USAGE:   ./sync-tools/s1_quick-ssh-test.sh
+# 
+# This script tests:
+# 1. SSH connectivity to Home Assistant
+# 2. Container detection and access
+# 3. Basic file system access for key configuration files
+# 4. Service status verification
+#
+# This is a lightweight test to verify the sync environment before running
+# more comprehensive extraction and comparison operations.
+# =============================================================================
+
+# Source the configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/config.sh"
 
-# Load configuration and detect mode
+# Load environment and set defaults
 load_env
 set_defaults
+
+# Detect mode
 MODE=$(detect_mode)
 
+print_status() {
+    local status="$1"
+    local message="$2"
+    case $status in
+        "OK") echo -e "\033[0;32m✅ $message\033[0m" ;;
+        "WARN") echo -e "\033[1;33m⚠️  $message\033[0m" ;;
+        "ERROR") echo -e "\033[0;31m❌ $message\033[0m" ;;
+        "INFO") echo -e "\033[0;34mℹ️  $message\033[0m" ;;
+    esac
+}
+
+echo "🔍 InfluxDB Stack Sync Tools - Quick SSH Test"
+echo "============================================="
+echo "Mode: $MODE"
+echo "Container: $(get_container_name "$MODE")"
+echo ""
+
+# Test SSH connectivity (addon mode only)
+if [ "$MODE" = "addon" ]; then
+    print_status "INFO" "Testing SSH connectivity to $HA_HOSTNAME..."
+    
+    SSH_CMD=$(get_ssh_connection "$MODE")
+    if timeout 5 $SSH_CMD "echo 'SSH connection successful'" >/dev/null 2>&1; then
+        print_status "OK" "SSH connection to $HA_HOSTNAME working"
+    else
+        print_status "ERROR" "SSH connection failed to $HA_HOSTNAME"
+        exit 1
+    fi
+else
+    print_status "INFO" "Test mode detected - skipping SSH test"
+fi
+
+# Test container access
+CONTAINER_NAME=$(get_container_name "$MODE")
+print_status "INFO" "Testing container access: $CONTAINER_NAME"
+
 if [ "$MODE" = "test" ]; then
-    echo "�� Test-Mode detected"
-    HA_IP="localhost"
-    CONTAINER_FILTER="$LOCAL_CONTAINER_NAME"
-    CMD_PREFIX=""
+    CONTAINER_ID="$CONTAINER_NAME"
 else
-    echo "🏠 Addon-Mode detected (remote Home Assistant)"
-    HA_IP="$HA_HOSTNAME"
-    CONTAINER_FILTER="$REMOTE_CONTAINER_NAME"
-    CMD_PREFIX=$(get_ssh_prefix "addon")
+    SSH_CMD=$(get_ssh_connection "$MODE")
+    CONTAINER_ID=$($SSH_CMD "docker ps -q --filter name=$CONTAINER_NAME" 2>/dev/null)
 fi
 
-# Show configuration
-show_config "$MODE"
-
-echo "Testing access to prometheus configuration files..."
-echo "Target: $HA_IP (container filter: $CONTAINER_FILTER)"
-echo "========================================================"
-
-# Execute commands (in Test-Mode or via SSH)
-$CMD_PREFIX bash << EOF
-echo '1. Container Status:'
-docker ps --filter 'name=$CONTAINER_FILTER' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
-
-echo ''
-echo '📁 2. Configuration Files Access:'
-CONTAINER_ID=\$(docker ps --filter 'name=$CONTAINER_FILTER' --format '{{.ID}}' | head -1)
-if [ -n "\$CONTAINER_ID" ]; then
-    echo 'Container found: '\$CONTAINER_ID
-    echo ''
-    echo 'Configuration access test:'
-    echo '  Dashboards:'
-    docker exec \$CONTAINER_ID find /etc/grafana/provisioning/dashboards -name "*.json" -type f 2>/dev/null | wc -l | xargs -I {} echo '    {} dashboard files found'
-    echo '  Prometheus:'
-    docker exec \$CONTAINER_ID ls /etc/prometheus/prometheus.yml 2>/dev/null && echo '    ✅ prometheus.yml accessible' || echo '    ❌ prometheus.yml not accessible'
-    echo '  Grafana:'
-    docker exec \$CONTAINER_ID ls /etc/grafana/grafana.ini 2>/dev/null && echo '    ✅ grafana.ini accessible' || echo '    ❌ grafana.ini not accessible'
-    echo '  Blackbox:'
-    docker exec \$CONTAINER_ID ls /etc/blackbox_exporter/blackbox.yml 2>/dev/null && echo '    ✅ blackbox.yml accessible' || echo '    ❌ blackbox.yml not accessible'
-    echo '  Alertmanager:'
-    docker exec \$CONTAINER_ID ls /etc/alertmanager/alertmanager.yml 2>/dev/null && echo '    ✅ alertmanager.yml accessible' || echo '    ❌ alertmanager.yml not accessible'
-else
-    echo '❌ No $CONTAINER_FILTER container running'
+if [ -z "$CONTAINER_ID" ]; then
+    print_status "ERROR" "Container $CONTAINER_NAME not found or not running"
+    exit 1
 fi
 
+print_status "OK" "Container $CONTAINER_NAME is accessible"
 
-EOF
+# Test file access for key InfluxDB Stack files
+echo ""
+print_status "INFO" "Testing configuration file access..."
 
-# Local-specific checks (only run locally)
-if [ -z "$CMD_PREFIX" ]; then
-    echo ''
-    echo '4. Test-Mode Data:'
-    if [ -d "$SCRIPT_DIR/../test-data" ]; then
-        echo "Test data directory found: $SCRIPT_DIR/../test-data"
-        ls -la "$SCRIPT_DIR/../test-data/" | head -5
-    else
-        echo 'No test-data directory found'
-    fi
+# Create test command based on mode
+if [ "$MODE" = "test" ]; then
+    TEST_CMD="docker exec $CONTAINER_ID"
 else
-    # Remote-specific checks (only run via SSH)
-    $CMD_PREFIX bash << 'EOF'
-echo ''
-echo '4. Host-side Addon Data:'
-ls -la /addon_configs/ | grep prometheus || echo 'No addon_configs found (expected - addon uses container storage)'
-ls -la /data/ | grep prometheus || echo 'No data directories found'
-ls -la /share/ | grep prometheus || echo 'No share directories found'
-EOF
+    SSH_CMD=$(get_ssh_connection "$MODE")
+    TEST_CMD="$SSH_CMD docker exec $CONTAINER_ID"
+fi
+
+# Test InfluxDB configuration access
+echo '  InfluxDB:'
+if $TEST_CMD test -d /etc/influxdb 2>/dev/null; then
+    echo '    ✅ /etc/influxdb/ directory accessible'
+else
+    echo '    ❌ /etc/influxdb/ directory not accessible'
+fi
+
+# Test Grafana configuration access
+echo '  Grafana:'
+$TEST_CMD ls /etc/grafana/grafana.ini 2>/dev/null && echo '    ✅ grafana.ini accessible' || echo '    ❌ grafana.ini not accessible'
+$TEST_CMD ls /etc/grafana/provisioning/datasources/influxdb.yml 2>/dev/null && echo '    ✅ influxdb.yml datasource accessible' || echo '    ❌ influxdb.yml datasource not accessible'
+
+# Test dashboard access
+echo '  Dashboards:'
+$TEST_CMD ls /etc/grafana/provisioning/dashboards/ 2>/dev/null && echo '    ✅ Dashboard directory accessible' || echo '    ❌ Dashboard directory not accessible'
+
+# Test NGINX configuration access
+echo '  NGINX:'
+$TEST_CMD ls /etc/nginx/nginx.conf 2>/dev/null && echo '    ✅ nginx.conf accessible' || echo '    ❌ nginx.conf not accessible'
+$TEST_CMD ls /etc/nginx/servers/ingress.conf 2>/dev/null && echo '    ✅ ingress.conf accessible' || echo '    ❌ ingress.conf not accessible'
+
+# Test service status
+echo ""
+print_status "INFO" "Testing service status..."
+
+# Test InfluxDB service
+if $TEST_CMD curl -s http://localhost:8086/health >/dev/null 2>&1; then
+    echo '  ✅ InfluxDB service responding'
+else
+    echo '  ❌ InfluxDB service not responding'
+fi
+
+# Test Grafana service
+if $TEST_CMD curl -s http://localhost:3000/api/health >/dev/null 2>&1; then
+    echo '  ✅ Grafana service responding'
+else
+    echo '  ❌ Grafana service not responding'
+fi
+
+# Test NGINX service
+if $TEST_CMD curl -s http://localhost:80/nginx_status >/dev/null 2>&1; then
+    echo '  ✅ NGINX service responding'
+else
+    echo '  ❌ NGINX service not responding'
 fi
 
 echo ""
-echo "Next Steps:"
-if [ -z "$CMD_PREFIX" ]; then
-    echo "- Container found: Direct Docker access available"
-    echo "- Test-Mode: Can extract configs directly from container"
-    echo "- Test data: Configuration stored in ../test-data/"
-else
-    echo "- Container found: Use SSH Container Access (ONLY option for this addon)"
-    echo "- API accessible: Can also use SSH + API Combo for comprehensive sync"  
-    echo "- No addon_configs: This addon stores everything in container (not on host)"
-fi
-echo ""
-echo "Recommended workflow:"
-echo "   1. Run ./s2_extract-configs.sh to get ALL current configuration files"
-echo "   2. Run ./s3_compare-configs.sh to see what changed"
-echo "   3. Run ./s4_sync-to-repo.sh to automatically sync changes to git repository"
-
-# Check if container was found and provide summary
-if [ -z "$CMD_PREFIX" ]; then
-    # Test-Mode - check if container exists
-    if docker ps --filter "name=$CONTAINER_FILTER" --format '{{.Names}}' | grep -q "$CONTAINER_FILTER"; then
-        print_status_icon "OK" "Container access verified in Test-Mode"
-    else
-        print_status_icon "ERROR" "Container access failed in Test-Mode"
-        exit 1
-    fi
-else
-    # Addon-Mode - check if we can connect
-    if timeout 5 $CMD_PREFIX "echo 'SSH test'" >/dev/null 2>&1; then
-        print_status_icon "OK" "SSH connection verified in Addon-Mode"
-    else
-        print_status_icon "ERROR" "SSH connection failed in Addon-Mode"
-        exit 1
-    fi
-fi 
+print_status "OK" "Quick SSH test completed successfully"
+print_status "INFO" "You can now run the other sync tools:"
+print_status "INFO" "  • s2_extract-configs.sh - Extract configurations from container"
+print_status "INFO" "  • s3_compare-configs.sh - Compare configurations"
+print_status "INFO" "  • s4_sync-to-repo.sh - Sync changes back to repository" 

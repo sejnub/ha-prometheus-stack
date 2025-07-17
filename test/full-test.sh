@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =============================================================================
-# PROMETHEUS STACK ADD-ON - FULL TEST SCRIPT
+# INFLUXDB STACK ADD-ON - FULL TEST SCRIPT
 # =============================================================================
 # PURPOSE: Run complete test cycle: cleanup → build → health check
 # USAGE:   ./test/full-test.sh
@@ -49,88 +49,117 @@ print_status() {
 # Function to run a script and handle errors
 run_script() {
     local script_name=$1
-    local script_path="$PROJECT_ROOT/test/$script_name"
+    local script_path=$2
+    local description=$3
     
-    print_status "INFO" "Running $script_name..."
+    print_status "INFO" "Starting $description..."
     
-    if [ ! -f "$script_path" ]; then
-        print_status "ERROR" "Script not found: $script_path"
-        exit 1
-    fi
-    
-    if [ ! -x "$script_path" ]; then
-        print_status "INFO" "Making $script_name executable..."
-        chmod +x "$script_path"
-    fi
-    
-    # Run the script and capture output
-    if "$script_path"; then
-        print_status "SUCCESS" "$script_name completed successfully"
-        return 0
+    if [ -f "$script_path" ]; then
+        if bash "$script_path"; then
+            print_status "SUCCESS" "$description completed successfully"
+            return 0
+        else
+            print_status "ERROR" "$description failed"
+            return 1
+        fi
     else
-        print_status "ERROR" "$script_name failed with exit code $?"
+        print_status "ERROR" "Script not found: $script_path"
         return 1
     fi
 }
 
+# Function to show script header
+show_header() {
+    echo ""
+    echo ""
+    echo ""
+    echo "🧪 InfluxDB Stack Add-on - Full Test Cycle"
+    echo "=========================================="
+    echo "This script will run the complete test cycle:"
+    echo "  1. 🧹 Cleanup existing test environment"
+    echo "  2. 🔨 Build and start InfluxDB Stack container"
+    echo "  3. 🏥 Health check all services"
+    echo ""
+}
+
+# Function to show final results
+show_results() {
+    local success=$1
+    echo ""
+    echo "=========================================="
+    if [ "$success" = "true" ]; then
+        print_status "SUCCESS" "🎉 All tests passed! InfluxDB Stack is ready for use."
+        echo ""
+        echo "📊 Access your InfluxDB Stack:"
+        echo "  • InfluxDB UI:    http://localhost:8086"
+        echo "  • Grafana:        http://localhost:3000"
+        echo "  • VS Code:        http://localhost:8443"
+        echo "  • Main Interface: http://localhost:80"
+        echo ""
+        echo "🔧 Useful commands:"
+        echo "  • View logs:      docker logs influxdb-stack-test"
+        echo "  • Stop container: docker stop influxdb-stack-test"
+        echo "  • Clean up:       ./test/cleanup.sh"
+    else
+        print_status "ERROR" "❌ Test cycle failed. Check the logs above for details."
+        echo ""
+        echo "🔧 Troubleshooting:"
+        echo "  • Check Docker is running: docker info"
+        echo "  • View container logs: docker logs influxdb-stack-test"
+        echo "  • Clean up and retry: ./test/cleanup.sh && ./test/full-test.sh"
+    fi
+    echo "=========================================="
+    echo ""
+}
+
 # Main execution
 main() {
-    echo "=============================================================================="
-    echo "                    PROMETHEUS STACK - FULL TEST SUITE"
-    echo "=============================================================================="
-    echo
+    show_header
     
-    # Get the project root directory
-    PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-    export PROJECT_ROOT
+    # Get script directory
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     
-    print_status "INFO" "Project root: $PROJECT_ROOT"
-    print_status "INFO" "Starting full test cycle..."
-    echo
+    # Define test scripts
+    local cleanup_script="$script_dir/cleanup.sh"
+    local build_script="$script_dir/build.sh"
+    local health_script="$script_dir/health-check.sh"
     
     # Step 1: Cleanup
-    echo "--- STEP 1: CLEANUP ---"
-    if ! run_script "cleanup.sh"; then
-        print_status "ERROR" "❌ Full test failed during cleanup step"
+    if ! run_script "cleanup.sh" "$cleanup_script" "Environment cleanup"; then
+        show_results "false"
         exit 1
     fi
-    echo
     
-    # Step 2: Build and start
-    echo "--- STEP 2: BUILD AND START ---"
-    if ! run_script "build.sh"; then
-        print_status "ERROR" "❌ Full test failed during build step"
+    echo ""
+    
+    # Step 2: Build
+    if ! run_script "build.sh" "$build_script" "Container build and startup"; then
+        show_results "false"
         exit 1
     fi
-    echo
+    
+    echo ""
     
     # Step 3: Health check
-    echo "--- STEP 3: HEALTH CHECK ---"
-    if ! run_script "health-check.sh"; then
-        print_status "ERROR" "❌ Full test failed during health check step"
-        print_status "INFO" "Container logs might help diagnose the issue:"
-        print_status "INFO" "  docker logs prometheus-stack-test"
+    if ! run_script "health-check.sh" "$health_script" "Service health verification"; then
+        show_results "false"
         exit 1
     fi
-    echo
     
-    # Success message
-    echo "=============================================================================="
-    print_status "SUCCESS" "🎉 ALL TESTS PASSED! 🎉"
-    echo "=============================================================================="
-    print_status "INFO" "The Prometheus Stack add-on is running and healthy!"
-    print_status "INFO" "Access the services at:"
-    print_status "INFO" "  - Main UI: http://localhost:80"
-    print_status "INFO" "  - Prometheus: http://localhost:9090"
-    print_status "INFO" "  - Alertmanager: http://localhost:9093"
-    print_status "INFO" "  - Blackbox: http://localhost:9115"
-    print_status "INFO" "  - Karma: http://localhost:8080"
-    print_status "INFO" "  - Grafana: http://localhost:3000"
-    print_status "INFO" "  - VS Code: http://localhost:8443"
-    echo
-    print_status "INFO" "To stop the test container, run: ./test/cleanup.sh"
-    echo "=============================================================================="
+    # All tests passed
+    show_results "true"
+    exit 0
 }
+
+# Error handler
+handle_error() {
+    print_status "ERROR" "An unexpected error occurred during testing"
+    show_results "false"
+    exit 1
+}
+
+# Set up error handling
+trap handle_error ERR
 
 # Run main function
 main "$@" 

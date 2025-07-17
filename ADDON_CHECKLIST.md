@@ -1,78 +1,77 @@
-# Home Assistant Add-on Repository Checklist
+# Home Assistant Add-on Checklist
 
-## ✅ Repository Structure Issues
+## Directory Structure Requirements
 
-- [ ] **Add-on files must be in a subfolder** (not in root)
-  - Move `config.json`, `Dockerfile`, `run.sh` etc. into a subfolder (e.g., `addon-name/`)
-  - Root should only contain: `repository.yaml`, `README.md`, `.github/`, etc.
+- [x] **Add-on directory**: Must be in a subdirectory (e.g., `influxdb-stack/`)
+- [x] **Required files**: `config.json`, `Dockerfile`, `README.md` in add-on directory
+- [x] **Repository structure**: Add-on files must be in subdirectory, not root
 
-- [ ] **Repository metadata file required**
-  - Create `repository.yaml` in root (NOT `repository.json`)
-  - Must contain: `name`, `url`, `maintainer`
+## Configuration Requirements
 
-## ✅ Config.json Requirements
+- [x] **Slug consistency**: 
+  - If folder is `influxdb-stack`, slug must be `"influxdb-stack"`
+  - Repository name should match: `ha-influxdb-stack`
+- [x] **Version format**: Use semantic versioning (e.g., `"1.0.0"`)
+- [x] **Architecture support**: Include supported architectures (`amd64`, `arm64`)
 
-- [ ] **Slug must match folder name exactly**
-  - If folder is `prometheus-stack`, slug must be `"prometheus-stack"`
-  - No underscores vs hyphens mismatch
+## File Structure
 
-- [ ] **Build configuration required for custom Dockerfile**
-  - Add `"build": { "dockerfile": "Dockerfile", "args": [] }`
-  - Required when not using pre-built `"image"`
+```
+repository-root/
+├── influxdb-stack/           # Add-on directory
+│   ├── config.json          # Required: Add-on configuration
+│   ├── Dockerfile           # Required: Container definition
+│   ├── README.md            # Required: Add-on documentation
+│   └── rootfs/              # Container filesystem
+├── README.md                # Repository documentation
+└── repository.yaml          # Repository metadata
+```
 
-- [ ] **Required fields present**
-  - `name`, `version`, `slug`, `description`
-  - `arch`, `startup`, `boot`
-  - `options` and `schema` for configuration
+## Testing Requirements
 
-## ✅ File Structure Validation
+- [x] **Local testing**: Test scripts in `test/` directory
+- [x] **Container builds**: Verify Docker image builds successfully
+- [x] **Service health**: All services start and respond to health checks
+- [x] **Port accessibility**: Required ports are accessible and functional
 
-- [ ] **No Windows Zone.Identifier files tracked by git**
-  - Remove any `*:Zone.Identifier` files
-  - Add to `.gitignore` if needed
+## Documentation Requirements
 
-- [ ] **All required add-on files present**
-  - `config.json`
-  - `Dockerfile`
-  - `run.sh` (executable)
-  - Configuration files referenced in Dockerfile
+- [x] **README.md**: Clear installation and usage instructions
+- [x] **Configuration docs**: Document all configuration options
+- [x] **Troubleshooting**: Common issues and solutions
+- [x] **Version info**: Changelog and version history
 
-## ✅ Testing & Development Setup
+## Home Assistant Integration
 
-- [ ] **Test scripts updated for new folder structure**
-  - Update `test/build.sh` to use correct paths
-  - Update GitHub Actions workflow context
+- [x] **Ingress support**: Web UI accessible through Home Assistant
+- [x] **Supervisor API**: Proper integration with Home Assistant Supervisor
+- [x] **Add-on store**: Compatible with Home Assistant Add-on Store format
+- [x] **Persistent data**: Data survives container restarts
 
-- [ ] **Both modes work: Add-on mode and Test mode**
-  - Add-on mode: reads from `/data/options.json`
-  - Test mode: also reads from `/data/options.json`
-  - Configuration preserved between test runs
-  - Test data directory properly gitignored
+## Security Requirements
 
-## ✅ Documentation Updates
+- [x] **Non-root execution**: Services run as non-root user where possible
+- [x] **Minimal permissions**: Only required permissions in config.json
+- [x] **Secure defaults**: Safe default configuration values
+- [x] **Input validation**: Proper validation of user inputs
 
-- [ ] **README.md reflects new structure**
-  - Update file structure diagram
-  - Update installation instructions
+## Quality Assurance
 
-## 🔍 Final Validation Checklist
+- [x] **Code quality**: Clean, maintainable code structure
+- [x] **Error handling**: Proper error messages and recovery
+- [x] **Logging**: Appropriate logging levels and messages
+- [x] **Performance**: Efficient resource usage
 
-- [ ] Repository can be added to Home Assistant Add-on Store
-- [ ] Add-on installs without errors
-- [ ] Configuration tab works in Home Assistant UI
-- [ ] All services start correctly
-- [ ] Health checks pass
-- [ ] Both development and production modes work
+## Release Preparation
 
-## 📝 Common Mistakes to Avoid
+- [x] **Version bump**: Update version in config.json
+- [x] **Changelog**: Document changes in CHANGELOG.md
+- [x] **Testing**: Full test suite passes
+- [x] **Documentation**: All docs updated for new version
 
-- ❌ Don't put add-on files in repository root
-- ❌ Don't use `repository.json` (use `repository.yaml`)
-- ❌ Don't mismatch slug and folder name
-- ❌ Don't forget `build` configuration for custom Dockerfile
-- ❌ Don't leave Windows Zone.Identifier files in git
-- ❌ Don't forget to update test scripts for new structure
+## Post-Release
 
----
-
-**Next time you build an add-on, use this checklist to avoid these common pitfalls!**
+- [x] **Monitoring**: Monitor for issues after release
+- [x] **User feedback**: Respond to user reports and questions
+- [x] **Maintenance**: Regular updates and security patches
+- [x] **Community**: Engage with Home Assistant community

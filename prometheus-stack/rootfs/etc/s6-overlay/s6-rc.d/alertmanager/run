@@ -1,7 +1,0 @@
-#!/command/with-contenv bashio
-
-echo "Starting Alertmanager..."
-exec s6-setuidgid root /opt/alertmanager/alertmanager \
-    --config.file=/etc/alertmanager/alertmanager.yml \
-    --storage.path=/data/alertmanager \
-    --web.listen-address=:9093 
